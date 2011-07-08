@@ -418,6 +418,7 @@ irqreturn_t mdp4_isr(int irq, void *ptr)
 			else if (panel & MDP4_PANEL_DSI_VIDEO)
 				mdp4_primary_vsync_dsi_video();
 #endif
+     spin_unlock(&mdp_spin_lock);
 		}
 #ifdef CONFIG_FB_MSM_DTV
 		if (isr & INTR_EXTERNAL_VSYNC) {
@@ -425,6 +426,7 @@ irqreturn_t mdp4_isr(int irq, void *ptr)
 			outp32(MDP_INTR_ENABLE, mdp_intr_mask);
 			if (panel & MDP4_PANEL_DTV)
 				mdp4_external_vsync_dtv();
+			spin_unlock(&mdp_spin_lock);
 		}
 #endif
 		if (isr & INTR_DMA_P_DONE) {
