@@ -347,18 +347,16 @@ struct mdp4_statistic {
 static inline int mdp4_overlay_writeback_setup(struct fb_info *fbi,
 		struct mdp4_overlay_pipe *pipe, uint8 *buf, int bpp)
 {
+  struct msm_fb_data_type *mfd = fbi->par;
 	int off;
 	struct msm_fb_data_type *mfd = (struct msm_fb_data_type *)fbi->par;
 
-#if 1 /* HTC defines different address for write-back (blt addr) */
 	pipe->blt_base = (ulong) buf;
-	off = ALIGN(fbi->var.xres, 32) * fbi->var.yres * bpp *  mfd->fb_page;
+	off = ALIGN(fbi->var.xres, 32) * fbi->var.yres * bpp * mfd->fb_page;
 	off += (1920 * 1080 * 2 * 1); /* hdmi */
 	pipe->blt_base += off;
-#else
 	off = 0;
 	pipe->blt_base = mfd->blt_base;
-#endif
 
 	PR_DISP_INFO("%s: base=%x offset=%x\n",
 			__func__, (int) pipe->blt_base, (int)off);
