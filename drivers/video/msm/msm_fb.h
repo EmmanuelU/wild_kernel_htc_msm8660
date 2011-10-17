@@ -51,6 +51,7 @@
 #include <linux/hrtimer.h>
 
 #include <linux/fb.h>
+#include <linux/ion.h>
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 #include <linux/earlysuspend.h>
@@ -74,6 +75,8 @@ struct msm_fb_data_type {
 	__u32 index;
 	__u32 ref_cnt;
 	__u32 fb_page;
+
+	struct ion_client *client;
 
 	panel_id_type panel;
 	struct msm_panel_info panel_info;
