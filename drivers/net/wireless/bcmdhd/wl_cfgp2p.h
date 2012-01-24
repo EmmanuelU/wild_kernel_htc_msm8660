@@ -235,6 +235,12 @@ wl_cfgp2p_get_p2p_noa(struct wl_priv *wl, struct net_device *ndev, char* buf, in
 extern s32
 wl_cfgp2p_set_p2p_ps(struct wl_priv *wl, struct net_device *ndev, char* buf, int len);
 
+extern s32
+wl_cfgp2p_register_ndev(struct wl_priv *wl);
+
+extern s32
+wl_cfgp2p_unregister_ndev(struct wl_priv *wl);
+
 /* WiFi Direct */
 #define SOCIAL_CHAN_1 1
 #define SOCIAL_CHAN_2 6
