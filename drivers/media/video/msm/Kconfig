@@ -362,3 +362,11 @@ config QS_S5K4E1
 	default n
 	---help---
 	  Samsung 5M with Autofocus
+
+config IMX105
+	bool "Sensor IMX105 8MP MIPI (BAYER 8M)"
+	depends on MSM_CAMERA && ARCH_MSM8X60
+	default n
+	---help---
+	  SONY 8M Bayer MIPI Sensor with Autofocus
+ 

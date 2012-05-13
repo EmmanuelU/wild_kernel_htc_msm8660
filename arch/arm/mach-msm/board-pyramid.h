@@ -118,6 +118,18 @@
 #define PYRAMID_TP_ATT_N             (65)
 #define PYRAMID_TP_ATT_N_XB       (50)
 
+/* Microp */
+#define DOUBLESHOT_GPIO_UP_RESET_N           (39)
+#define DOUBLESHOT_GPIO_UP_INT_N           (57)
+
+/* TP */
+#define DOUBLESHOT_TP_I2C_SDA           (51)
+#define DOUBLESHOT_TP_I2C_SCL           (52)
+#define DOUBLESHOT_TP_ATT_N             (65)
+#define DOUBLESHOT_TP_ATT_N_XB          (50)
+
+
+
 /* LCD */
 #define GPIO_LCM_RST_N			(66)
 #define GPIO_LCM_ID			(50)
@@ -181,6 +193,15 @@
 #define PYRAMID_PLS_INT            PMGPIO(35)
 #define PYRAMID_AUD_REMO_PRES      PMGPIO(37)
 #define PYRAMID_WIFI_BT_SLEEP_CLK  PMGPIO(38)
+
+#define DOUBLESHOT_KEYMATRIX_DRV1     PMGPIO(9)
+#define DOUBLESHOT_KEYMATRIX_DRV2     PMGPIO(10)
+#define DOUBLESHOT_KEYMATRIX_DRV3     PMGPIO(11)
+#define DOUBLESHOT_KEYMATRIX_DRV4     PMGPIO(12)
+#define DOUBLESHOT_KEYMATRIX_DRV5     PMGPIO(13)
+#define DOUBLESHOT_KEYMATRIX_DRV6     PMGPIO(14)
+#define DOUBLESHOT_KEYMATRIX_DRV7     PMGPIO(15)
+#define DOUBLESHOT_TP_RST             PMGPIO(21)
 
 
 int __init pyramid_init_mmc(void);
