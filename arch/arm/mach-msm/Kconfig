@@ -703,6 +703,13 @@ config MACH_VIGOR
 	help
 	  Support for the Vigor device.
 
+config MACH_DOUBLESHOT
+	depends on ARCH_MSM8X60
+	default n
+	bool "ds"
+	help
+	  Support for the DS device.
+
 config MACH_RUBY
 	depends on ARCH_MSM8X60
 	default n

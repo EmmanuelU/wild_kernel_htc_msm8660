@@ -17,7 +17,7 @@
 
 #include <mach/board.h>
 
-#define PYRAMID_PROJECT_NAME	"pyramid"
+#define PYRAMID_PROJECT_NAME	"doubleshot"
 
 #define MSM_RAM_CONSOLE_BASE	MSM_HTC_RAM_CONSOLE_PHYS
 #define MSM_RAM_CONSOLE_SIZE	MSM_HTC_RAM_CONSOLE_SIZE
@@ -131,8 +131,15 @@
 
 
 /* LCD */
-#define GPIO_LCM_RST_N			(66)
+//#define GPIO_LCM_RST_N			(66)
 #define GPIO_LCM_ID			(50)
+
+/* LCD */
+#define GPIO_LCM_ID1_IM1		(50)
+#define GPIO_LCM_ID1_IM1_XB		(65)
+#define GPIO_LCM_RST_N			(66)
+
+
 
 /* Audio */
 #define PYRAMID_AUD_CODEC_RST        (67)

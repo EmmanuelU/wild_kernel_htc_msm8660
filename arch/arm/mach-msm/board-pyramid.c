@@ -32,6 +32,8 @@
 #include <linux/isl29029.h>
 #include <linux/mpu.h>
 
+#include "proc_comm.h"
+
 #include <linux/msm-charger.h>
 #include <linux/i2c.h>
 #include <linux/i2c/sx150x.h>
@@ -161,7 +163,7 @@ int id_set_two_phase_freq(int cpufreq);
 #define PM8901_IRQ_BASE				(PM8058_IRQ_BASE + \
 						NR_PMIC8058_IRQS)
 
-int __init pyd_init_panel(struct resource *res, size_t size);
+int __init dot_init_panel(struct resource *res, size_t size);
 #ifdef CONFIG_ION_MSM
 int __init pyramid_ion_reserve_memory(struct memtype_reserve *table);
 int __init pyramid_ion_init();
@@ -6417,7 +6419,7 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 	platform_device_register(&msm_gsbi1_qup_spi_device);
 #endif
 
-	pyd_init_panel(msm_fb_resources, ARRAY_SIZE(msm_fb_resources));
+	dot_init_panel(msm_fb_resources, ARRAY_SIZE(msm_fb_resources));
 	
 	fixup_i2c_configs();
 	register_i2c_devices();
@@ -6459,6 +6461,9 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 
 static void __init pyramid_init(void)
 {
+	uint32_t restart_reason = 0x6f656d99;
+	msm_proc_comm(PCOM_RESET_CHIP_IMM, &restart_reason, 0);
+	
 	msm8x60_init(&pyramid_board_data);
 	printk(KERN_INFO "%s revision=%d engineerid=%d\n", __func__, system_rev, engineerid);
 }
@@ -6477,7 +6482,7 @@ static void __init pyramid_fixup(struct machine_desc *desc, struct tag *tags,
         mi->bank[0].size = SIZE_ADDR1;
 }
 
-MACHINE_START(PYRAMID, "pyramid")
+MACHINE_START(DOUBLESHOT, "doubleshot")
 	.fixup = pyramid_fixup,
 	.map_io = pyramid_map_io,
 	.reserve = pyramid_reserve,
