@@ -116,7 +116,7 @@
 #include <mach/cable_detect.h>
 #include <linux/msm_tsens.h>
 
-#include "board-pyramid.h"
+#include "board-doubleshot.h"
 #include "devices.h"
 #include "devices-msm8x60.h"
 #include "cpuidle.h"
@@ -324,7 +324,7 @@ static void *sdc5_status_notify_cb_devid;
 
 static unsigned int engineerid;
 
-unsigned int pyramid_get_engineerid(void)
+unsigned int doubleshot_get_engineerid(void)
 {
 	return engineerid;
 }
@@ -793,7 +793,7 @@ static struct isa1200_platform_data isa1200_1_pdata = {
 	.power_on = isa1200_power,
 	.dev_setup = isa1200_dev_setup,
 	/*gpio to enable haptic*/
-	.hap_en_gpio = PM8058_GPIO_PM_TO_SYS(PYRAMID_HAP_ENABLE),
+	.hap_en_gpio = PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_HAP_ENABLE),
 	.max_timeout = 15000,
 	.mode_ctrl = PWM_GEN_MODE,
 	.pwm_fd = {
@@ -1266,7 +1266,7 @@ static struct android_usb_platform_data android_usb_pdata = {
 	.num_functions = ARRAY_SIZE(usb_functions_all),
 	.functions = usb_functions_all,
 	.update_pid_and_serial_num = usb_diag_update_pid_and_serial_num,
-	.usb_id_pin_gpio = PYRAMID_GPIO_USB_ID,
+	.usb_id_pin_gpio = DOUBLESHOT_GPIO_USB_ID,
 	.fserial_init_string = "tty:modem,tty,tty:serial",
 };
 
@@ -1305,7 +1305,7 @@ static struct platform_device msm_vpe_device = {
 #ifdef CONFIG_HTC_BATT8x60
 static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.guage_driver = GUAGE_NONE,
-	.gpio_mbat_in = MSM_GPIO_TO_INT(PYRAMID_GPIO_MBAT_IN),
+	.gpio_mbat_in = MSM_GPIO_TO_INT(DOUBLESHOT_GPIO_MBAT_IN),
 	.gpio_mbat_in_trigger_level = MBAT_IN_LOW_TRIGGER,
 	.charger = SWITCH_CHARGER_TPS65200,
 	.mpp_data = {
@@ -1344,21 +1344,21 @@ static uint32_t camera_off_gpio_table[] = {
 	GPIO_CFG(138, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM2_RST# */
 	GPIO_CFG(140, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM2_PWDN */
 	GPIO_CFG(32, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_16MA),	/* CAM_MCLK */
-	GPIO_CFG(PYRAMID_CAM_I2C_SDA, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_4MA),		/* CAM_I2C_SDA */
-	GPIO_CFG(PYRAMID_CAM_I2C_SCL, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_8MA),		/* CAM_I2C_SCL */
+	GPIO_CFG(DOUBLESHOT_CAM_I2C_SDA, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_4MA),		/* CAM_I2C_SDA */
+	GPIO_CFG(DOUBLESHOT_CAM_I2C_SCL, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_8MA),		/* CAM_I2C_SCL */
 	GPIO_CFG(141, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM_SEL */
-	GPIO_CFG(PYRAMID_CAM_CAM1_ID, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM_CAM1_ID */
+	GPIO_CFG(DOUBLESHOT_CAM_CAM1_ID, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM_CAM1_ID */
 };
 
 static uint32_t camera_on_gpio_table[] = {
-	GPIO_CFG(PYRAMID_CAM_I2C_SDA, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_4MA),		/* CAM_I2C_SDA */
-	GPIO_CFG(PYRAMID_CAM_I2C_SCL, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_8MA),		/* CAM_I2C_SCL */
+	GPIO_CFG(DOUBLESHOT_CAM_I2C_SDA, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_4MA),		/* CAM_I2C_SDA */
+	GPIO_CFG(DOUBLESHOT_CAM_I2C_SCL, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_8MA),		/* CAM_I2C_SCL */
 	GPIO_CFG(32, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_16MA),	/* CAM_MCLK */
 	GPIO_CFG(137, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM1_RST# */
 	GPIO_CFG(138, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM2_RST# */
 	GPIO_CFG(140, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM2_PWDN */
 	GPIO_CFG(141, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM_SEL */
-	GPIO_CFG(PYRAMID_CAM_CAM1_ID, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM_CAM1_ID */
+	GPIO_CFG(DOUBLESHOT_CAM_CAM1_ID, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM_CAM1_ID */
 };
 
 static int camera_sensor_power_enable(char *power, unsigned volt)
@@ -1711,8 +1711,8 @@ static struct platform_device msm_gemini_device = {
 
 static struct tps65200_platform_data tps65200_data = {
 	.charger_check = 1,
-	.gpio_chg_stat = PM8058_GPIO_IRQ(PM8058_IRQ_BASE, PYRAMID_CHG_STAT),
-	.gpio_chg_int  = MSM_GPIO_TO_INT(PYRAMID_GPIO_CHG_INT),
+	.gpio_chg_stat = PM8058_GPIO_IRQ(PM8058_IRQ_BASE, DOUBLESHOT_CHG_STAT),
+	.gpio_chg_int  = MSM_GPIO_TO_INT(DOUBLESHOT_GPIO_CHG_INT),
 };
 
 static struct i2c_board_info msm_tps_65200_boardinfo[] __initdata = {
@@ -1726,23 +1726,23 @@ static struct i2c_board_info msm_tps_65200_boardinfo[] __initdata = {
 #ifdef CONFIG_I2C_QUP
 
 static uint32_t gsbi4_gpio_table[] = {
-	GPIO_CFG(PYRAMID_CAM_I2C_SDA, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-	GPIO_CFG(PYRAMID_CAM_I2C_SCL, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
+	GPIO_CFG(DOUBLESHOT_CAM_I2C_SDA, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
+	GPIO_CFG(DOUBLESHOT_CAM_I2C_SCL, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
 };
 
 static uint32_t gsbi5_gpio_table[] = {
-	GPIO_CFG(PYRAMID_TP_I2C_SDA, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-	GPIO_CFG(PYRAMID_TP_I2C_SCL, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
+	GPIO_CFG(DOUBLESHOT_TP_I2C_SDA, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
+	GPIO_CFG(DOUBLESHOT_TP_I2C_SCL, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
 };
 
 static uint32_t gsbi7_gpio_table[] = {
-	GPIO_CFG(PYRAMID_GENERAL_I2C_SDA, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-	GPIO_CFG(PYRAMID_GENERAL_I2C_SCL, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
+	GPIO_CFG(DOUBLESHOT_GENERAL_I2C_SDA, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
+	GPIO_CFG(DOUBLESHOT_GENERAL_I2C_SCL, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
 };
 
 static uint32_t gsbi10_gpio_table[] = {
-	GPIO_CFG(PYRAMID_SENSOR_I2C_SDA, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-	GPIO_CFG(PYRAMID_SENSOR_I2C_SCL, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
+	GPIO_CFG(DOUBLESHOT_SENSOR_I2C_SDA, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
+	GPIO_CFG(DOUBLESHOT_SENSOR_I2C_SCL, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
 };
 
 
@@ -2118,9 +2118,11 @@ static int doubleshot_ts_atmel_power(int on)
 {
 	pr_info("%s: power %d\n", __func__, on);
 
-	gpio_set_value(PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_TP_RST), 0);
+//	gpio_set_value(PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_TP_RST), 0);
+	gpio_set_value((DOUBLESHOT_TP_RST), 0);
 	msleep(5);
-	gpio_set_value(PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_TP_RST), 1);
+//	gpio_set_value(PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_TP_RST), 1);
+	gpio_set_value((DOUBLESHOT_TP_RST), 1);
 	msleep(40);
 
 	return 0;
@@ -2232,10 +2234,10 @@ static int configure_uart_gpios(int on)
 {
 	int ret = 0, i;
 	int uart_gpios[] = {
-		PYRAMID_GPIO_BT_UART1_TX,
-		PYRAMID_GPIO_BT_UART1_RX,
-		PYRAMID_GPIO_BT_UART1_CTS,
-		PYRAMID_GPIO_BT_UART1_RTS,
+		DOUBLESHOT_GPIO_BT_UART1_TX,
+		DOUBLESHOT_GPIO_BT_UART1_RX,
+		DOUBLESHOT_GPIO_BT_UART1_CTS,
+		DOUBLESHOT_GPIO_BT_UART1_RTS,
 	};
 	for (i = 0; i < ARRAY_SIZE(uart_gpios); i++) {
 		if (on) {
@@ -2688,9 +2690,9 @@ static struct platform_device *early_regulators[] __initdata = {
 static void config_flashlight_gpios(void)
 {
 	static uint32_t flashlight_gpio_table[] = {
-		GPIO_CFG(PYRAMID_TORCH_EN, 0, GPIO_CFG_OUTPUT,
+		GPIO_CFG(DOUBLESHOT_TORCH_EN, 0, GPIO_CFG_OUTPUT,
 			GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
-		GPIO_CFG(PYRAMID_FLASH_EN, 0, GPIO_CFG_OUTPUT,
+		GPIO_CFG(DOUBLESHOT_FLASH_EN, 0, GPIO_CFG_OUTPUT,
 			GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
 	};
 
@@ -2700,8 +2702,8 @@ static void config_flashlight_gpios(void)
 
 static struct flashlight_platform_data flashlight_data = {
 	.gpio_init 		= config_flashlight_gpios,
-	.torch 			= PYRAMID_TORCH_EN,
-	.flash 			= PYRAMID_FLASH_EN,
+	.torch 			= DOUBLESHOT_TORCH_EN,
+	.flash 			= DOUBLESHOT_FLASH_EN,
 	.flash_duration_ms 	= 600,
 	.led_count 		= 2,
 };
@@ -2728,20 +2730,20 @@ static struct platform_device *early_devices[] __initdata = {
 	&flashlight_device,
 #endif
 };
-
+/*
 static struct tsens_platform_data pyr_tsens_pdata  = {
 		.tsens_factor		= 1000,
 		.hw_type		= MSM_8660,
 		.tsens_num_sensor	= 6,
 		.slope 			= 702,
 };
+*/
 
-/*
 static struct platform_device msm_tsens_device = {
 	.name   = "tsens-tm",
 	.id = -1,
 };
-*/
+
 
 #ifdef CONFIG_SENSORS_MSM_ADC
 static struct adc_access_fn xoadc_fn = {
@@ -2812,7 +2814,7 @@ static struct platform_device msm_adc_device = {
 
 /* HTC_HEADSET_GPIO Driver */
 static struct htc_headset_gpio_platform_data htc_headset_gpio_data = {
-	.hpin_gpio		= PYRAMID_GPIO_AUD_HP_DET,
+	.hpin_gpio		= DOUBLESHOT_GPIO_AUD_HP_DET,
 	.key_enable_gpio	= 0,
 	.mic_select_gpio	= 0,
 };
@@ -2946,15 +2948,15 @@ static void mhl_sii9234_1v2_power(bool enable);
 #endif
 
 static uint32_t usb_ID_PIN_input_table[] = {
-	GPIO_CFG(PYRAMID_GPIO_USB_ID, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+	GPIO_CFG(DOUBLESHOT_GPIO_USB_ID, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
 };
 
 static uint32_t usb_ID_PIN_ouput_table[] = {
-	GPIO_CFG(PYRAMID_GPIO_USB_ID, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+	GPIO_CFG(DOUBLESHOT_GPIO_USB_ID, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
 };
 
 static uint32_t mhl_usb_switch_ouput_table[] = {
-	GPIO_CFG(PYRAMID_GPIO_MHL_USB_SWITCH, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
+	GPIO_CFG(DOUBLESHOT_GPIO_MHL_USB_SWITCH, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
 };
 
 static struct pm8xxx_mpp_init_info usb_mpp_init_configs[] = {
@@ -2987,11 +2989,11 @@ void config_pyramid_usb_id_gpios(bool output)
 {
 	if (output) {
 		gpio_tlmm_config(usb_ID_PIN_ouput_table[0], 0);
-		gpio_set_value(PYRAMID_GPIO_USB_ID, 1);
-		printk(KERN_INFO "%s %d output high\n",  __func__, PYRAMID_GPIO_USB_ID);
+		gpio_set_value(DOUBLESHOT_GPIO_USB_ID, 1);
+		printk(KERN_INFO "%s %d output high\n",  __func__, DOUBLESHOT_GPIO_USB_ID);
 	} else {
 		gpio_tlmm_config(usb_ID_PIN_input_table[0], 0);
-		printk(KERN_INFO "%s %d input none pull\n",  __func__, PYRAMID_GPIO_USB_ID);
+		printk(KERN_INFO "%s %d input none pull\n",  __func__, DOUBLESHOT_GPIO_USB_ID);
 	}
 }
 
@@ -3007,7 +3009,7 @@ static void pyramid_usb_dpdn_switch(int path)
 		gpio_tlmm_config(mhl_usb_switch_ouput_table[0], 0);
 
 		pr_info("[CABLE] %s: Set %s path\n", __func__, mhl ? "MHL" : "USB");
-		gpio_set_value(PYRAMID_GPIO_MHL_USB_SWITCH, (mhl ^ !polarity) ? 1 : 0);
+		gpio_set_value(DOUBLESHOT_GPIO_MHL_USB_SWITCH, (mhl ^ !polarity) ? 1 : 0);
 		break;
 	}
 	}
@@ -3022,9 +3024,9 @@ static struct cable_detect_platform_data cable_detect_pdata = {
 	.vbus_mpp_config = pm8058_usb_config,
 	.vbus_mpp_irq  = PM8058_IRQ_BASE + PM8058_CBLPWR_IRQ,
 	.detect_type = CABLE_TYPE_PMIC_ADC,
-	.usb_id_pin_gpio = PYRAMID_GPIO_USB_ID,
+	.usb_id_pin_gpio = DOUBLESHOT_GPIO_USB_ID,
 	.usb_dpdn_switch = pyramid_usb_dpdn_switch,
-	.mhl_reset_gpio = PYRAMID_GPIO_MHL_RESET,
+	.mhl_reset_gpio = DOUBLESHOT_GPIO_MHL_RESET,
 	.mpp_data = {
 		.usbid_mpp	= PM8058_MPP_PM_TO_SYS(XOADC_MPP_4),
 		.usbid_amux	= PM_MPP_AIN_AMUX_CH5,
@@ -3217,8 +3219,8 @@ static int mhl_sii9234_all_power(bool enable)
 
 #ifdef CONFIG_FB_MSM_HDMI_MHL_SII9234
 static uint32_t mhl_gpio_table[] = {
-	GPIO_CFG(PYRAMID_GPIO_MHL_RESET, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
-	GPIO_CFG(PYRAMID_GPIO_MHL_INT, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA),
+	GPIO_CFG(DOUBLESHOT_GPIO_MHL_RESET, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
+	GPIO_CFG(DOUBLESHOT_GPIO_MHL_INT, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA),
 };
 static int mhl_sii9234_power(int on)
 {
@@ -3240,8 +3242,8 @@ static int mhl_sii9234_power(int on)
 }
 
 static T_MHL_PLATFORM_DATA mhl_sii9234_device_data = {
-	.gpio_intr = PYRAMID_GPIO_MHL_INT,
-	.gpio_reset = PYRAMID_GPIO_MHL_RESET,
+	.gpio_intr = DOUBLESHOT_GPIO_MHL_INT,
+	.gpio_reset = DOUBLESHOT_GPIO_MHL_RESET,
 	.ci2ca = 0,
 	#ifdef CONFIG_FB_MSM_HDMI_MHL
 	.mhl_usb_switch		= pyramid_usb_dpdn_switch,
@@ -3255,7 +3257,7 @@ static struct i2c_board_info msm_i2c_gsbi7_mhl_sii9234_info[] =
 	{
 		I2C_BOARD_INFO(MHL_SII9234_I2C_NAME, 0x72 >> 1),
 		.platform_data = &mhl_sii9234_device_data,
-		.irq = MSM_GPIO_TO_INT(PYRAMID_GPIO_MHL_INT)
+		.irq = MSM_GPIO_TO_INT(DOUBLESHOT_GPIO_MHL_INT)
 	},
 };
 #endif
@@ -3368,7 +3370,7 @@ static struct platform_device *pyramid_devices[] __initdata = {
 	&msm_device_rng,
 #endif
 
-	//&msm_tsens_device,
+	&msm_tsens_device,
 	&msm_rpm_device,
 	&cable_detect_device,
 #ifdef CONFIG_BT
@@ -3577,7 +3579,7 @@ static int pm8058_gpios_init(void)
 
 #ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
 		{
-			PM8058_GPIO_PM_TO_SYS(PYRAMID_SDC3_DET),
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_SDC3_DET),
 			{
 				.direction      = PM_GPIO_DIR_IN,
 				.pull           = PM_GPIO_PULL_UP_30,
@@ -3588,7 +3590,7 @@ static int pm8058_gpios_init(void)
 		},
 #endif
 		{ /* Audio Microphone Selector */
-			PM8058_GPIO_PM_TO_SYS(PYRAMID_AUD_MIC_SEL),    /* 26 */
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_MIC_SEL),    /* 26 */
 			{
 				.direction      = PM_GPIO_DIR_OUT,
 				.output_value   = 0,
@@ -3601,7 +3603,7 @@ static int pm8058_gpios_init(void)
 			}
 		},
 		{ /* TPA2051 Power */
-			PM8058_GPIO_PM_TO_SYS(PYRAMID_AUD_HP_EN),
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_HP_EN),
 			{
 				.direction	= PM_GPIO_DIR_OUT,
 				.output_value	= 0,
@@ -3614,7 +3616,7 @@ static int pm8058_gpios_init(void)
 			}
 		},
 		{ /* Timpani Reset */
-			PM8058_GPIO_PM_TO_SYS(PYRAMID_AUD_QTR_RESET),
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_QTR_RESET),
 			{
 				.direction	= PM_GPIO_DIR_OUT,
 				.output_value	= 1,
@@ -3627,7 +3629,7 @@ static int pm8058_gpios_init(void)
 			}
 		},
 		{
-			PM8058_GPIO_PM_TO_SYS(PYRAMID_PLS_INT),
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_PLS_INT),
 			{
 				.direction		= PM_GPIO_DIR_IN,
 				.pull			= PM_GPIO_PULL_UP_1P5,
@@ -3636,34 +3638,8 @@ static int pm8058_gpios_init(void)
 				.inv_int_pol	= 0,
 			},
 		},
-		{ /* Green LED */
-			PM8058_GPIO_PM_TO_SYS(PYRAMID_GREEN_LED),
-			{
-				.direction	= PM_GPIO_DIR_OUT,
-				.output_value	= 1,
-				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
-				.pull		= PM_GPIO_PULL_NO,
-				.out_strength	= PM_GPIO_STRENGTH_HIGH,
-				.function	= PM_GPIO_FUNC_2,
-				.vin_sel	= PM8058_GPIO_VIN_L5,
-				.inv_int_pol	= 0,
-			}
-		},
-		{ /* AMBER */
-			PM8058_GPIO_PM_TO_SYS(PYRAMID_AMBER_LED),
-			{
-				.direction	= PM_GPIO_DIR_OUT,
-				.output_value	= 1,
-				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
-				.pull		= PM_GPIO_PULL_NO,
-				.out_strength	= PM_GPIO_STRENGTH_HIGH,
-				.function	= PM_GPIO_FUNC_2,
-				.vin_sel	= PM8058_GPIO_VIN_L5,
-				.inv_int_pol	= 0,
-			}
-		},
 		{ /* Volume Up Key */
-			PM8058_GPIO_PM_TO_SYS(PYRAMID_VOL_UP),
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_VOL_UP),
 			{
 				.direction      = PM_GPIO_DIR_IN,
 				.pull           = PM_GPIO_PULL_UP_31P5,
@@ -3673,7 +3649,7 @@ static int pm8058_gpios_init(void)
 			}
 		},
 		{ /* Volume Down key */
-			PM8058_GPIO_PM_TO_SYS(PYRAMID_VOL_DN),
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_VOL_DN),
 			{
 				.direction      = PM_GPIO_DIR_IN,
 				.pull           = PM_GPIO_PULL_UP_1P5,
@@ -3683,7 +3659,7 @@ static int pm8058_gpios_init(void)
 			}
 		},
 		{ /* PMIC ID interrupt */
-			PM8058_GPIO_PM_TO_SYS(PYRAMID_AUD_REMO_PRES),
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_REMO_PRES),
 			{
 				.direction	= PM_GPIO_DIR_IN,
 				.pull		= PM_GPIO_PULL_UP_1P5,
@@ -4366,10 +4342,10 @@ static struct i2c_board_info wm8903_codec_i2c_info[] = {
 
 #ifdef CONFIG_MSM8X60_AUDIO
 static uint32_t msm_spi_gpio[] = {
-	GPIO_CFG(PYRAMID_SPI_DO,  1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
-	GPIO_CFG(PYRAMID_SPI_DI,  1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
-	GPIO_CFG(PYRAMID_SPI_CS,  1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
-	GPIO_CFG(PYRAMID_SPI_CLK, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
+	GPIO_CFG(DOUBLESHOT_SPI_DO,  1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
+	GPIO_CFG(DOUBLESHOT_SPI_DI,  1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
+	GPIO_CFG(DOUBLESHOT_SPI_CS,  1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
+	GPIO_CFG(DOUBLESHOT_SPI_CLK, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
 };
 
 static uint32_t auxpcm_gpio_table[] = {
@@ -4388,7 +4364,7 @@ static void msm_auxpcm_init(void)
 }
 
 static struct tpa2051d3_platform_data tpa2051d3_pdata = {
-	.gpio_tpa2051_spk_en = PYRAMID_AUD_HP_EN,
+	.gpio_tpa2051_spk_en = DOUBLESHOT_AUD_HP_EN,
 	.spkr_cmd = {0x00, 0x82, 0x00, 0x07, 0xCD, 0x4F, 0x0D},
 	.hsed_cmd = {0x00, 0x8C, 0x20, 0x57, 0xCD, 0x4F, 0x0D},
 };
@@ -4405,7 +4381,7 @@ void msm_snddev_voltage_on(void)
 {
 }
 
-void __init pyramid_audio_init(void);
+void __init doubleshot_audio_init(void);
 
 void msm_snddev_voltage_off(void)
 {
@@ -4888,12 +4864,13 @@ static struct i2c_registry msm8x60_i2c_devices[] __initdata = {
 
 #endif
 #endif
-	{
+// this is added later, coz revision spefic settings needed
+/*	{
 		I2C_SURF | I2C_FFA,
 		MSM_GSBI5_QUP_I2C_BUS_ID,
 		msm_i2c_gsbi5_info,
 		ARRAY_SIZE(msm_i2c_gsbi5_info),
-	},
+	},*/
 };
 #endif /* CONFIG_I2C */
 
@@ -4934,7 +4911,7 @@ static void register_i2c_devices(void)
 		i2c_register_board_info(MSM_GSBI10_QUP_I2C_BUS_ID,
 				i2c_CM3628_devices_xa, ARRAY_SIZE(i2c_CM3628_devices_xa));
 	}
-
+#endif
 	if (system_rev >= 1) {
 		struct atmel_i2c_platform_data *pdata;
 
@@ -4946,7 +4923,6 @@ static void register_i2c_devices(void)
 	i2c_register_board_info(MSM_GSBI5_QUP_I2C_BUS_ID,
 		msm_i2c_gsbi5_info, ARRAY_SIZE(msm_i2c_gsbi5_info));
 
-#endif
 #endif
 }
 
@@ -5031,7 +5007,7 @@ static void __init msm8x60_init_buses(void)
 #endif
 
 #ifdef CONFIG_SERIAL_MSM_HS
-	msm_uart_dm1_pdata.wakeup_irq = gpio_to_irq(PYRAMID_GPIO_BT_HOST_WAKE);
+	msm_uart_dm1_pdata.wakeup_irq = gpio_to_irq(DOUBLESHOT_GPIO_BT_HOST_WAKE);
 	msm_device_uart_dm1.dev.platform_data = &msm_uart_dm1_pdata;
 #endif
 
@@ -5746,18 +5722,18 @@ static unsigned int msm8x60_sdcc_slot_status(struct device *dev)
 {
 	int status;
 
-	status = gpio_request(PM8058_GPIO_PM_TO_SYS(PYRAMID_SDC3_DET)
+	status = gpio_request(PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_SDC3_DET)
 				, "SD_HW_Detect");
 	if (status) {
 		pr_err("%s:Failed to request GPIO %d\n", __func__,
-				PM8058_GPIO_PM_TO_SYS(PYRAMID_SDC3_DET));
+				PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_SDC3_DET));
 	} else {
 		status = gpio_direction_input(
-				PM8058_GPIO_PM_TO_SYS(PYRAMID_SDC3_DET));
+				PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_SDC3_DET));
 		if (!status)
 			status = !(gpio_get_value_cansleep(
-				PM8058_GPIO_PM_TO_SYS(PYRAMID_SDC3_DET)));
-		gpio_free(PM8058_GPIO_PM_TO_SYS(PYRAMID_SDC3_DET));
+				PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_SDC3_DET)));
+		gpio_free(PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_SDC3_DET));
 	}
 	return (unsigned int) status;
 }
@@ -5825,7 +5801,7 @@ static struct mmc_platform_data msm8x60_sdc3_data = {
 #ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
 	.status      = msm8x60_sdcc_slot_status,
 	.status_irq  = PM8058_GPIO_IRQ(PM8058_IRQ_BASE,
-				       PYRAMID_SDC3_DET),
+				       DOUBLESHOT_SDC3_DET),
 	.irq_flags   = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
 #endif
 	.slot_type	= &pyramid_sdslot_type,
@@ -5917,7 +5893,7 @@ static void __init msm8x60_init_mmc(void)
 	msm_add_sdcc(3, &msm8x60_sdc3_data);
 #endif
 #ifdef CONFIG_MMC_MSM_SDC4_SUPPORT
-	ret = pyramid_init_mmc();
+	ret = doubleshot_init_mmc();
 	if (ret != 0)
 		printk(KERN_ERR "%s: Unable to initialize MMC (SDCC4)\n", __func__);
 #endif
@@ -6274,7 +6250,7 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 	raw_speed_bin = readl(QFPROM_SPEED_BIN_ADDR);
 	speed_bin = raw_speed_bin & 0xF;
 
-	msm_tsens_early_init(&pyr_tsens_pdata);
+//	msm_tsens_early_init(&pyr_tsens_pdata);
 
 	/*
 	 * Initialize RPM first as other drivers and devices may need
@@ -6379,7 +6355,7 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 	       system_rev, (speed_bin == 0x1) ? 1 : 0);
 	if (system_rev > 2 || speed_bin == 0x1) {
 		htc_headset_pmic_data.key_gpio =
-			PM8058_GPIO_PM_TO_SYS(PYRAMID_AUD_REMO_PRES);
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_REMO_PRES);
 		htc_headset_mgr_data.headset_config_num =
 			ARRAY_SIZE(htc_headset_mgr_config);
 		htc_headset_mgr_data.headset_config = htc_headset_mgr_config;
@@ -6445,7 +6421,7 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 	gpio_tlmm_config(msm_spi_gpio[3], GPIO_CFG_ENABLE);
 	msm_snddev_init();
 	msm_auxpcm_init();
-	pyramid_audio_init();
+	doubleshot_audio_init();
 #endif
 
 	sysinfo_proc_init();
@@ -6454,8 +6430,8 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 		ret = sysfs_create_group(properties_kobj,
 				&pyramid_properties_attr_group);
 
-	pyramid_init_keypad();
-	pyramid_wifi_init();
+	doubleshot_init_keypad();
+	doubleshot_wifi_init();
 	headset_device_register();
 }
 

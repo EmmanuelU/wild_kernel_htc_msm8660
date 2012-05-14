@@ -11,7 +11,7 @@
 #include <linux/skbuff.h>
 #include <linux/wlan_plat.h>
 
-#include "board-pyramid.h"
+#include "board-doubleshot.h"
 
 int pyramid_wifi_power(int on);
 int pyramid_wifi_reset(int on);
@@ -78,8 +78,8 @@ int __init pyramid_init_wifi_mem(void)
 static struct resource pyramid_wifi_resources[] = {
 	[0] = {
 		.name		= "bcm4329_wlan_irq",
-		.start		= MSM_GPIO_TO_INT(PYRAMID_GPIO_WIFI_IRQ),
-		.end		= MSM_GPIO_TO_INT(PYRAMID_GPIO_WIFI_IRQ),
+		.start		= MSM_GPIO_TO_INT(DOUBLESHOT_GPIO_WIFI_IRQ),
+		.end		= MSM_GPIO_TO_INT(DOUBLESHOT_GPIO_WIFI_IRQ),
 		.flags          = IORESOURCE_IRQ | IORESOURCE_IRQ_HIGHLEVEL | IORESOURCE_IRQ_SHAREABLE,
 	},
 };
@@ -261,7 +261,7 @@ int pyramid_wifi_get_mac_addr(unsigned char *buf)
 	return 0;
 }
 
-int __init pyramid_wifi_init(void)
+int __init doubleshot_wifi_init(void)
 {
 	int ret;
 

@@ -36,51 +36,51 @@ static const char bt_name[] = "bcm4329";
 static uint32_t pyramid_bt_on_table[] = {
 
 	/* BT_RTS */
-	GPIO_CFG(PYRAMID_GPIO_BT_UART1_RTS,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_UART1_RTS,
 				1,
 				GPIO_CFG_OUTPUT,
 				GPIO_CFG_NO_PULL,
 				GPIO_CFG_8MA),
 	/* BT_CTS */
-	GPIO_CFG(PYRAMID_GPIO_BT_UART1_CTS,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_UART1_CTS,
 				1,
 				GPIO_CFG_INPUT,
 				GPIO_CFG_PULL_UP,
 				GPIO_CFG_8MA),
 	/* BT_RX */
-	GPIO_CFG(PYRAMID_GPIO_BT_UART1_RX,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_UART1_RX,
 				1,
 				GPIO_CFG_INPUT,
 				GPIO_CFG_PULL_UP,
 				GPIO_CFG_8MA),
 	/* BT_TX */
-	GPIO_CFG(PYRAMID_GPIO_BT_UART1_TX,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_UART1_TX,
 				1,
 				GPIO_CFG_OUTPUT,
 				GPIO_CFG_NO_PULL,
 				GPIO_CFG_8MA),
 
 	/* BT_HOST_WAKE */
-	GPIO_CFG(PYRAMID_GPIO_BT_HOST_WAKE,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_HOST_WAKE,
 				0,
 				GPIO_CFG_INPUT,
 				GPIO_CFG_NO_PULL,
 				GPIO_CFG_4MA),
 	/* BT_CHIP_WAKE */
-	GPIO_CFG(PYRAMID_GPIO_BT_CHIP_WAKE,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_CHIP_WAKE,
 				0,
 				GPIO_CFG_OUTPUT,
 				GPIO_CFG_NO_PULL,
 				GPIO_CFG_4MA),
 
 	/* BT_RESET_N */
-	GPIO_CFG(PYRAMID_GPIO_BT_RESET_N,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_RESET_N,
 				0,
 				GPIO_CFG_OUTPUT,
 				GPIO_CFG_NO_PULL,
 				GPIO_CFG_4MA),
 	/* BT_SHUTDOWN_N */
-	GPIO_CFG(PYRAMID_GPIO_BT_SHUTDOWN_N,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_SHUTDOWN_N,
 				0,
 				GPIO_CFG_OUTPUT,
 				GPIO_CFG_NO_PULL,
@@ -91,51 +91,51 @@ static uint32_t pyramid_bt_on_table[] = {
 static uint32_t pyramid_bt_off_table[] = {
 
 	/* BT_RTS */
-	GPIO_CFG(PYRAMID_GPIO_BT_UART1_RTS,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_UART1_RTS,
 				0,
 				GPIO_CFG_OUTPUT,
 				GPIO_CFG_NO_PULL,
 				GPIO_CFG_8MA),
 	/* BT_CTS */
-	GPIO_CFG(PYRAMID_GPIO_BT_UART1_CTS,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_UART1_CTS,
 				0,
 				GPIO_CFG_INPUT,
 				GPIO_CFG_PULL_UP,
 				GPIO_CFG_8MA),
 	/* BT_RX */
-	GPIO_CFG(PYRAMID_GPIO_BT_UART1_RX,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_UART1_RX,
 				0,
 				GPIO_CFG_INPUT,
 				GPIO_CFG_PULL_UP,
 				GPIO_CFG_8MA),
 	/* BT_TX */
-	GPIO_CFG(PYRAMID_GPIO_BT_UART1_TX,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_UART1_TX,
 				0,
 				GPIO_CFG_OUTPUT,
 				GPIO_CFG_NO_PULL,
 				GPIO_CFG_8MA),
 
 	/* BT_RESET_N */
-	GPIO_CFG(PYRAMID_GPIO_BT_RESET_N,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_RESET_N,
 				0,
 				GPIO_CFG_OUTPUT,
 				GPIO_CFG_NO_PULL,
 				GPIO_CFG_4MA),
 	/* BT_SHUTDOWN_N */
-	GPIO_CFG(PYRAMID_GPIO_BT_SHUTDOWN_N,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_SHUTDOWN_N,
 				0,
 				GPIO_CFG_OUTPUT,
 				GPIO_CFG_NO_PULL,
 				GPIO_CFG_4MA),
 
 	/* BT_HOST_WAKE */
-	GPIO_CFG(PYRAMID_GPIO_BT_HOST_WAKE,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_HOST_WAKE,
 				0,
 				GPIO_CFG_INPUT,
 				GPIO_CFG_PULL_UP,
 				GPIO_CFG_4MA),
 	/* BT_CHIP_WAKE */
-	GPIO_CFG(PYRAMID_GPIO_BT_CHIP_WAKE,
+	GPIO_CFG(DOUBLESHOT_GPIO_BT_CHIP_WAKE,
 				0,
 				GPIO_CFG_OUTPUT,
 				GPIO_CFG_NO_PULL,
@@ -166,11 +166,11 @@ static void pyramid_config_bt_on(void)
 	mdelay(5);
 
 	/* BT_SHUTDOWN_N */
-	gpio_set_value(PYRAMID_GPIO_BT_SHUTDOWN_N, 1);
+	gpio_set_value(DOUBLESHOT_GPIO_BT_SHUTDOWN_N, 1);
 	/*mdelay(2);*/
 
 	/* BT_RESET_N */
-	gpio_set_value(PYRAMID_GPIO_BT_RESET_N, 1);
+	gpio_set_value(DOUBLESHOT_GPIO_BT_RESET_N, 1);
 	mdelay(2);
 }
 
@@ -179,11 +179,11 @@ static void pyramid_config_bt_off(void)
 	printk(KERN_INFO "[BT]-- R OFF --\n");
 
 	/* BT_RESET_N */
-	gpio_set_value(PYRAMID_GPIO_BT_RESET_N, 0);
+	gpio_set_value(DOUBLESHOT_GPIO_BT_RESET_N, 0);
 	/*mdelay(2);*/
 
 	/* BT_SHUTDOWN_N */
-	gpio_set_value(PYRAMID_GPIO_BT_SHUTDOWN_N, 0);
+	gpio_set_value(DOUBLESHOT_GPIO_BT_SHUTDOWN_N, 0);
 	mdelay(2);
 
 	/* set bt off configuration*/
@@ -192,19 +192,19 @@ static void pyramid_config_bt_off(void)
 	mdelay(5);
 
 	/* BT_RTS */
-	gpio_set_value(PYRAMID_GPIO_BT_UART1_RTS, 1);
+	gpio_set_value(DOUBLESHOT_GPIO_BT_UART1_RTS, 1);
 
 	/* BT_CTS */
 
 	/* BT_RX */
 
 	/* BT_TX */
-	gpio_set_value(PYRAMID_GPIO_BT_UART1_TX, 0);
+	gpio_set_value(DOUBLESHOT_GPIO_BT_UART1_TX, 0);
 
 	/* BT_HOST_WAKE */
 
 	/* BT_CHIP_WAKE */
-	gpio_set_value(PYRAMID_GPIO_BT_CHIP_WAKE, 0);
+	gpio_set_value(DOUBLESHOT_GPIO_BT_CHIP_WAKE, 0);
 }
 
 static int bluetooth_set_power(void *data, bool blocked)
@@ -227,10 +227,10 @@ static int pyramid_rfkill_probe(struct platform_device *pdev)
 	bool default_state = true; /* off */
 
 #if 0 /* Is this necessary? */
-	rc = gpio_request(PYRAMID_GPIO_BT_RESET_N, "bt_reset");
+	rc = gpio_request(DOUBLESHOT_GPIO_BT_RESET_N, "bt_reset");
 	if (rc)
 		goto err_gpio_reset;
-	rc = gpio_request(PYRAMID_GPIO_BT_SHUTDOWN_N, "bt_shutdown");
+	rc = gpio_request(DOUBLESHOT_GPIO_BT_SHUTDOWN_N, "bt_shutdown");
 	if (rc)
 		goto err_gpio_shutdown;
 #endif
@@ -264,9 +264,9 @@ err_rfkill_reg:
 	rfkill_destroy(bt_rfk);
 err_rfkill_alloc:
 #if 0
-	gpio_free(PYRAMID_GPIO_BT_SHUTDOWN_N);
+	gpio_free(DOUBLESHOT_GPIO_BT_SHUTDOWN_N);
 err_gpio_shutdown:
-	gpio_free(PYRAMID_GPIO_BT_RESET_N);
+	gpio_free(DOUBLESHOT_GPIO_BT_RESET_N);
 err_gpio_reset:
 #endif
 	return rc;
@@ -278,8 +278,8 @@ static int pyramid_rfkill_remove(struct platform_device *dev)
 	/*rfkill_free(bt_rfk);*/
 	rfkill_destroy(bt_rfk);
 #if 0
-	gpio_free(PYRAMID_GPIO_BT_SHUTDOWN_N);
-	gpio_free(PYRAMID_GPIO_BT_RESET_N);
+	gpio_free(DOUBLESHOT_GPIO_BT_SHUTDOWN_N);
+	gpio_free(DOUBLESHOT_GPIO_BT_RESET_N);
 #endif
 
 	return 0;

@@ -30,7 +30,7 @@
 #include <asm/mach/mmc.h>
 
 #include "devices.h"
-#include "board-pyramid.h"
+#include "board-doubleshot.h"
 #include "proc_comm.h"
 #include <mach/msm_iomap.h>
 #include <linux/mfd/pmic8058.h>
@@ -90,7 +90,7 @@ static uint32_t wifi_on_gpio_table[] = {
 	//GPIO_CFG(119, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_4MA), /* DAT0 */
 	//GPIO_CFG(111, 1, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_8MA), /* CMD */
 	//GPIO_CFG(110, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA), /* CLK */
-	GPIO_CFG(PYRAMID_GPIO_WIFI_IRQ, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA), /* WLAN IRQ */
+	GPIO_CFG(DOUBLESHOT_GPIO_WIFI_IRQ, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA), /* WLAN IRQ */
 };
 
 static uint32_t wifi_off_gpio_table[] = {
@@ -100,7 +100,7 @@ static uint32_t wifi_off_gpio_table[] = {
 	//GPIO_CFG(119, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_4MA), /* DAT0 */
 	//GPIO_CFG(111, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_4MA), /* CMD */
 	//GPIO_CFG(110, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA), /* CLK */
-	GPIO_CFG(PYRAMID_GPIO_WIFI_IRQ, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_4MA), /* WLAN IRQ */
+	GPIO_CFG(DOUBLESHOT_GPIO_WIFI_IRQ, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_4MA), /* WLAN IRQ */
 };
 
 static void config_gpio_table(uint32_t *table, int len)
@@ -203,7 +203,7 @@ int pyramid_wifi_power(int on)
 	}
 	//htc_wifi_bt_sleep_clk_ctl(on, ID_WIFI);
 	mdelay(1);//Delay 1 ms, Recommand by Hardware
-	gpio_set_value(PYRAMID_GPIO_WIFI_SHUTDOWN_N, on); /* WIFI_SHUTDOWN */
+	gpio_set_value(DOUBLESHOT_GPIO_WIFI_SHUTDOWN_N, on); /* WIFI_SHUTDOWN */
 
 	mdelay(120);
 	return 0;
@@ -216,7 +216,7 @@ int pyramid_wifi_reset(int on)
 	return 0;
 }
 
-int __init pyramid_init_mmc()
+int __init doubleshot_init_mmc()
 {
 	uint32_t id;
 	wifi_status_cb = NULL;
@@ -224,10 +224,10 @@ int __init pyramid_init_mmc()
 	printk(KERN_INFO "pyramid: %s\n", __func__);
 
 	/* initial WIFI_SHUTDOWN# */
-	id = GPIO_CFG(PYRAMID_GPIO_WIFI_SHUTDOWN_N, 0, GPIO_CFG_OUTPUT,
+	id = GPIO_CFG(DOUBLESHOT_GPIO_WIFI_SHUTDOWN_N, 0, GPIO_CFG_OUTPUT,
 		GPIO_CFG_NO_PULL, GPIO_CFG_2MA);
 	gpio_tlmm_config(id, 0);
-	gpio_set_value(PYRAMID_GPIO_WIFI_SHUTDOWN_N, 0);
+	gpio_set_value(DOUBLESHOT_GPIO_WIFI_SHUTDOWN_N, 0);
 
 	msm_add_sdcc(4, &pyramid_wifi_data);
 
