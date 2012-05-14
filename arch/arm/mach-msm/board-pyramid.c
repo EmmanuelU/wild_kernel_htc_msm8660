@@ -6461,8 +6461,8 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 
 static void __init pyramid_init(void)
 {
-	uint32_t restart_reason = 0x6f656d99;
-	msm_proc_comm(PCOM_RESET_CHIP_IMM, &restart_reason, 0);
+//	uint32_t restart_reason = 0x6f656d99;
+//	msm_proc_comm(PCOM_RESET_CHIP_IMM, &restart_reason, 0);
 	
 	msm8x60_init(&pyramid_board_data);
 	printk(KERN_INFO "%s revision=%d engineerid=%d\n", __func__, system_rev, engineerid);
