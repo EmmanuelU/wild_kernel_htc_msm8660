@@ -46,7 +46,8 @@
 #define PM8058_GPIO_BLOCK_START	24
 #define PM8058_MPP_BLOCK_START	16
 
-#define PM8058_NR_IRQS		256
+//#define PM8058_NR_IRQS		256
+#define PM8058_NR_IRQS		240
 
 #define PM8058_IRQ_BLOCK_BIT(block, bit) ((block) * 8 + (bit))
 

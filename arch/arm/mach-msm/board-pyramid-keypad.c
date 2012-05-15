@@ -134,10 +134,10 @@ struct pm_gpio matrix_sns_config = {
 	.function       = PM_GPIO_FUNC_NORMAL,
 };
 static unsigned int doubleshot_sns_gpios[] = {
-	PMGPIO(1), PMGPIO(2),
-	PMGPIO(3), PMGPIO(4),
-	PMGPIO(5), PMGPIO(6),
-	PMGPIO(7),
+	PM8058_GPIO_PM_TO_SYS(PMGPIO(1)), PM8058_GPIO_PM_TO_SYS(PMGPIO(2)),
+	PM8058_GPIO_PM_TO_SYS(PMGPIO(3)), PM8058_GPIO_PM_TO_SYS(PMGPIO(4)),
+	PM8058_GPIO_PM_TO_SYS(PMGPIO(5)), PM8058_GPIO_PM_TO_SYS(PMGPIO(6)),
+	PM8058_GPIO_PM_TO_SYS(PMGPIO(7)),
 };
 
 static void doubleshot_setup_matrix_gpio(void)
@@ -269,7 +269,7 @@ static struct gpio_event_switch_info doubleshot_keypad_switch_info = {
 	.set_qty_irq = doubleshot_set_qty_irq,
 };
 
-//#ifdef CONFIG_INPUT_MICROP
+#ifdef CONFIG_INPUT_MICROP
 static struct gpio_event_direct_entry doubleshot_microp_key_map[] = {
 	{
 		.code = KEY_MENU,
@@ -305,15 +305,15 @@ static struct gpio_event_microp_info doubleshot_keypad_microp_info = {
 	.irq = MSM_uP_TO_INT(0),
 	.microp_info = 0x53, /*project code*/
 };
-//#endif
+#endif
 
 static struct gpio_event_info *doubleshot_keypad_info[] = {
 	&doubleshot_keypad_input_info.info,
 	&doubleshot_keypad_switch_info.info,
 	&doubleshot_keypad_matrix_info.info,
-//#ifdef CONFIG_INPUT_MICROP
+#ifdef CONFIG_INPUT_MICROP
 	&doubleshot_keypad_microp_info.info,
-//#endif
+#endif
 };
 
 static struct gpio_event_platform_data doubleshot_keypad_data = {
