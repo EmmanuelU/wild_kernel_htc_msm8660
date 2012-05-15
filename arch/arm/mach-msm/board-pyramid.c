@@ -3724,7 +3724,7 @@ static int pm8058_gpios_init(void)
 		if (rc < 0) {
 			pr_err("%s pmic gpio config failed\n",
 				__func__);
-			return rc;
+		//	return rc;
 		}
 	}
 
@@ -6690,15 +6690,16 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 	doubleshot_audio_init();
 #endif
 
+	doubleshot_init_keypad();
+	doubleshot_wifi_init();
+	headset_device_register();
+
 	sysinfo_proc_init();
 	properties_kobj = kobject_create_and_add("board_properties", NULL);
 	if (properties_kobj)
 		ret = sysfs_create_group(properties_kobj,
 				&pyramid_properties_attr_group);
 
-	doubleshot_init_keypad();
-	doubleshot_wifi_init();
-	headset_device_register();
 
 	msm_mpm_set_irq_ignore_list(irq_ignore_tbl, irq_num_ignore_tbl);
 //	msm_clk_soc_set_ignore_list(clk_ignore_tbl, clk_num_ignore_tbl);
