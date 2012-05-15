@@ -3720,6 +3720,7 @@ static int pm8058_gpios_init(void)
 	for (i = 0; i < ARRAY_SIZE(gpio_cfgs); ++i) {
 		rc = pm8xxx_gpio_config(gpio_cfgs[i].gpio,
 				&gpio_cfgs[i].cfg);
+		pr_err("%d - gpio config ... ",i);
 		if (rc < 0) {
 			pr_err("%s pmic gpio config failed\n",
 				__func__);

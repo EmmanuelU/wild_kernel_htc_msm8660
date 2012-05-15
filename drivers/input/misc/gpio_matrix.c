@@ -355,6 +355,13 @@ int gpio_event_matrix_func(struct gpio_event_input_devs *input_devs,
 				input_set_capability(input_devs->dev[dev],
 							EV_KEY, keycode);
 		}
+#ifndef CONFIG_ARCH_MSM8X60
+    if (mi->setup_ninputs_gpio)
+	mi->setup_ninputs_gpio();
+#else
+    if (mi->setup_matrix_gpio)
+	mi->setup_matrix_gpio();
+#endif
 
 		for (i = 0; i < mi->noutputs; i++) {
 			err = gpio_request(mi->output_gpios[i], "gpio_kp_out");

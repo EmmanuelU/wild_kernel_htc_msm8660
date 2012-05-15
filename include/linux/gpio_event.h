@@ -41,6 +41,9 @@ struct gpio_event_info {
 		     void **data, unsigned int dev, unsigned int type,
 		     unsigned int code, int value); /* out events */
 	bool no_suspend;
+#ifdef CONFIG_OPTICALJOYSTICK_CRUCIAL
+	bool oj_btn;
+#endif
 };
 
 struct gpio_event_platform_data {
@@ -75,6 +78,7 @@ enum gpio_event_matrix_flags {
 #define MATRIX_KEY(dev, code) \
 	(((dev) << MATRIX_CODE_BITS) | (code & MATRIX_KEY_MASK))
 
+extern int get_kp_irq_mode(void);
 extern int gpio_event_matrix_func(struct gpio_event_input_devs *input_devs,
 			struct gpio_event_info *info, void **data, int func);
 struct gpio_event_matrix_info {
@@ -85,13 +89,22 @@ struct gpio_event_matrix_info {
 	unsigned int *input_gpios;
 	unsigned int *output_gpios;
 	unsigned int ninputs;
-	unsigned int noutputs;
+    	unsigned int noutputs;
 	/* time to wait before reading inputs after driving each output */
+//	ktime_t settle_time;
+	/* time to wait before scanning the keypad a second time */
+//	ktime_t debounce_delay;
+//	ktime_t poll_time;
 	struct timespec settle_time;
 	/* time to wait before scanning the keypad a second time */
 	struct timespec debounce_delay;
 	struct timespec poll_time;
 	unsigned flags;
+	void (*setup_ninputs_gpio)(void);
+	/* disable some gpio as wakeup source */
+	unsigned int notintr_gpios;
+	unsigned int detect_phone_status;
+	void (*setup_matrix_gpio)(void);
 };
 
 /* Directly connected inputs and outputs */
@@ -109,6 +122,7 @@ struct gpio_event_direct_entry {
 	uint32_t gpio:16;
 	uint32_t code:10;
 	uint32_t dev:6;
+	bool     check_call_status;
 	bool     not_wakeup_src;
 };
 
@@ -174,6 +188,20 @@ uint16_t gpio_axis_4bit_gray_map(
 uint16_t gpio_axis_5bit_singletrack_map(
 			struct gpio_event_axis_info *info, uint16_t in);
 
+/* MicroP keys */
+extern int gpio_event_microp_func(struct gpio_event_input_devs *input_devs,
+			struct gpio_event_info *info, void **data, int func);
+struct gpio_event_microp_info {
+	/* initialize to gpio_event_microp_func */
+	struct gpio_event_info info;
+	uint16_t flags;
+	uint16_t type;
+	const struct gpio_event_direct_entry *keymap;
+	size_t keymap_size;
+	uint32_t irq;
+	uint8_t microp_info;
+};
+
 /* switchs */
 extern int gpio_event_switch_func(struct gpio_event_input_devs *input_devs,
 			struct gpio_event_info *info, void **data, int func);
@@ -189,4 +217,8 @@ struct gpio_event_switch_info {
 	void (*setup_switch_gpio)(void);
 	void (*set_qty_irq)(uint8_t);
 };
+
+int gpio_event_get_phone_call_status(void);
+int gpio_event_get_fm_radio_status(void);
+int gpio_event_get_quickboot_status(void);
 #endif
