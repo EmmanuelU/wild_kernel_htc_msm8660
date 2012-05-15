@@ -329,6 +329,11 @@ unsigned int doubleshot_get_engineerid(void)
 	return engineerid;
 }
 
+#ifdef CONFIG_MICROP_COMMON
+void __init doubleshot_microp_init(void);
+#endif
+
+
 #define _GET_REGULATOR(var, name) do {				\
 	var = regulator_get(NULL, name);			\
 	if (IS_ERR(var)) {					\
@@ -2118,11 +2123,11 @@ static int doubleshot_ts_atmel_power(int on)
 {
 	pr_info("%s: power %d\n", __func__, on);
 
-//	gpio_set_value(PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_TP_RST), 0);
-	gpio_set_value((DOUBLESHOT_TP_RST), 0);
+	gpio_set_value(PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_TP_RST), 0);
+//	gpio_set_value((DOUBLESHOT_TP_RST), 0);
 	msleep(5);
-//	gpio_set_value(PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_TP_RST), 1);
-	gpio_set_value((DOUBLESHOT_TP_RST), 1);
+	gpio_set_value(PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_TP_RST), 1);
+//	gpio_set_value((DOUBLESHOT_TP_RST), 1);
 	msleep(40);
 
 	return 0;
@@ -3494,7 +3499,239 @@ static void __init pyramid_reserve(void)
 #define EXT_CHG_VALID_MPP_2 11
 
 #ifdef CONFIG_PMIC8058
+#define PMIC_GPIO_SDC3_DET 34
 
+
+static int pm8058_gpios_init(void)
+{
+	int i;
+	int rc;
+	struct pm8058_gpio_cfg {
+		int                gpio;
+		struct pm_gpio cfg;
+	};
+
+	struct pm8058_gpio_cfg gpio_cfgs[] = {
+		{
+			DOUBLESHOT_KEYMATRIX_DRV1,
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+		{
+			DOUBLESHOT_KEYMATRIX_DRV2,
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+		{
+			DOUBLESHOT_KEYMATRIX_DRV3,
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+		{
+			DOUBLESHOT_KEYMATRIX_DRV4,
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+		{
+			DOUBLESHOT_KEYMATRIX_DRV5,
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+		{
+			DOUBLESHOT_KEYMATRIX_DRV6,
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+		{
+			DOUBLESHOT_KEYMATRIX_DRV7,
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+#ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
+		{
+			PMIC_GPIO_SDC3_DET - 1,
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+#endif
+		{ /* Volume Up Key */
+			DOUBLESHOT_VOL_UP,
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_31P5,
+				.vin_sel        = PM8058_GPIO_VIN_S3,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			}
+		},
+		{ /* Volume Down key */
+			DOUBLESHOT_VOL_DN,
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_1P5,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			}
+		},
+		{
+			DOUBLESHOT_AUD_HPTV_DET_HP, /* 24 */
+			{
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 1,
+				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
+				.pull		= PM_GPIO_PULL_NO,
+				.out_strength	= PM_GPIO_STRENGTH_HIGH,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= PM8058_GPIO_VIN_L5, /* 2.85 V */
+				.inv_int_pol	= 0,
+			}
+		},
+		{
+			DOUBLESHOT_AUD_HPTV_DET_TV, /* 25 */
+			{
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 0,
+				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
+				.pull		= PM_GPIO_PULL_NO,
+				.out_strength	= PM_GPIO_STRENGTH_HIGH,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= PM8058_GPIO_VIN_L5, /* 2.85 V */
+				.inv_int_pol	= 0,
+			}
+		},
+		{
+			DOUBLESHOT_AUD_TVOUT_HP_SEL, /* 36 */
+			{
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 0,
+				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
+				.pull		= PM_GPIO_PULL_NO,
+				.out_strength	= PM_GPIO_STRENGTH_HIGH,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= PM8058_GPIO_VIN_L5, /* 2.85 V */
+				.inv_int_pol	= 0,
+			}
+		},
+		{ /* Audio Microphone Selector */
+			DOUBLESHOT_AUD_MIC_SEL,	/* 26 */
+			{
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 0,
+				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
+				.pull		= PM_GPIO_PULL_NO,
+				.out_strength	= PM_GPIO_STRENGTH_HIGH,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= 6,	/* LDO5 2.85 V */
+				.inv_int_pol	= 0,
+			}
+		},
+		{ /* Audio Receiver Amplifier */
+			DOUBLESHOT_AUD_HANDSET_ENO,	/* 17 */
+			{
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 0,
+				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
+				.pull		= PM_GPIO_PULL_NO,
+				.out_strength	= PM_GPIO_STRENGTH_HIGH,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= 6,	/* LDO5 2.85 V */
+				.inv_int_pol	= 0,
+			}
+		},
+		{ /* Audio Speaker Amplifier */
+			DOUBLESHOT_AUD_SPK_ENO,	/* 18 */
+			{
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 0,
+				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
+				.pull		= PM_GPIO_PULL_NO,
+				.out_strength	= PM_GPIO_STRENGTH_HIGH,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= 6,	/* LDO5 2.85 V */
+				.inv_int_pol	= 0,
+			}
+		},
+		{ /* Timpani Reset */
+			DOUBLESHOT_AUD_QTR_RESET,
+			{
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 0,
+				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
+				.pull		= PM_GPIO_PULL_DN,
+				.out_strength	= PM_GPIO_STRENGTH_HIGH,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= 2,
+				.inv_int_pol	= 0,
+			}
+		},
+		{
+			DOUBLESHOT_AUD_REMO_PRES,
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_NO,
+				.vin_sel        = PM8058_GPIO_VIN_L5, /* 2.85 V */
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+	};
+
+	for (i = 0; i < ARRAY_SIZE(gpio_cfgs); ++i) {
+		rc = pm8xxx_gpio_config(gpio_cfgs[i].gpio,
+				&gpio_cfgs[i].cfg);
+		if (rc < 0) {
+			pr_err("%s pmic gpio config failed\n",
+				__func__);
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
+
+#if 0
 static int pm8058_gpios_init(void)
 {
 	int i;
@@ -3682,6 +3919,13 @@ static int pm8058_gpios_init(void)
 
 	return 0;
 }
+
+#endif
+
+
+
+
+
 
 static struct pm8xxx_vibrator_platform_data pm8058_vib_pdata = {
        .initial_vibrate_ms  = 0,
@@ -6223,6 +6467,22 @@ static int __init board_serialno_setup(char *serialno)
 }
 __setup("androidboot.serialno=", board_serialno_setup);
 
+int __initdata irq_ignore_tbl[] =
+{
+MSM_GPIO_TO_INT(64),
+MSM_GPIO_TO_INT(65),
+};
+unsigned __initdata irq_num_ignore_tbl = ARRAY_SIZE(irq_ignore_tbl);
+
+/*int __initdata clk_ignore_tbl[] =
+{
+L_GSBI12_UART_CLK,
+L_SDC4_CLK,
+L_SDC4_P_CLK,
+};
+unsigned __initdata clk_num_ignore_tbl = ARRAY_SIZE(clk_ignore_tbl);
+*/
+
 #define PM8058_LPM_SET(id)	(1 << RPM_VREG_ID_##id)
 #define PM8901_LPM_SET(id)	(1 << (RPM_VREG_ID_##id - RPM_VREG_ID_PM8901_L0))
 
@@ -6250,6 +6510,7 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 	raw_speed_bin = readl(QFPROM_SPEED_BIN_ADDR);
 	speed_bin = raw_speed_bin & 0xF;
 
+// TODO!! this should be done in this kernel version?? originally the platform data was commented out
 //	msm_tsens_early_init(&pyr_tsens_pdata);
 
 	/*
@@ -6413,6 +6674,10 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 #ifdef CONFIG_SENSORS_MSM_ADC
 	msm_adc_pdata.target_hw = MSM_8x60;
 #endif
+#ifdef CONFIG_MICROP_COMMON
+	doubleshot_microp_init();
+#endif
+
 #ifdef CONFIG_MSM8X60_AUDIO
 	spi_register_board_info(msm_spi_board_info, ARRAY_SIZE(msm_spi_board_info));
 	gpio_tlmm_config(msm_spi_gpio[0], GPIO_CFG_ENABLE);
@@ -6433,13 +6698,14 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 	doubleshot_init_keypad();
 	doubleshot_wifi_init();
 	headset_device_register();
+
+	msm_mpm_set_irq_ignore_list(irq_ignore_tbl, irq_num_ignore_tbl);
+//	msm_clk_soc_set_ignore_list(clk_ignore_tbl, clk_num_ignore_tbl);
+
 }
 
 static void __init pyramid_init(void)
 {
-//	uint32_t restart_reason = 0x6f656d99;
-//	msm_proc_comm(PCOM_RESET_CHIP_IMM, &restart_reason, 0);
-	
 	msm8x60_init(&pyramid_board_data);
 	printk(KERN_INFO "%s revision=%d engineerid=%d\n", __func__, system_rev, engineerid);
 }
