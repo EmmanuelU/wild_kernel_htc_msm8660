@@ -3517,6 +3517,7 @@ static int pm8058_gpios_init(void)
 	};
 
 	struct pm8058_gpio_cfg gpio_cfgs[] = {
+#if 1
 		{
 			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_KEYMATRIX_DRV1),
 			{
@@ -3587,9 +3588,11 @@ static int pm8058_gpios_init(void)
 				.inv_int_pol    = 0,
 			},
 		},
+#endif
+
 #ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
 		{
-			PMIC_GPIO_SDC3_DET - 1,
+			PM8058_GPIO_PM_TO_SYS(PMIC_GPIO_SDC3_DET),
 			{
 				.direction      = PM_GPIO_DIR_IN,
 				.pull           = PM_GPIO_PULL_UP_30,
