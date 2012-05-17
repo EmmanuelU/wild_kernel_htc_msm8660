@@ -3055,6 +3055,7 @@ static struct platform_device cable_detect_device = {
 	},
 };
 
+#if 0
 static struct pm8058_led_config pm_led_config[] = {
 	{
 		.name = "green",
@@ -3111,6 +3112,7 @@ static struct platform_device pm8058_leds = {
 		.platform_data	= &pm8058_leds_data,
 	},
 };
+#endif
 
 #ifdef CONFIG_FB_MSM_HDMI_MHL
 static struct regulator *reg_8901_l0;
@@ -3386,7 +3388,7 @@ static struct platform_device *pyramid_devices[] __initdata = {
 #ifdef CONFIG_BT
 	&pyramid_rfkill,
 #endif
-	&pm8058_leds,
+	//&pm8058_leds,
 	&msm8660_device_watchdog,
 };
 
