@@ -17,6 +17,7 @@
 #define _LINUX_LEDS_PM8058_H
 
 #include <linux/leds.h>
+#include <linux/pwm.h>
 #include <linux/workqueue.h>
 #include <linux/android_alarm.h>
 
