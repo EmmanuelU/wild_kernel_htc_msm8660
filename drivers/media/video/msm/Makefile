@@ -79,8 +79,8 @@ else
   ifdef CONFIG_MACH_BLISS
     obj-$(CONFIG_MT9V113) += mt9v113.o mt9v113_reg_lens_9251.o
   else
-    ifdef CONFIG_MACH_BLISSC
-      obj-$(CONFIG_MT9V113) += mt9v113.o mt9v113_reg_lens_9251.o
+    ifdef CONFIG_MACH_DOUBLESHOT
+      obj-$(CONFIG_MT9V113) += mt9v113.o mt9v113_reg_dot.o
     else
       obj-$(CONFIG_MT9V113) += mt9v113.o mt9v113_reg_lens_9218.o
     endif
