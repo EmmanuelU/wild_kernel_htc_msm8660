@@ -3055,54 +3055,39 @@ static struct platform_device cable_detect_device = {
 	},
 };
 
-#if 0
+
 static struct pm8058_led_config pm_led_config[] = {
 	{
-		.name = "green",
-		.type = PM8058_LED_RGB,
-		.bank = 0,
-		.pwm_size = 9,
-		.clk = PM_PWM_CLK_32KHZ,
-		.pre_div = PM_PWM_PREDIVIDE_2,
-		.pre_div_exp = 1,
-		.pwm_value = 511,
+		.name = "keyboard-backlight",
+		.type = PM8058_LED_CURRENT,
+		.bank = 3,
+		.out_current = 300,
 	},
 	{
-		.name = "amber",
-		.type = PM8058_LED_RGB,
-		.bank = 1,
-		.pwm_size = 9,
-		.clk = PM_PWM_CLK_32KHZ,
-		.pre_div = PM_PWM_PREDIVIDE_2,
-		.pre_div_exp = 1,
-		.pwm_value = 511,
-	},
-	{
-		.name = "button-backlight",
+		.name = "caps",
 		.type = PM8058_LED_DRVX,
-		.bank = 6,
-		.flags = PM8058_LED_LTU_EN,
-		.period_us = USEC_PER_SEC / 1000,
-		.start_index = 0,
-		.duites_size = 8,
-		.duty_time_ms = 32,
-		.lut_flag = PM_PWM_LUT_RAMP_UP | PM_PWM_LUT_PAUSE_HI_EN,
-		.out_current = 10,
+		.bank = 4,
+		.out_current = 40,
 	},
-
+	{
+		.name = "func",
+		.type = PM8058_LED_DRVX,
+		.bank = 5,
+		.out_current = 40,
+	},
 };
 
 static struct pm8058_led_platform_data pm8058_leds_data = {
 	.led_config = pm_led_config,
 	.num_leds = ARRAY_SIZE(pm_led_config),
 	.duties = {0, 15, 30, 45, 60, 75, 90, 100,
-		   100, 90, 75, 60, 45, 30, 15, 0,
-		   0, 0, 0, 0, 0, 0, 0, 0,
-		   0, 0, 0, 0, 0, 0, 0, 0,
-		   0, 0, 0, 0, 0, 0, 0, 0,
-		   0, 0, 0, 0, 0, 0, 0, 0,
-		   0, 0, 0, 0, 0, 0, 0, 0,
-		   0, 0, 0, 0, 0, 0, 0, 0},
+                100, 90, 75, 60, 45, 30, 15, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0},
 };
 
 static struct platform_device pm8058_leds = {
@@ -3112,7 +3097,6 @@ static struct platform_device pm8058_leds = {
 		.platform_data	= &pm8058_leds_data,
 	},
 };
-#endif
 
 #ifdef CONFIG_FB_MSM_HDMI_MHL
 static struct regulator *reg_8901_l0;
@@ -3388,7 +3372,7 @@ static struct platform_device *pyramid_devices[] __initdata = {
 #ifdef CONFIG_BT
 	&pyramid_rfkill,
 #endif
-	//&pm8058_leds,
+	&pm8058_leds,
 	&msm8660_device_watchdog,
 };
 
