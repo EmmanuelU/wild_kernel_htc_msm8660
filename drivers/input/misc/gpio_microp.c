@@ -91,6 +91,7 @@ static void microp_scan_key(struct microp_input_state *ds)
 #endif
 			input_event(ds->input_devs->dev[key_entry[i].dev],
 			ds->info->type, key_entry[i].code, pressed);
+			input_sync(ds->input_devs->dev[key_entry->dev]);
 #ifdef CONFIG_OPTICALJOYSTICK_CRUCIAL
 		}
 #endif
@@ -118,9 +119,11 @@ static int report_key_event(struct microp_input_state *ds, uint8_t keycode)
 		curcial_oj_send_key(BTN_MOUSE, pressed);
 	else
 #endif
+	{
 		input_event(ds->input_devs->dev[key_entry->dev],
 		ds->info->type, key_entry->code, pressed);
-
+		input_sync(ds->input_devs->dev[key_entry->dev]);
+	}
 	return err;
 }
 static void gpio_event_check_func(struct work_struct *work)

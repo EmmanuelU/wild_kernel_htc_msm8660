@@ -1423,27 +1423,27 @@ static int Pyramid_sensor_vreg_off(void)
 {
 	int rc;
 	pr_info("[CAM] %s\n", __func__);
-/* main / 2nd camera digital power */
-if (system_rev >= 1) {
-/* XB board and after ... */
-rc = camera_sensor_power_disable("8058_l24");
-} else {
-/* XA board */
-rc = camera_sensor_power_disable("8058_l23");
-}
-/*pr_info("[CAM]sensor_power_disable(\"8058_l23\") == %d\n", rc);*/
+	/* main / 2nd camera digital power */
+	if (system_rev >= 1) {
+		/* XB board and after ... */
+		rc = camera_sensor_power_disable("8058_l24");
+	} else {
+		/* XA board */
+		rc = camera_sensor_power_disable("8058_l23");
+	}
+	/*pr_info("[CAM]sensor_power_disable(\"8058_l23\") == %d\n", rc);*/
 
-/* main / 2nd camera analog power */
-rc = camera_sensor_power_disable("8058_l15");
-/*pr_info("[CAM]sensor_power_disable(\"8058_l15\") == %d\n", rc);*/
+	/* main / 2nd camera analog power */
+	rc = camera_sensor_power_disable("8058_l15");
+	/*pr_info("[CAM]sensor_power_disable(\"8058_l15\") == %d\n", rc);*/
 
-/* IO power off */
-rc = camera_sensor_power_disable("8058_l12");
-/*pr_info("[CAM]sensor_power_disable(\"8058_l12\") == %d\n", rc);*/
+	/* IO power off */
+	rc = camera_sensor_power_disable("8058_l12");
+	/*pr_info("[CAM]sensor_power_disable(\"8058_l12\") == %d\n", rc);*/
 
-/* main camera VCM power */
-rc = camera_sensor_power_disable("8058_l10");
-/*pr_info("[CAM]sensor_power_disable(\"8058_l10\") == %d\n", rc);*/
+	/* main camera VCM power */
+	rc = camera_sensor_power_disable("8058_l10");
+	/*pr_info("[CAM]sensor_power_disable(\"8058_l10\") == %d\n", rc);*/
 
 	/* main / 2nd camera digital power */
 //	rc = camera_sensor_power_disable("8058_l9");
@@ -1469,31 +1469,31 @@ rc = camera_sensor_power_disable("8058_l10");
 
 static int Pyramid_sensor_vreg_on(void)
 {
-int rc;
-pr_info("[CAM]%s\n", __func__);
+	int rc;
+	pr_info("[CAM]%s\n", __func__);
 
-/* DOT Main camera VCM power */
-rc = camera_sensor_power_enable("8058_l10", 2850000);
-/*pr_info("[CAM]sensor_power_enable(\"8058_l10\", 2850) == %d\n", rc);*/
-/* DOT Main/2nd IO and 2nd VDD*/
-rc = camera_sensor_power_enable("8058_l12", 1800000);
-/*pr_info("[CAM]sensor_power_enable(\"8058_l12\", 1800) == %d\n", rc);*/
-udelay(50);
-/* DOT Main / 2nd camera Analog power */
-rc = camera_sensor_power_enable("8058_l15", 2800000);
-/*pr_info("[CAM]sensor_power_enable(\"8058_l15\", 2850) == %d\n", rc);*/
-udelay(50);
-/* Main Digital power */
-if (system_rev >= 1) {
-/* XB board and after ... */
-rc = camera_sensor_power_enable("8058_l24", 1200000);
-pr_info("Apply XB board camera digital power pin L24\n");
-} else {
-/* XA board */
-rc = camera_sensor_power_enable("8058_l23", 1200000);
-pr_info("Apply XA board camera digital power pin L23\n");
-}
-/*pr_info("[CAM]sensor_power_enable(\"8058_l23\", 1200) == %d\n", rc);*/
+	/* DOT Main camera VCM power */
+	rc = camera_sensor_power_enable("8058_l10", 2850000);
+	/*pr_info("[CAM]sensor_power_enable(\"8058_l10\", 2850) == %d\n", rc);*/
+	/* DOT Main/2nd IO and 2nd VDD*/
+	rc = camera_sensor_power_enable("8058_l12", 1800000);
+	/*pr_info("[CAM]sensor_power_enable(\"8058_l12\", 1800) == %d\n", rc);*/
+	udelay(50);
+	/* DOT Main / 2nd camera Analog power */
+	rc = camera_sensor_power_enable("8058_l15", 2800000);
+	/*pr_info("[CAM]sensor_power_enable(\"8058_l15\", 2850) == %d\n", rc);*/
+	udelay(50);
+	/* Main Digital power */
+	if (system_rev >= 1) {
+		/* XB board and after ... */
+		rc = camera_sensor_power_enable("8058_l24", 1200000);
+		pr_info("Apply XB board camera digital power pin L24\n");
+	} else {
+		/* XA board */
+		rc = camera_sensor_power_enable("8058_l23", 1200000);
+		pr_info("Apply XA board camera digital power pin L23\n");
+	}
+	/*pr_info("[CAM]sensor_power_enable(\"8058_l23\", 1200) == %d\n", rc);*/
 
 mdelay(1);
 return rc;
@@ -1504,16 +1504,16 @@ return rc;
 #define CLK_SWITCH 141
 static void Pyramid_maincam_clk_switch(void)
 {
-int rc = 0;
-pr_info("[CAM]Doing clk switch (Main Cam)\n");
-rc = gpio_request(CLK_SWITCH, "imx105");
-if (rc < 0)
-pr_err("[CAM]GPIO (%d) request fail\n", CLK_SWITCH);
-else
-gpio_direction_output(CLK_SWITCH, 0);
-gpio_free(CLK_SWITCH);
+	int rc = 0;
+	pr_info("[CAM]Doing clk switch (Main Cam)\n");
+	rc = gpio_request(CLK_SWITCH, "imx105");
+	if (rc < 0)
+		pr_err("[CAM]GPIO (%d) request fail\n", CLK_SWITCH);
+	else
+		gpio_direction_output(CLK_SWITCH, 0);
+	gpio_free(CLK_SWITCH);
 
-mdelay(1);
+	mdelay(1);
 	return;
 }
 
@@ -2637,8 +2637,8 @@ static struct rpm_regulator_init_data rpm_regulator_init_data[] = {
 	/*	ID        a_on pd ss min_uV   max_uV   init_ip */
 	RPM_LDO(PM8901_L0,  0, 1, 0, 1200000, 1200000, LDO300HMIN),
 	RPM_LDO(PM8901_L1,  0, 1, 0, 3000000, 3100000, LDO300HMIN),
-	RPM_LDO(PM8901_L2,  0, 0, 0, 2850000, 3300000, LDO300HMIN),
-	RPM_LDO(PM8901_L3,  0, 1, 0, 3300000, 3300000, LDO300HMIN),
+	RPM_LDO(PM8901_L2,  0, 0, 0, 3300000, 3300000, LDO300HMIN),
+	RPM_LDO(PM8901_L3,  0, 1, 0, 2850000, 2850000, LDO300HMIN),
 	RPM_LDO(PM8901_L4,  0, 1, 0, 1800000, 1800000, LDO300HMIN),
 	RPM_LDO(PM8901_L5,  0, 0, 0, 1800000, 2850000, LDO300HMIN),
 	RPM_LDO(PM8901_L6,  0, 1, 0, 2200000, 2200000, LDO300HMIN),

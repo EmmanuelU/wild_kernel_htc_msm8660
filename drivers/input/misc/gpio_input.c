@@ -22,7 +22,7 @@
 #include <linux/slab.h>
 #include <linux/wakelock.h>
 
-#ifdef CONFIG_MFD_MAX8957
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
 static struct workqueue_struct *ki_queue;
 #endif
 
@@ -40,7 +40,7 @@ enum {
 struct gpio_key_state {
 	struct gpio_input_state *ds;
 	uint8_t debounce;
-#ifdef CONFIG_MFD_MAX8957
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
 	struct work_struct work;
 #endif
 };
@@ -53,7 +53,7 @@ struct gpio_input_state {
 	int debounce_count;
 	spinlock_t irq_lock;
 	struct wake_lock wake_lock;
-#ifdef CONFIG_MFD_MAX8957
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
 	struct wake_lock key_pressed_wake_lock;
 #endif
 	struct gpio_key_state key_state[0];
@@ -170,7 +170,7 @@ static enum hrtimer_restart gpio_event_input_timer_func(struct hrtimer *timer)
 	return HRTIMER_NORESTART;
 }
 
-void keypad_reprort_keycode(struct gpio_key_state *ks)
+void keypad_report_keycode(struct gpio_key_state *ks)
 {
 	struct gpio_input_state *ds = ks->ds;
 	int keymap_index;
@@ -192,7 +192,7 @@ void keypad_reprort_keycode(struct gpio_key_state *ks)
 	pressed = gpio_get_value(key_entry->gpio) ^
 			!(ds->info->flags & GPIOEDF_ACTIVE_HIGH);
 
-#ifdef CONFIG_MFD_MAX8957
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
 	if (key_entry->code == KEY_POWER) {
 		if (pressed)
 			wake_lock(&ds->key_pressed_wake_lock);
@@ -212,7 +212,7 @@ void keypad_reprort_keycode(struct gpio_key_state *ks)
 	input_sync(ds->input_devs->dev[key_entry->dev]);
 }
 
-#ifdef CONFIG_MFD_MAX8957
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
 static void keypad_do_work(struct work_struct *w)
 {
 	struct gpio_key_state *ks = container_of(w, struct gpio_key_state, work);
@@ -228,7 +228,9 @@ static irqreturn_t gpio_event_input_irq_handler(int irq, void *dev_id)
 	const struct gpio_event_direct_entry *key_entry;
 	unsigned long irqflags;
 #ifndef CONFIG_MFD_MAX8957
+#ifndef CONFIG_MACH_DOUBLESHOT
 	int pressed;
+#endif
 #endif
 	pr_info("%s, irq=%d, use_irq=%d\n", __func__, irq, ds->use_irq);
 
@@ -258,7 +260,7 @@ static irqreturn_t gpio_event_input_irq_handler(int irq, void *dev_id)
 		}
 		spin_unlock_irqrestore(&ds->irq_lock, irqflags);
 	} else {
-#ifdef CONFIG_MFD_MAX8957
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
 		queue_work(ki_queue, &ks->work);
 #else
 		pressed = gpio_get_value(key_entry->gpio) ^
@@ -287,7 +289,7 @@ static int gpio_event_input_request_irqs(struct gpio_input_state *ds)
 		err = irq = gpio_to_irq(ds->info->keymap[i].gpio);
 		if (err < 0)
 			goto err_gpio_get_irq_num_failed;
-#ifdef CONFIG_MFD_MAX8957
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
 		INIT_WORK(&ds->key_state[i].work, keypad_do_work);
 		queue_work(ki_queue, &ds->key_state[i].work);
 #endif
@@ -358,7 +360,7 @@ int gpio_event_input_func(struct gpio_event_input_devs *input_devs,
 		ds->input_devs = input_devs;
 		ds->info = di;
 		wake_lock_init(&ds->wake_lock, WAKE_LOCK_SUSPEND, "gpio_input");
-#ifdef CONFIG_MFD_MAX8957
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
 		wake_lock_init(&ds->key_pressed_wake_lock, WAKE_LOCK_SUSPEND, "pwr_key_pressed");
 #endif
 		spin_lock_init(&ds->irq_lock);
@@ -397,7 +399,7 @@ int gpio_event_input_func(struct gpio_event_input_devs *input_devs,
 
 		if (di->setup_input_gpio)
 			di->setup_input_gpio();
-#ifdef CONFIG_MFD_MAX8957
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
 		ki_queue = create_singlethread_workqueue("ki_queue");
 #endif
 
@@ -437,7 +439,7 @@ err_gpio_request_failed:
 	}
 err_bad_keymap:
 	wake_lock_destroy(&ds->wake_lock);
-#ifdef CONFIG_MFD_MAX8957
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
 	wake_lock_destroy(&ds->key_pressed_wake_lock);
 #endif
 	kfree(ds);
