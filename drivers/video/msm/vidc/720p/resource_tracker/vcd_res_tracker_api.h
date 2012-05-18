@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -14,7 +14,6 @@
 #define _VIDEO_720P_RESOURCE_TRACKER_API_H_
 
 #include "vcd_core.h"
-#include "vcd_ddl.h"
 
 void res_trk_init(struct device *device, u32 irq);
 u32 res_trk_power_up(void);
@@ -28,13 +27,6 @@ u32 res_trk_get_curr_perf_level(u32 *pn_perf_lvl);
 u32 res_trk_download_firmware(void);
 u32 res_trk_get_core_type(void);
 u32 res_trk_get_mem_type(void);
-u32 res_trk_get_disable_fullhd(void);
 u32 res_trk_get_enable_ion(void);
 struct ion_client *res_trk_get_ion_client(void);
-void res_trk_set_mem_type(enum ddl_mem_area mem_type);
-int res_trk_check_for_sec_session(void);
-int res_trk_open_secure_session(void);
-int res_trk_close_secure_session(void);
-void res_trk_secure_set(void);
-void res_trk_secure_unset(void);
 #endif

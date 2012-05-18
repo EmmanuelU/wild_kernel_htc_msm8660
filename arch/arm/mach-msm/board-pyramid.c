@@ -1357,7 +1357,7 @@ static uint32_t camera_off_gpio_table[] = {
 	GPIO_CFG(DOUBLESHOT_CAM_I2C_SDA, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_4MA),		/* CAM_I2C_SDA */
 	GPIO_CFG(DOUBLESHOT_CAM_I2C_SCL, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_UP, GPIO_CFG_8MA),		/* CAM_I2C_SCL */
 	GPIO_CFG(141, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM_SEL */
-	GPIO_CFG(DOUBLESHOT_CAM_CAM1_ID, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM_CAM1_ID */
+	//GPIO_CFG(DOUBLESHOT_CAM_CAM1_ID, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM_CAM1_ID */
 };
 
 static uint32_t camera_on_gpio_table[] = {
@@ -1368,7 +1368,7 @@ static uint32_t camera_on_gpio_table[] = {
 	GPIO_CFG(138, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM2_RST# */
 	GPIO_CFG(140, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM2_PWDN */
 	GPIO_CFG(141, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM_SEL */
-	GPIO_CFG(DOUBLESHOT_CAM_CAM1_ID, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM_CAM1_ID */
+	//GPIO_CFG(DOUBLESHOT_CAM_CAM1_ID, 0, GPIO_CFG_OUTPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),	/* CAM_CAM1_ID */
 };
 
 static int camera_sensor_power_enable(char *power, unsigned volt)
@@ -1600,7 +1600,7 @@ static struct msm_camera_sensor_flash_data flash_imx105 = {
 
 static struct camera_flash_cfg msm_camera_sensor_flash_cfg = {
 	.low_temp_limit		= 5,
-	.low_cap_limit		= 5,
+	.low_cap_limit		= 30,
 };
 
 static struct msm_camera_sensor_info msm_camera_sensor_imx105_data = {
@@ -2715,7 +2715,8 @@ static struct flashlight_platform_data flashlight_data = {
 	.torch 			= DOUBLESHOT_TORCH_EN,
 	.flash 			= DOUBLESHOT_FLASH_EN,
 	.flash_duration_ms 	= 600,
-	.led_count 		= 2,
+	.led_count 		= 1,
+//	.led_count 		= 2,
 };
 
 static struct platform_device flashlight_device = {

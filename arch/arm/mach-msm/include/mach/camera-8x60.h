@@ -548,6 +548,7 @@ void msm_camio_csi_core_reset(void);
 void msm_camio_csi_misr_read(void);
 void msm_camio_csi_misr_debug_on(void);
 
+void msm_camio_clk_set_min_rate(struct clk *clk, int rate);
 
 void msm_camio_csi_core_soft_reset(void);
 void msm_camio_csi_core_on(void);

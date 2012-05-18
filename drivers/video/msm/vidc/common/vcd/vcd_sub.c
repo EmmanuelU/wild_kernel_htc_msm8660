@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -13,7 +13,7 @@
 #include <linux/memory_alloc.h>
 #include <mach/msm_subsystem_map.h>
 #include <asm/div64.h>
-#include <media/msm/vidc_type.h>
+#include "vidc_type.h"
 #include "vcd.h"
 #include "vdec_internal.h"
 
@@ -57,7 +57,6 @@ static int vcd_pmem_alloc(size_t sz, u8 **kernel_vaddr, u8 **phy_addr,
 		pr_err("%s() map table is full", __func__);
 		goto bailout;
 	}
-	res_trk_set_mem_type(DDL_MM_MEM);
 	memtype = res_trk_get_mem_type();
 	if (!cctxt->vcd_enable_ion) {
 		map_buffer->phy_addr = (phys_addr_t)
@@ -69,7 +68,7 @@ static int vcd_pmem_alloc(size_t sz, u8 **kernel_vaddr, u8 **phy_addr,
 	} else {
 		map_buffer->alloc_handle = ion_alloc(
 			    cctxt->vcd_ion_client, sz, SZ_4K,
-			    memtype);
+			    (1<<memtype));
 		if (!map_buffer->alloc_handle) {
 			pr_err("%s() ION alloc failed", __func__);
 			goto bailout;
@@ -2812,12 +2811,7 @@ u32 vcd_set_frame_size(
 	u32 rc;
 	u32 frm_p_units;
 	(void)frm_size;
-	if (res_trk_get_disable_fullhd() && frm_size &&
-		(frm_size->width * frm_size->height > 1280 * 720)) {
-		VCD_MSG_ERROR("Frame size = %dX%d greater than 1280X720 not"
-			"supported", frm_size->width, frm_size->height);
-		return VCD_ERR_FAIL;
-	}
+
 	prop_hdr.prop_id = DDL_I_FRAME_PROC_UNITS;
 	prop_hdr.sz = sizeof(frm_p_units);
 	rc = ddl_get_property(cctxt->ddl_handle, &prop_hdr, &frm_p_units);

@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -11,7 +11,7 @@
  *
  */
 
-#include <media/msm/vidc_type.h>
+#include "vidc_type.h"
 #include "vcd_ddl_utils.h"
 #include "vcd_ddl_metadata.h"
 
@@ -1468,8 +1468,8 @@ void ddl_set_default_dec_property(struct ddl_client_context *ddl)
 {
 	struct ddl_decoder_data *decoder = &(ddl->codec_data.decoder);
 
-	if (decoder->codec.codec == VCD_CODEC_MPEG4 ||
-	    decoder->codec.codec == VCD_CODEC_MPEG2)
+	if (decoder->codec.codec >= VCD_CODEC_MPEG2 &&
+		decoder->codec.codec <=  VCD_CODEC_XVID)
 		decoder->post_filter.post_filter = true;
 	else
 		decoder->post_filter.post_filter = false;
