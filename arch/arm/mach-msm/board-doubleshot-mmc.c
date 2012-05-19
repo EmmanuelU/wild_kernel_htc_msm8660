@@ -1,4 +1,4 @@
-/* linux/arch/arm/mach-msm/board-pyramid-mmc.c
+/* linux/arch/arm/mach-msm/board-doubleshot-mmc.c
  *
  * Copyright (C) 2008 HTC Corporation.
  *
@@ -119,7 +119,7 @@ static void config_gpio_table(uint32_t *table, int len)
 /* BCM4329 returns wrong sdio_vsn(1) when we read cccr,
  * we use predefined value (sdio_vsn=2) here to initial sdio driver well
  */
-static struct embedded_sdio_data pyramid_wifi_emb_data = {
+static struct embedded_sdio_data doubleshot_wifi_emb_data = {
 	.cccr	= {
 		.sdio_vsn	= 2,
 		.multi_block	= 1,
@@ -134,7 +134,7 @@ static void (*wifi_status_cb)(int card_present, void *dev_id);
 static void *wifi_status_cb_devid;
 
 static int
-pyramid_wifi_status_register(void (*callback)(int card_present, void *dev_id),
+doubleshot_wifi_status_register(void (*callback)(int card_present, void *dev_id),
 				void *dev_id)
 {
 	if (wifi_status_cb)
@@ -145,22 +145,22 @@ pyramid_wifi_status_register(void (*callback)(int card_present, void *dev_id),
 	return 0;
 }
 
-static int pyramid_wifi_cd;	/* WiFi virtual 'card detect' status */
+static int doubleshot_wifi_cd;	/* WiFi virtual 'card detect' status */
 
-static unsigned int pyramid_wifi_status(struct device *dev)
+static unsigned int doubleshot_wifi_status(struct device *dev)
 {
-	return pyramid_wifi_cd;
+	return doubleshot_wifi_cd;
 }
 
-static unsigned int pyramid_wifislot_type = MMC_TYPE_SDIO_WIFI;
-static struct mmc_platform_data pyramid_wifi_data = {
+static unsigned int doubleshot_wifislot_type = MMC_TYPE_SDIO_WIFI;
+static struct mmc_platform_data doubleshot_wifi_data = {
 	// according to BCM4329 datasheet, 2.3v is min
         .ocr_mask               = MMC_VDD_22_23,
-        .status                 = pyramid_wifi_status,
-        .register_status_notify = pyramid_wifi_status_register,
-        .embedded_sdio          = &pyramid_wifi_emb_data,
+        .status                 = doubleshot_wifi_status,
+        .register_status_notify = doubleshot_wifi_status_register,
+        .embedded_sdio          = &doubleshot_wifi_emb_data,
         .mmc_bus_width  = MMC_CAP_4_BIT_DATA,
-        .slot_type = &pyramid_wifislot_type,
+        .slot_type = &doubleshot_wifislot_type,
         .msmsdcc_fmin   = 400000,
         .msmsdcc_fmid   = 24000000,
         .msmsdcc_fmax   = 48000000,
@@ -172,19 +172,19 @@ static struct mmc_platform_data pyramid_wifi_data = {
 };
 
 
-int pyramid_wifi_set_carddetect(int val)
+int doubleshot_wifi_set_carddetect(int val)
 {
 	printk(KERN_INFO "%s: %d\n", __func__, val);
-	pyramid_wifi_cd = val;
+	doubleshot_wifi_cd = val;
 	if (wifi_status_cb)
 		wifi_status_cb(val, wifi_status_cb_devid);
 	else
 		printk(KERN_WARNING "%s: Nobody to notify\n", __func__);
 	return 0;
 }
-EXPORT_SYMBOL(pyramid_wifi_set_carddetect);
+EXPORT_SYMBOL(doubleshot_wifi_set_carddetect);
 
-int pyramid_wifi_power(int on)
+int doubleshot_wifi_power(int on)
 {
 	const unsigned SDC4_HDRV_PULL_CTL_ADDR = (unsigned) MSM_TLMM_BASE + 0x20A0;
 
@@ -208,9 +208,9 @@ int pyramid_wifi_power(int on)
 	mdelay(120);
 	return 0;
 }
-EXPORT_SYMBOL(pyramid_wifi_power);
+EXPORT_SYMBOL(doubleshot_wifi_power);
 
-int pyramid_wifi_reset(int on)
+int doubleshot_wifi_reset(int on)
 {
 	printk(KERN_INFO "%s: do nothing\n", __func__);
 	return 0;
@@ -221,7 +221,7 @@ int __init doubleshot_init_mmc()
 	uint32_t id;
 	wifi_status_cb = NULL;
 
-	printk(KERN_INFO "pyramid: %s\n", __func__);
+	printk(KERN_INFO "doubleshot: %s\n", __func__);
 
 	/* initial WIFI_SHUTDOWN# */
 	id = GPIO_CFG(DOUBLESHOT_GPIO_WIFI_SHUTDOWN_N, 0, GPIO_CFG_OUTPUT,
@@ -229,7 +229,7 @@ int __init doubleshot_init_mmc()
 	gpio_tlmm_config(id, 0);
 	gpio_set_value(DOUBLESHOT_GPIO_WIFI_SHUTDOWN_N, 0);
 
-	msm_add_sdcc(4, &pyramid_wifi_data);
+	msm_add_sdcc(4, &doubleshot_wifi_data);
 
 	return 0;
 }

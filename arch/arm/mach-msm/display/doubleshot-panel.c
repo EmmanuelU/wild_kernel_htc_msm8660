@@ -32,7 +32,7 @@
 #include <mach/debug_display.h>
 
 #include "../devices.h"
-#include "../board-pyramid.h"
+#include "../board-doubleshot.h"
 #include "../devices-msm8x60.h"
 #include "../../../../drivers/video/msm/mdp_hw.h"
 

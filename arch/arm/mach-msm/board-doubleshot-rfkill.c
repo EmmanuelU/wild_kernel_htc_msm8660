@@ -13,7 +13,7 @@
  *
  */
 
-/* Control bluetooth power for pyramid platform */
+/* Control bluetooth power for doubleshot platform */
 
 #include <linux/platform_device.h>
 #include <linux/module.h>
@@ -24,7 +24,7 @@
 #include <asm/mach-types.h>
 
 #include <linux/mfd/pmic8058.h>
-#include "board-pyramid.h"
+#include "board-doubleshot.h"
 /*
 #include <mach/htc_sleep_clk.h>
 */
@@ -33,7 +33,7 @@ static struct rfkill *bt_rfk;
 static const char bt_name[] = "bcm4329";
 
 /* bt on configuration */
-static uint32_t pyramid_bt_on_table[] = {
+static uint32_t doubleshot_bt_on_table[] = {
 
 	/* BT_RTS */
 	GPIO_CFG(DOUBLESHOT_GPIO_BT_UART1_RTS,
@@ -88,7 +88,7 @@ static uint32_t pyramid_bt_on_table[] = {
 };
 
 /* bt off configuration */
-static uint32_t pyramid_bt_off_table[] = {
+static uint32_t doubleshot_bt_off_table[] = {
 
 	/* BT_RTS */
 	GPIO_CFG(DOUBLESHOT_GPIO_BT_UART1_RTS,
@@ -156,13 +156,13 @@ static void config_bt_table(uint32_t *table, int len)
 	}
 }
 
-static void pyramid_config_bt_on(void)
+static void doubleshot_config_bt_on(void)
 {
 	printk(KERN_INFO "[BT]-- R ON --\n");
 
 	/* set bt on configuration*/
-	config_bt_table(pyramid_bt_on_table,
-				ARRAY_SIZE(pyramid_bt_on_table));
+	config_bt_table(doubleshot_bt_on_table,
+				ARRAY_SIZE(doubleshot_bt_on_table));
 	mdelay(5);
 
 	/* BT_SHUTDOWN_N */
@@ -174,7 +174,7 @@ static void pyramid_config_bt_on(void)
 	mdelay(2);
 }
 
-static void pyramid_config_bt_off(void)
+static void doubleshot_config_bt_off(void)
 {
 	printk(KERN_INFO "[BT]-- R OFF --\n");
 
@@ -187,8 +187,8 @@ static void pyramid_config_bt_off(void)
 	mdelay(2);
 
 	/* set bt off configuration*/
-	config_bt_table(pyramid_bt_off_table,
-				ARRAY_SIZE(pyramid_bt_off_table));
+	config_bt_table(doubleshot_bt_off_table,
+				ARRAY_SIZE(doubleshot_bt_off_table));
 	mdelay(5);
 
 	/* BT_RTS */
@@ -210,18 +210,18 @@ static void pyramid_config_bt_off(void)
 static int bluetooth_set_power(void *data, bool blocked)
 {
 	if (!blocked)
-		pyramid_config_bt_on();
+		doubleshot_config_bt_on();
 	else
-		pyramid_config_bt_off();
+		doubleshot_config_bt_off();
 
 	return 0;
 }
 
-static struct rfkill_ops pyramid_rfkill_ops = {
+static struct rfkill_ops doubleshot_rfkill_ops = {
 	.set_block = bluetooth_set_power,
 };
 
-static int pyramid_rfkill_probe(struct platform_device *pdev)
+static int doubleshot_rfkill_probe(struct platform_device *pdev)
 {
 	int rc = 0;
 	bool default_state = true; /* off */
@@ -245,7 +245,7 @@ static int pyramid_rfkill_probe(struct platform_device *pdev)
 	bluetooth_set_power(NULL, default_state);
 
 	bt_rfk = rfkill_alloc(bt_name, &pdev->dev, RFKILL_TYPE_BLUETOOTH,
-						 &pyramid_rfkill_ops, NULL);
+						 &doubleshot_rfkill_ops, NULL);
 	if (!bt_rfk) {
 		rc = -ENOMEM;
 		goto err_rfkill_alloc;
@@ -272,7 +272,7 @@ err_gpio_reset:
 	return rc;
 }
 
-static int pyramid_rfkill_remove(struct platform_device *dev)
+static int doubleshot_rfkill_remove(struct platform_device *dev)
 {
 	rfkill_unregister(bt_rfk);
 	/*rfkill_free(bt_rfk);*/
@@ -285,27 +285,27 @@ static int pyramid_rfkill_remove(struct platform_device *dev)
 	return 0;
 }
 
-static struct platform_driver pyramid_rfkill_driver = {
-	.probe = pyramid_rfkill_probe,
-	.remove = pyramid_rfkill_remove,
+static struct platform_driver doubleshot_rfkill_driver = {
+	.probe = doubleshot_rfkill_probe,
+	.remove = doubleshot_rfkill_remove,
 	.driver = {
-		.name = "pyramid_rfkill",
+		.name = "doubleshot_rfkill",
 		.owner = THIS_MODULE,
 	},
 };
 
-static int __init pyramid_rfkill_init(void)
+static int __init doubleshot_rfkill_init(void)
 {
-	return platform_driver_register(&pyramid_rfkill_driver);
+	return platform_driver_register(&doubleshot_rfkill_driver);
 }
 
-static void __exit pyramid_rfkill_exit(void)
+static void __exit doubleshot_rfkill_exit(void)
 {
-	platform_driver_unregister(&pyramid_rfkill_driver);
+	platform_driver_unregister(&doubleshot_rfkill_driver);
 }
 
-module_init(pyramid_rfkill_init);
-module_exit(pyramid_rfkill_exit);
-MODULE_DESCRIPTION("pyramid rfkill");
+module_init(doubleshot_rfkill_init);
+module_exit(doubleshot_rfkill_exit);
+MODULE_DESCRIPTION("doubleshot rfkill");
 MODULE_AUTHOR("Nick Pelly <npelly@google.com>");
 MODULE_LICENSE("GPL");

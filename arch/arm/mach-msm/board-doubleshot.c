@@ -170,8 +170,8 @@ int id_set_two_phase_freq(int cpufreq);
 
 int __init dot_init_panel(struct resource *res, size_t size);
 #ifdef CONFIG_ION_MSM
-int __init pyramid_ion_reserve_memory(struct memtype_reserve *table);
-int __init pyramid_ion_init();
+int __init doubleshot_ion_reserve_memory(struct memtype_reserve *table);
+int __init doubleshot_ion_init();
 #endif
 
 enum {
@@ -466,26 +466,26 @@ static struct msm_spm_platform_data msm_spm_data[] __initdata = {
 };
 
 #ifdef CONFIG_PERFLOCK
-static unsigned pyramid_perf_acpu_table[] = {
+static unsigned doubleshot_perf_acpu_table[] = {
 	384000000,
 	756000000,
 	1188000000,
 };
 
-static struct perflock_platform_data pyramid_perflock_data = {
-	.perf_acpu_table = pyramid_perf_acpu_table,
-	.table_size = ARRAY_SIZE(pyramid_perf_acpu_table),
+static struct perflock_platform_data doubleshot_perflock_data = {
+	.perf_acpu_table = doubleshot_perf_acpu_table,
+	.table_size = ARRAY_SIZE(doubleshot_perf_acpu_table),
 };
 
-static unsigned pyramid_cpufreq_ceiling_acpu_table[] = {
+static unsigned doubleshot_cpufreq_ceiling_acpu_table[] = {
 	-1,
 	-1,
 	1026000000,
 };
 
-static struct perflock_platform_data pyramid_cpufreq_ceiling_data = {
-	.perf_acpu_table = pyramid_cpufreq_ceiling_acpu_table,
-	.table_size = ARRAY_SIZE(pyramid_cpufreq_ceiling_acpu_table),
+static struct perflock_platform_data doubleshot_cpufreq_ceiling_data = {
+	.perf_acpu_table = doubleshot_cpufreq_ceiling_acpu_table,
+	.table_size = ARRAY_SIZE(doubleshot_cpufreq_ceiling_acpu_table),
 };
 #endif
 
@@ -1190,9 +1190,9 @@ static void msm_hsusb_vbus_power(bool on)
 
 /* ToDo: mark it */
 /* #if defined(CONFIG_USB_GADGET_MSM_72K) || defined(CONFIG_USB_EHCI_MSM_72K) */
-static int pyramid_phy_init_seq[] = { 0x06, 0x36, 0x0C, 0x31, 0x31, 0x32, 0x1, 0x0E, 0x1, 0x11, -1 };
+static int doubleshot_phy_init_seq[] = { 0x06, 0x36, 0x0C, 0x31, 0x31, 0x32, 0x1, 0x0E, 0x1, 0x11, -1 };
 static struct msm_otg_platform_data msm_otg_pdata = {
-	.phy_init_seq		= pyramid_phy_init_seq,
+	.phy_init_seq		= doubleshot_phy_init_seq,
 	.mode			= USB_PERIPHERAL,
 	.otg_control		= OTG_PMIC_CONTROL,
 	.phy_type		= CI_45NM_INTEGRATED_PHY,
@@ -1419,7 +1419,7 @@ static int camera_sensor_power_disable(char *power)
 }
 
 
-static int Pyramid_sensor_vreg_off(void)
+static int Doubleshot_sensor_vreg_off(void)
 {
 	int rc;
 	pr_info("[CAM] %s\n", __func__);
@@ -1467,7 +1467,7 @@ static int Pyramid_sensor_vreg_off(void)
 }
 
 
-static int Pyramid_sensor_vreg_on(void)
+static int Doubleshot_sensor_vreg_on(void)
 {
 	int rc;
 	pr_info("[CAM]%s\n", __func__);
@@ -1502,7 +1502,7 @@ return rc;
 
 
 #define CLK_SWITCH 141
-static void Pyramid_maincam_clk_switch(void)
+static void Doubleshot_maincam_clk_switch(void)
 {
 	int rc = 0;
 	pr_info("[CAM]Doing clk switch (Main Cam)\n");
@@ -1517,7 +1517,7 @@ static void Pyramid_maincam_clk_switch(void)
 	return;
 }
 
-static void Pyramid_seccam_clk_switch(void)
+static void Doubleshot_seccam_clk_switch(void)
 {
 	int rc = 0;
 	pr_info("[CAM] Doing clk switch (2nd Cam)\n");
@@ -1532,22 +1532,22 @@ static void Pyramid_seccam_clk_switch(void)
 	return;
 }
 
-static int pyramid_config_camera_on_gpios(void)
+static int doubleshot_config_camera_on_gpios(void)
 {
 	config_gpio_table(camera_on_gpio_table,
 		ARRAY_SIZE(camera_on_gpio_table));
 	return 0;
 }
 
-static void pyramid_config_camera_off_gpios(void)
+static void doubleshot_config_camera_off_gpios(void)
 {
 	config_gpio_table(camera_off_gpio_table,
 		ARRAY_SIZE(camera_off_gpio_table));
 }
 
 static struct msm_camera_device_platform_data msm_camera_device_data = {
-	.camera_gpio_on  = pyramid_config_camera_on_gpios,
-	.camera_gpio_off = pyramid_config_camera_off_gpios,
+	.camera_gpio_on  = doubleshot_config_camera_on_gpios,
+	.camera_gpio_off = doubleshot_config_camera_off_gpios,
 	.ioext.csiphy = 0x04800000,
 	.ioext.csisz  = 0x00000400,
 	.ioext.csiirq = CSI_0_IRQ,
@@ -1556,8 +1556,8 @@ static struct msm_camera_device_platform_data msm_camera_device_data = {
 };
 
 static struct msm_camera_device_platform_data msm_camera_device_data_web_cam = {
-	.camera_gpio_on  = pyramid_config_camera_on_gpios,
-	.camera_gpio_off = pyramid_config_camera_off_gpios,
+	.camera_gpio_on  = doubleshot_config_camera_on_gpios,
+	.camera_gpio_off = doubleshot_config_camera_off_gpios,
 	.ioext.csiphy = 0x04900000,
 	.ioext.csisz  = 0x00000400,
 	.ioext.csiirq = CSI_1_IRQ,
@@ -1609,9 +1609,9 @@ static struct msm_camera_sensor_info msm_camera_sensor_imx105_data = {
 	.sensor_pwd		= 139,/*139,*/ /*Main Cam PWD*/
 	.vcm_pwd		= 58,/*VCM_PD*/
 	.vcm_enable		= 1,
-	.camera_power_on = Pyramid_sensor_vreg_on,
-	.camera_power_off = Pyramid_sensor_vreg_off,
-	.camera_clk_switch = Pyramid_maincam_clk_switch,
+	.camera_power_on = Doubleshot_sensor_vreg_on,
+	.camera_power_off = Doubleshot_sensor_vreg_off,
+	.camera_clk_switch = Doubleshot_maincam_clk_switch,
 	.pdata			= &msm_camera_device_data,
 	.resource		= msm_camera_resources,
 	.num_resources	= ARRAY_SIZE(msm_camera_resources),
@@ -1639,9 +1639,9 @@ static struct msm_camera_sensor_info msm_camera_sensor_mt9v113_data = {
 	.sensor_name	= "mt9v113",
 	.sensor_reset	= 138,/*2nd Cam RST*/
 	.sensor_pwd		= 140,/*2nd Cam PWD*/
-	.camera_clk_switch = Pyramid_seccam_clk_switch,
-	.camera_power_on = Pyramid_sensor_vreg_on,
-	.camera_power_off = Pyramid_sensor_vreg_off,
+	.camera_clk_switch = Doubleshot_seccam_clk_switch,
+	.camera_power_on = Doubleshot_sensor_vreg_on,
+	.camera_power_off = Doubleshot_sensor_vreg_off,
 	.pdata			= &msm_camera_device_data_web_cam,
 	.resource		= msm_camera_resources,
 	.num_resources	= ARRAY_SIZE(msm_camera_resources),
@@ -2210,7 +2210,7 @@ static struct i2c_board_info msm_i2c_gsbi5_info[] = {
 };
 
 
-static ssize_t pyramid_virtual_keys_show(struct kobject *kobj,
+static ssize_t doubleshot_virtual_keys_show(struct kobject *kobj,
 			struct kobj_attribute *attr, char *buf)
 {
 	return sprintf(buf,
@@ -2221,21 +2221,21 @@ static ssize_t pyramid_virtual_keys_show(struct kobject *kobj,
 		"\n");
 }
 
-static struct kobj_attribute pyramid_virtual_keys_attr = {
+static struct kobj_attribute doubleshot_virtual_keys_attr = {
 	.attr = {
 		.name = "virtualkeys.cy8c-touchscreen",
 		.mode = S_IRUGO,
 	},
-	.show = &pyramid_virtual_keys_show,
+	.show = &doubleshot_virtual_keys_show,
 };
 
-static struct attribute *pyramid_properties_attrs[] = {
-	&pyramid_virtual_keys_attr.attr,
+static struct attribute *doubleshot_properties_attrs[] = {
+	&doubleshot_virtual_keys_attr.attr,
 	NULL
 };
 
-static struct attribute_group pyramid_properties_attr_group = {
-	.attrs = pyramid_properties_attrs,
+static struct attribute_group doubleshot_properties_attr_group = {
+	.attrs = doubleshot_properties_attrs,
 };
 
 #define TS_PEN_IRQ_GPIO 61
@@ -2274,8 +2274,8 @@ static struct msm_serial_hs_platform_data msm_uart_dm1_pdata = {
 #endif
 
 #ifdef CONFIG_BT
-static struct platform_device pyramid_rfkill = {
-	.name = "pyramid_rfkill",
+static struct platform_device doubleshot_rfkill = {
+	.name = "doubleshot_rfkill",
 	.id = -1,
 };
 #endif
@@ -2996,7 +2996,7 @@ static void pm8058_usb_config(void)
 	mpp_init_setup(usb_mpp_init_configs, ARRAY_SIZE(usb_mpp_init_configs));
 }
 
-void config_pyramid_usb_id_gpios(bool output)
+void config_doubleshot_usb_id_gpios(bool output)
 {
 	if (output) {
 		gpio_tlmm_config(usb_ID_PIN_ouput_table[0], 0);
@@ -3008,7 +3008,7 @@ void config_pyramid_usb_id_gpios(bool output)
 	}
 }
 
-static void pyramid_usb_dpdn_switch(int path)
+static void doubleshot_usb_dpdn_switch(int path)
 {
 	switch (path) {
 	case PATH_USB:
@@ -3036,13 +3036,13 @@ static struct cable_detect_platform_data cable_detect_pdata = {
 	.vbus_mpp_irq  = PM8058_IRQ_BASE + PM8058_CBLPWR_IRQ,
 	.detect_type = CABLE_TYPE_PMIC_ADC,
 	.usb_id_pin_gpio = DOUBLESHOT_GPIO_USB_ID,
-	.usb_dpdn_switch = pyramid_usb_dpdn_switch,
+	.usb_dpdn_switch = doubleshot_usb_dpdn_switch,
 	.mhl_reset_gpio = DOUBLESHOT_GPIO_MHL_RESET,
 	.mpp_data = {
 		.usbid_mpp	= PM8058_MPP_PM_TO_SYS(XOADC_MPP_4),
 		.usbid_amux	= PM_MPP_AIN_AMUX_CH5,
 	},
-	.config_usb_id_gpios = config_pyramid_usb_id_gpios,
+	.config_usb_id_gpios = config_doubleshot_usb_id_gpios,
 #ifdef CONFIG_FB_MSM_HDMI_MHL
 	.mhl_1v2_power = mhl_sii9234_1v2_power,
 #endif
@@ -3243,7 +3243,7 @@ static T_MHL_PLATFORM_DATA mhl_sii9234_device_data = {
 	.gpio_reset = DOUBLESHOT_GPIO_MHL_RESET,
 	.ci2ca = 0,
 	#ifdef CONFIG_FB_MSM_HDMI_MHL
-	.mhl_usb_switch		= pyramid_usb_dpdn_switch,
+	.mhl_usb_switch		= doubleshot_usb_dpdn_switch,
 	.mhl_1v2_power = mhl_sii9234_1v2_power,
 	#endif
 	.power = mhl_sii9234_power,
@@ -3261,7 +3261,7 @@ static struct i2c_board_info msm_i2c_gsbi7_mhl_sii9234_info[] =
 #endif
 
 
-static struct platform_device *pyramid_devices[] __initdata = {
+static struct platform_device *doubleshot_devices[] __initdata = {
 	&ram_console_device,
 	&msm_device_smd,
 	&msm_device_uart_dm12,
@@ -3371,7 +3371,7 @@ static struct platform_device *pyramid_devices[] __initdata = {
 	&msm_rpm_device,
 	&cable_detect_device,
 #ifdef CONFIG_BT
-	&pyramid_rfkill,
+	&doubleshot_rfkill,
 #endif
 	&pm8058_leds,
 	&msm8660_device_watchdog,
@@ -3459,7 +3459,7 @@ static void __init reserve_pmem_memory(void)
 static void __init msm8x60_calculate_reserve_sizes(void)
 {
 #ifdef CONFIG_ION_MSM
-	pyramid_ion_reserve_memory(msm8x60_reserve_table);
+	doubleshot_ion_reserve_memory(msm8x60_reserve_table);
 #endif
 
 	size_pmem_devices();
@@ -3481,7 +3481,7 @@ static struct reserve_info msm8x60_reserve_info __initdata = {
 	.paddr_to_memtype = msm8x60_paddr_to_memtype,
 };
 
-static void __init pyramid_reserve(void)
+static void __init doubleshot_reserve(void)
 {
 	reserve_info = &msm8x60_reserve_info;
 	msm_reserve();
@@ -5355,7 +5355,7 @@ static void __init msm8x60_init_buses(void)
 #endif
 }
 
-static void __init pyramid_map_io(void)
+static void __init doubleshot_map_io(void)
 {
 	msm_shared_ram_phys = MSM_SHARED_RAM_PHYS;
 	msm_map_msm8x60_io();
@@ -6081,7 +6081,7 @@ static uint32_t msm_rpm_get_swfi_latency(void)
 }
 
 #ifdef CONFIG_MMC_MSM_SDC1_SUPPORT
-static unsigned int pyramid_emmcslot_type = MMC_TYPE_MMC;
+static unsigned int doubleshot_emmcslot_type = MMC_TYPE_MMC;
 static struct mmc_platform_data msm8x60_sdc1_data = {
 	.ocr_mask       = MMC_VDD_27_28 | MMC_VDD_28_29,
 	/*.translate_vdd  = msm_sdcc_setup_power,*/
@@ -6090,7 +6090,7 @@ static struct mmc_platform_data msm8x60_sdc1_data = {
 #else
 	.mmc_bus_width  = MMC_CAP_4_BIT_DATA,
 #endif
-	.slot_type	= &pyramid_emmcslot_type,
+	.slot_type	= &doubleshot_emmcslot_type,
 	.msmsdcc_fmin	= 400000,
 	.msmsdcc_fmid	= 24000000,
 	.msmsdcc_fmax	= 48000000,
@@ -6115,7 +6115,7 @@ static struct mmc_platform_data msm8x60_sdc2_data = {
 #endif
 
 #ifdef CONFIG_MMC_MSM_SDC3_SUPPORT
-static unsigned int pyramid_sdslot_type = MMC_TYPE_SD;
+static unsigned int doubleshot_sdslot_type = MMC_TYPE_SD;
 static struct mmc_platform_data msm8x60_sdc3_data = {
 	.ocr_mask       = MMC_VDD_27_28 | MMC_VDD_28_29,
 	.translate_vdd  = msm_sdcc_setup_power,
@@ -6129,7 +6129,7 @@ static struct mmc_platform_data msm8x60_sdc3_data = {
 				       DOUBLESHOT_SDC3_DET),
 	.irq_flags   = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
 #endif
-	.slot_type	= &pyramid_sdslot_type,
+	.slot_type	= &doubleshot_sdslot_type,
 	.msmsdcc_fmin	= 400000,
 	.msmsdcc_fmid	= 24000000,
 	.msmsdcc_fmax	= 48000000,
@@ -6521,11 +6521,11 @@ struct msm_board_data {
 	struct msm_gpiomux_configs *gpiomux_cfgs;
 };
 
-static struct msm_board_data pyramid_board_data __initdata = {
+static struct msm_board_data doubleshot_board_data __initdata = {
 	.gpiomux_cfgs = msm8x60_pyramid_gpiomux_cfgs,
 };
 
-void pyramid_add_usb_devices(void)
+void doubleshot_add_usb_devices(void)
 {
 	printk(KERN_INFO "%s rev: %d\n", __func__, system_rev);
 	android_usb_pdata.products[0].product_id =
@@ -6671,8 +6671,8 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 	acpuclk_init(&acpuclk_8x60_soc_data);
 
 #ifdef CONFIG_PERFLOCK
-	perflock_init(&pyramid_perflock_data);
-	cpufreq_ceiling_init(&pyramid_cpufreq_ceiling_data);
+	perflock_init(&doubleshot_perflock_data);
+	cpufreq_ceiling_init(&doubleshot_cpufreq_ceiling_data);
 #endif
 
 #ifdef CONFIG_CPU_FREQ_GOV_ONDEMAND_2_PHASE
@@ -6708,16 +6708,16 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 	if (SOCINFO_VERSION_MAJOR(socinfo_get_version()) != 1)
 		platform_add_devices(msm_footswitch_devices,
 				     msm_num_footswitch_devices);
-	platform_add_devices(pyramid_devices,
-			     ARRAY_SIZE(pyramid_devices));
+	platform_add_devices(doubleshot_devices,
+			     ARRAY_SIZE(doubleshot_devices));
 
 #ifdef CONFIG_ION_MSM
-	pyramid_ion_init();
+	doubleshot_ion_init();
 #endif
 
 	/*usb driver won't be loaded in MFG 58 station and gift mode*/
 	if (!(board_mfg_mode() == 6 || board_mfg_mode() == 7))
-		pyramid_add_usb_devices();
+		doubleshot_add_usb_devices();
 
 #ifdef CONFIG_USB_EHCI_MSM_72K
 		msm_add_host(0, &msm_usb_host_pdata);
@@ -6778,7 +6778,7 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 	properties_kobj = kobject_create_and_add("board_properties", NULL);
 	if (properties_kobj)
 		ret = sysfs_create_group(properties_kobj,
-				&pyramid_properties_attr_group);
+				&doubleshot_properties_attr_group);
 
 
 	msm_mpm_set_irq_ignore_list(irq_ignore_tbl, irq_num_ignore_tbl);
@@ -6786,18 +6786,18 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 
 }
 
-static void __init pyramid_init(void)
+static void __init doubleshot_init(void)
 {
-	msm8x60_init(&pyramid_board_data);
+	msm8x60_init(&doubleshot_board_data);
 	printk(KERN_INFO "%s revision=%d engineerid=%d\n", __func__, system_rev, engineerid);
 }
 
-static void __init pyramid_charm_init_early(void)
+static void __init doubleshot_charm_init_early(void)
 {
 	msm8x60_allocate_memory_regions();
 }
 
-static void __init pyramid_fixup(struct machine_desc *desc, struct tag *tags,
+static void __init doubleshot_fixup(struct machine_desc *desc, struct tag *tags,
                                  char **cmdline, struct meminfo *mi)
 {
 	engineerid = parse_tag_engineerid(tags);
@@ -6807,11 +6807,11 @@ static void __init pyramid_fixup(struct machine_desc *desc, struct tag *tags,
 }
 
 MACHINE_START(DOUBLESHOT, "doubleshot")
-	.fixup = pyramid_fixup,
-	.map_io = pyramid_map_io,
-	.reserve = pyramid_reserve,
+	.fixup = doubleshot_fixup,
+	.map_io = doubleshot_map_io,
+	.reserve = doubleshot_reserve,
 	.init_irq = msm8x60_init_irq,
-	.init_machine = pyramid_init,
+	.init_machine = doubleshot_init,
 	.timer = &msm_timer,
-	.init_early = pyramid_charm_init_early,
+	.init_early = doubleshot_charm_init_early,
 MACHINE_END

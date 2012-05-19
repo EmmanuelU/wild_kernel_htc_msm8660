@@ -410,7 +410,7 @@ struct msm_panel_common_pdata {
 	int (*bkl_enable)(int);
 	int fpga_3d_config_addr;
 	struct gamma_curvy *abl_gamma_tbl;
-#ifdef CONFIG_MACH_PYRAMID
+#if defined(CONFIG_MACH_PYRAMID) || defined(CONFIG_MACH_DOUBLESHOT)
 	struct mdp_reg *color_enhancment_tbl;
 #endif
 };

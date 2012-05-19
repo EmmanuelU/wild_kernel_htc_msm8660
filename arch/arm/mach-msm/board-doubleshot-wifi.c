@@ -1,4 +1,4 @@
-/* linux/arch/arm/mach-msm/board-pyramid-wifi.c
+/* linux/arch/arm/mach-msm/board-doubleshot-wifi.c
 */
 #include <linux/kernel.h>
 #include <linux/init.h>
@@ -13,10 +13,10 @@
 
 #include "board-doubleshot.h"
 
-int pyramid_wifi_power(int on);
-int pyramid_wifi_reset(int on);
-int pyramid_wifi_set_carddetect(int on);
-int pyramid_wifi_get_mac_addr(unsigned char *buf);
+int doubleshot_wifi_power(int on);
+int doubleshot_wifi_reset(int on);
+int doubleshot_wifi_set_carddetect(int on);
+int doubleshot_wifi_get_mac_addr(unsigned char *buf);
 
 #define PREALLOC_WLAN_NUMBER_OF_SECTIONS	4
 #define PREALLOC_WLAN_NUMBER_OF_BUFFERS		160
@@ -45,7 +45,7 @@ static wifi_mem_prealloc_t wifi_mem_array[PREALLOC_WLAN_NUMBER_OF_SECTIONS] = {
 	{ NULL, (WLAN_SECTION_SIZE_3 + PREALLOC_WLAN_SECTION_HEADER) }
 };
 
-static void *pyramid_wifi_mem_prealloc(int section, unsigned long size)
+static void *doubleshot_wifi_mem_prealloc(int section, unsigned long size)
 {
 	if (section == PREALLOC_WLAN_NUMBER_OF_SECTIONS)
 		return wlan_static_skb;
@@ -56,7 +56,7 @@ static void *pyramid_wifi_mem_prealloc(int section, unsigned long size)
 	return wifi_mem_array[section].mem_ptr;
 }
 
-int __init pyramid_init_wifi_mem(void)
+int __init doubleshot_init_wifi_mem(void)
 {
 	int i;
 
@@ -75,7 +75,7 @@ int __init pyramid_init_wifi_mem(void)
 	return 0;
 }
 
-static struct resource pyramid_wifi_resources[] = {
+static struct resource doubleshot_wifi_resources[] = {
 	[0] = {
 		.name		= "bcm4329_wlan_irq",
 		.start		= MSM_GPIO_TO_INT(DOUBLESHOT_GPIO_WIFI_IRQ),
@@ -84,28 +84,28 @@ static struct resource pyramid_wifi_resources[] = {
 	},
 };
 
-static struct wifi_platform_data pyramid_wifi_control = {
-	.set_power      = pyramid_wifi_power,
-	.set_reset      = pyramid_wifi_reset,
-	.set_carddetect = pyramid_wifi_set_carddetect,
-	.mem_prealloc   = pyramid_wifi_mem_prealloc,
-	.get_mac_addr	= pyramid_wifi_get_mac_addr,
+static struct wifi_platform_data doubleshot_wifi_control = {
+	.set_power      = doubleshot_wifi_power,
+	.set_reset      = doubleshot_wifi_reset,
+	.set_carddetect = doubleshot_wifi_set_carddetect,
+	.mem_prealloc   = doubleshot_wifi_mem_prealloc,
+	.get_mac_addr	= doubleshot_wifi_get_mac_addr,
 	//.dot11n_enable  = 1,
 };
 
-static struct platform_device pyramid_wifi_device = {
+static struct platform_device doubleshot_wifi_device = {
 	.name           = "bcm4329_wlan",
 	.id             = 1,
-	.num_resources  = ARRAY_SIZE(pyramid_wifi_resources),
-	.resource       = pyramid_wifi_resources,
+	.num_resources  = ARRAY_SIZE(doubleshot_wifi_resources),
+	.resource       = doubleshot_wifi_resources,
 	.dev            = {
-		.platform_data = &pyramid_wifi_control,
+		.platform_data = &doubleshot_wifi_control,
 	},
 };
 
 extern unsigned char *get_wifi_nvs_ram(void);
 
-static unsigned pyramid_wifi_update_nvs(char *str)
+static unsigned doubleshot_wifi_update_nvs(char *str)
 {
 #define NVS_LEN_OFFSET		0x0C
 #define NVS_DATA_OFFSET		0x40
@@ -232,7 +232,7 @@ get_mac_from_wifi_nvs_ram(char* buf, unsigned int buf_len)
 }
 
 #define ETHER_ADDR_LEN 6
-int pyramid_wifi_get_mac_addr(unsigned char *buf)
+int doubleshot_wifi_get_mac_addr(unsigned char *buf)
 {
 	static u8 ether_mac_addr[] = {0x00, 0x11, 0x22, 0x33, 0x44, 0xFF};
 	char mac[WIFI_MAX_MAC_LEN];
@@ -255,7 +255,7 @@ int pyramid_wifi_get_mac_addr(unsigned char *buf)
 
 	memcpy(buf, ether_mac_addr, sizeof(ether_mac_addr));
 
-	printk("pyramid_wifi_get_mac_addr = %02x %02x %02x %02x %02x %02x \n",
+	printk("doubleshot_wifi_get_mac_addr = %02x %02x %02x %02x %02x %02x \n",
 		ether_mac_addr[0],ether_mac_addr[1],ether_mac_addr[2],ether_mac_addr[3],ether_mac_addr[4],ether_mac_addr[5]);
 
 	return 0;
@@ -269,11 +269,11 @@ int __init doubleshot_wifi_init(void)
 #ifdef HW_OOB
 	strip_nvs_param("sd_oobonly");
 #else
-	pyramid_wifi_update_nvs("sd_oobonly=1\n");
+	doubleshot_wifi_update_nvs("sd_oobonly=1\n");
 #endif
-	pyramid_wifi_update_nvs("btc_params80=0\n");
-	pyramid_wifi_update_nvs("btc_params6=30\n");
-	pyramid_init_wifi_mem();
-	ret = platform_device_register(&pyramid_wifi_device);
+	doubleshot_wifi_update_nvs("btc_params80=0\n");
+	doubleshot_wifi_update_nvs("btc_params6=30\n");
+	doubleshot_init_wifi_mem();
+	ret = platform_device_register(&doubleshot_wifi_device);
 	return ret;
 }

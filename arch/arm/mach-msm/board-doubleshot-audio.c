@@ -1,4 +1,4 @@
-/* linux/arch/arm/mach-msm/board-pyramid-audio.c
+/* linux/arch/arm/mach-msm/board-doubleshot-audio.c
  *
  * Copyright (C) 2010-2011 HTC Corporation.
  *
@@ -30,7 +30,7 @@
 #include <mach/qdsp6v2_1x/q6asm.h>
 #include <mach/htc_acoustic_8x60.h>
 
-#include "board-pyramid-audio-data.h"
+#include "board-doubleshot-audio-data.h"
 #include <mach/qdsp6v2_1x/audio_dev_ctl.h>
 
 static struct mutex bt_sco_lock;
@@ -50,13 +50,13 @@ static atomic_t q6_effect_mode = ATOMIC_INIT(-1);
 #define PM8058_GPIO_BASE			NR_MSM_GPIOS
 #define PM8058_GPIO_PM_TO_SYS(pm_gpio)		(pm_gpio + PM8058_GPIO_BASE)
 #define PMGPIO(x) (x-1)
-void pyramid_snddev_bmic_pamp_on(int en);
+void doubleshot_snddev_bmic_pamp_on(int en);
 static uint32_t msm_aic3254_reset_gpio[] = {
 	GPIO_CFG(DOUBLESHOT_AUD_CODEC_RST, 0, GPIO_CFG_OUTPUT,
 		GPIO_CFG_PULL_UP, GPIO_CFG_8MA),
 };
 
-void pyramid_snddev_poweramp_on(int en)
+void doubleshot_snddev_poweramp_on(int en)
 {
 	pr_aud_info("%s %d\n", __func__, en);
 	if (en) {
@@ -77,7 +77,7 @@ void pyramid_snddev_poweramp_on(int en)
 	}
 }
 
-void pyramid_snddev_hsed_pamp_on(int en)
+void doubleshot_snddev_hsed_pamp_on(int en)
 {
 	pr_aud_info("%s %d\n", __func__, en);
 	if (en) {
@@ -98,7 +98,7 @@ void pyramid_snddev_hsed_pamp_on(int en)
 	}
 }
 
-void pyramid_snddev_hs_spk_pamp_on(int en)
+void doubleshot_snddev_hs_spk_pamp_on(int en)
 {
 	pr_aud_info("%s %d\n", __func__, en);
 	if (en) {
@@ -123,7 +123,7 @@ void pyramid_snddev_hs_spk_pamp_on(int en)
 	}
 }
 
-void pyramid_snddev_receiver_pamp_on(int en)
+void doubleshot_snddev_receiver_pamp_on(int en)
 {
 	pr_aud_info("%s %d\n", __func__, en);
 	if (en) {
@@ -135,13 +135,13 @@ void pyramid_snddev_receiver_pamp_on(int en)
 	}
 }
 
-void pyramid_snddev_bt_sco_pamp_on(int en)
+void doubleshot_snddev_bt_sco_pamp_on(int en)
 {
 	/* to be implemented */
 }
 
 /* power on/off externnal mic bias */
-void pyramid_mic_enable(int en, int shift)
+void doubleshot_mic_enable(int en, int shift)
 {
 	pr_aud_info("%s: %d, shift %d\n", __func__, en, shift);
 
@@ -155,12 +155,12 @@ void pyramid_mic_enable(int en, int shift)
 	mutex_unlock(&mic_lock);
 }
 
-void pyramid_snddev_imic_pamp_on(int en)
+void doubleshot_snddev_imic_pamp_on(int en)
 {
 	int ret;
 
 	pr_aud_info("%s %d\n", __func__, en);
-	pyramid_snddev_bmic_pamp_on(en);
+	doubleshot_snddev_bmic_pamp_on(en);
 	if (en) {
 		ret = pm8058_micbias_enable(OTHC_MICBIAS_0, OTHC_SIGNAL_ALWAYS_ON);
 		if (ret)
@@ -173,7 +173,7 @@ void pyramid_snddev_imic_pamp_on(int en)
 	}
 }
 
-void pyramid_snddev_bmic_pamp_on(int en)
+void doubleshot_snddev_bmic_pamp_on(int en)
 {
 	int ret;
 
@@ -195,7 +195,7 @@ void pyramid_snddev_bmic_pamp_on(int en)
 	}
 }
 
-void pyramid_snddev_emic_pamp_on(int en)
+void doubleshot_snddev_emic_pamp_on(int en)
 {
 	pr_aud_info("%s %d\n", __func__, en);
 
@@ -207,7 +207,7 @@ void pyramid_snddev_emic_pamp_on(int en)
 	}
 }
 
-void pyramid_snddev_stereo_mic_pamp_on(int en)
+void doubleshot_snddev_stereo_mic_pamp_on(int en)
 {
 	int ret;
 
@@ -236,7 +236,7 @@ void pyramid_snddev_stereo_mic_pamp_on(int en)
 	}
 }
 
-void pyramid_snddev_fmspk_pamp_on(int en)
+void doubleshot_snddev_fmspk_pamp_on(int en)
 {
 	pr_aud_info("%s %d\n", __func__, en);
 	if (en) {
@@ -256,7 +256,7 @@ void pyramid_snddev_fmspk_pamp_on(int en)
 	}
 }
 
-void pyramid_snddev_fmhs_pamp_on(int en)
+void doubleshot_snddev_fmhs_pamp_on(int en)
 {
 	pr_aud_info("%s %d\n", __func__, en);
 	if (en) {
@@ -272,11 +272,11 @@ void pyramid_snddev_fmhs_pamp_on(int en)
 	}
 }
 
-void pyramid_voltage_on(int en)
+void doubleshot_voltage_on(int en)
 {
 }
 
-int pyramid_get_rx_vol(uint8_t hw, int network, int level)
+int doubleshot_get_rx_vol(uint8_t hw, int network, int level)
 {
 	int vol = 0;
 
@@ -287,37 +287,37 @@ int pyramid_get_rx_vol(uint8_t hw, int network, int level)
 	return vol;
 }
 
-void pyramid_rx_amp_enable(int en)
+void doubleshot_rx_amp_enable(int en)
 {
 	if (curr_rx_mode != 0) {
 		atomic_set(&aic3254_ctl, 1);
 		pr_aud_info("%s: curr_rx_mode 0x%x, en %d\n",
 			__func__, curr_rx_mode, en);
 		if (curr_rx_mode & BIT_SPEAKER)
-			pyramid_snddev_poweramp_on(en);
+			doubleshot_snddev_poweramp_on(en);
 		if (curr_rx_mode & BIT_HEADSET)
-			pyramid_snddev_hsed_pamp_on(en);
+			doubleshot_snddev_hsed_pamp_on(en);
 		if (curr_rx_mode & BIT_RECEIVER)
-			pyramid_snddev_receiver_pamp_on(en);
+			doubleshot_snddev_receiver_pamp_on(en);
 		if (curr_rx_mode & BIT_FM_SPK)
-			pyramid_snddev_fmspk_pamp_on(en);
+			doubleshot_snddev_fmspk_pamp_on(en);
 		if (curr_rx_mode & BIT_FM_HS)
-			pyramid_snddev_fmhs_pamp_on(en);
+			doubleshot_snddev_fmhs_pamp_on(en);
 		atomic_set(&aic3254_ctl, 0);;
 	}
 }
 
-int pyramid_support_aic3254(void)
+int doubleshot_support_aic3254(void)
 {
 	return 1;
 }
 
-int pyramid_support_back_mic(void)
+int doubleshot_support_back_mic(void)
 {
 	return 1;
 }
 
-void pyramid_get_acoustic_tables(struct acoustic_tables *tb)
+void doubleshot_get_acoustic_tables(struct acoustic_tables *tb)
 {
 	switch (system_rev) {
 	case 0:
@@ -333,7 +333,7 @@ void pyramid_get_acoustic_tables(struct acoustic_tables *tb)
 	}
 }
 
-int pyramid_support_beats(void)
+int doubleshot_support_beats(void)
 {
 	/* this means HW support 1V for beats */
 	/* PCB ID is defined by HW revision
@@ -345,19 +345,19 @@ int pyramid_support_beats(void)
 		return 0;
 }
 
-void pyramid_enable_beats(int en)
+void doubleshot_enable_beats(int en)
 {
 	pr_aud_info("%s: %d\n", __func__, en);
 	set_beats_on(en);
 }
 
-int pyramid_is_msm_i2s_slave(void)
+int doubleshot_is_msm_i2s_slave(void)
 {
 	/* 1 - CPU slave, 0 - CPU master */
 	return 1;
 }
 
-void pyramid_reset_3254(void)
+void doubleshot_reset_3254(void)
 {
 	gpio_tlmm_config(msm_aic3254_reset_gpio[0], GPIO_CFG_ENABLE);
 	gpio_set_value(DOUBLESHOT_AUD_CODEC_RST, 0);
@@ -365,13 +365,13 @@ void pyramid_reset_3254(void)
 	gpio_set_value(DOUBLESHOT_AUD_CODEC_RST, 1);
 }
 
-void pyramid_set_q6_effect_mode(int mode)
+void doubleshot_set_q6_effect_mode(int mode)
 {
 	pr_aud_info("%s: mode %d\n", __func__, mode);
 	atomic_set(&q6_effect_mode, mode);
 }
 
-int pyramid_get_q6_effect_mode(void)
+int doubleshot_get_q6_effect_mode(void)
 {
 	int mode = atomic_read(&q6_effect_mode);
 	pr_aud_info("%s: mode %d\n", __func__, mode);
@@ -379,32 +379,32 @@ int pyramid_get_q6_effect_mode(void)
 }
 
 static struct q6v2audio_analog_ops ops = {
-	.speaker_enable	        = pyramid_snddev_poweramp_on,
-	.headset_enable	        = pyramid_snddev_hsed_pamp_on,
-	.handset_enable	        = pyramid_snddev_receiver_pamp_on,
-	.headset_speaker_enable	= pyramid_snddev_hs_spk_pamp_on,
-	.bt_sco_enable	        = pyramid_snddev_bt_sco_pamp_on,
-	.int_mic_enable         = pyramid_snddev_imic_pamp_on,
-	.back_mic_enable        = pyramid_snddev_bmic_pamp_on,
-	.ext_mic_enable         = pyramid_snddev_emic_pamp_on,
-	.stereo_mic_enable      = pyramid_snddev_stereo_mic_pamp_on,
-	.fm_headset_enable      = pyramid_snddev_fmhs_pamp_on,
-	.fm_speaker_enable      = pyramid_snddev_fmspk_pamp_on,
-	.voltage_on		= pyramid_voltage_on,
+	.speaker_enable	        = doubleshot_snddev_poweramp_on,
+	.headset_enable	        = doubleshot_snddev_hsed_pamp_on,
+	.handset_enable	        = doubleshot_snddev_receiver_pamp_on,
+	.headset_speaker_enable	= doubleshot_snddev_hs_spk_pamp_on,
+	.bt_sco_enable	        = doubleshot_snddev_bt_sco_pamp_on,
+	.int_mic_enable         = doubleshot_snddev_imic_pamp_on,
+	.back_mic_enable        = doubleshot_snddev_bmic_pamp_on,
+	.ext_mic_enable         = doubleshot_snddev_emic_pamp_on,
+	.stereo_mic_enable      = doubleshot_snddev_stereo_mic_pamp_on,
+	.fm_headset_enable      = doubleshot_snddev_fmhs_pamp_on,
+	.fm_speaker_enable      = doubleshot_snddev_fmspk_pamp_on,
+	.voltage_on		= doubleshot_voltage_on,
 };
 
 static struct q6v2audio_icodec_ops iops = {
-	.support_aic3254 = pyramid_support_aic3254,
-	.is_msm_i2s_slave = pyramid_is_msm_i2s_slave,
+	.support_aic3254 = doubleshot_support_aic3254,
+	.is_msm_i2s_slave = doubleshot_is_msm_i2s_slave,
 };
 
 static struct q6v2audio_ecodec_ops eops = {
-	.bt_sco_enable  = pyramid_snddev_bt_sco_pamp_on,
+	.bt_sco_enable  = doubleshot_snddev_bt_sco_pamp_on,
 };
 
 static struct aic3254_ctl_ops cops = {
-	.rx_amp_enable        = pyramid_rx_amp_enable,
-	.reset_3254           = pyramid_reset_3254,
+	.rx_amp_enable        = doubleshot_rx_amp_enable,
+	.reset_3254           = doubleshot_reset_3254,
 	.lb_dsp_init          = &LOOPBACK_DSP_INIT_PARAM,
 	.lb_receiver_imic     = &LOOPBACK_Receiver_IMIC_PARAM,
 	.lb_speaker_imic      = &LOOPBACK_Speaker_IMIC_PARAM,
@@ -415,27 +415,27 @@ static struct aic3254_ctl_ops cops = {
 };
 
 static struct acoustic_ops acoustic = {
-	.enable_mic_bias = pyramid_mic_enable,
-	.support_aic3254 = pyramid_support_aic3254,
-	.support_back_mic = pyramid_support_back_mic,
-	.get_acoustic_tables = pyramid_get_acoustic_tables,
-	.support_beats = pyramid_support_beats,
-	.enable_beats = pyramid_enable_beats,
-	.set_q6_effect = pyramid_set_q6_effect_mode,
+	.enable_mic_bias = doubleshot_mic_enable,
+	.support_aic3254 = doubleshot_support_aic3254,
+	.support_back_mic = doubleshot_support_back_mic,
+	.get_acoustic_tables = doubleshot_get_acoustic_tables,
+	.support_beats = doubleshot_support_beats,
+	.enable_beats = doubleshot_enable_beats,
+	.set_q6_effect = doubleshot_set_q6_effect_mode,
 };
 
-void pyramid_aic3254_set_mode(int config, int mode)
+void doubleshot_aic3254_set_mode(int config, int mode)
 {
 	aic3254_set_mode(config, mode);
 }
 
 
 static struct q6v2audio_aic3254_ops aops = {
-       .aic3254_set_mode = pyramid_aic3254_set_mode,
+       .aic3254_set_mode = doubleshot_aic3254_set_mode,
 };
 
 static struct q6asm_ops qops = {
-	.get_q6_effect = pyramid_get_q6_effect_mode,
+	.get_q6_effect = doubleshot_get_q6_effect_mode,
 };
 
 void __init doubleshot_audio_init(void)
@@ -456,8 +456,8 @@ void __init doubleshot_audio_init(void)
 
 	aic3254_register_ctl_ops(&cops);
 
-	/* PMIC GPIO Init (See board-pyramid.c) */
+	/* PMIC GPIO Init (See board-doubleshot.c) */
 
 	/* Reset AIC3254 */
-	pyramid_reset_3254();
+	doubleshot_reset_3254();
 }
