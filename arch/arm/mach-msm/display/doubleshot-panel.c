@@ -44,6 +44,8 @@ static struct regulator *l4_1v8;
 
 static void doubleshot_id1_im1_switch(int on)
 {
+
+#if 0
 	int rc = 0;
 	pr_info("panel id1 im1 switch %d\n", on);
 
@@ -85,6 +87,7 @@ static void doubleshot_id1_im1_switch(int on)
 			gpio_free(GPIO_LCM_ID1_IM1);
 		}
 	}
+#endif
 	return;
 }
 
@@ -114,14 +117,14 @@ static void doubleshot_panel_power(int on)
 				goto fail;
 			}
 		} else {
-		lvs1_1v8 = regulator_get(NULL, "8901_lvs1");
-		if (IS_ERR(lvs1_1v8)) {
-			pr_err("%s: unable to get 8901_lvs1\n", __func__);
-			goto fail;
-		}
+			lvs1_1v8 = regulator_get(NULL, "8901_lvs1");
+			if (IS_ERR(lvs1_1v8)) {
+				pr_err("%s: unable to get 8901_lvs1\n", __func__);
+				goto fail;
+			}
 		}
 
-		ret = regulator_set_voltage(l1_3v, 3000000, 3000000);
+		ret = regulator_set_voltage(l1_3v, 3100000, 3100000);
 		if (ret) {
 			pr_err("%s: error setting l1_3v voltage\n", __func__);
 			goto fail;
@@ -167,6 +170,13 @@ static void doubleshot_panel_power(int on)
 	}
 
 	if (on) {
+		if (regulator_enable(l1_3v)) {
+			PR_DISP_ERR("%s: Unable to enable the regulator:"
+					" l1_3v\n", __func__);
+			return;
+		}
+		hr_msleep(5);
+
 		if (system_rev >= 1) {
 			if (regulator_enable(l4_1v8)) {
 				pr_err("%s: Unable to enable the regulator:"
@@ -174,18 +184,20 @@ static void doubleshot_panel_power(int on)
 				return;
 			}
 		} else {
-		if (regulator_enable(lvs1_1v8)) {
-			pr_err("%s: Unable to enable the regulator:"
-					" lvs1_1v8\n", __func__);
-			return;
-		}
+			if (regulator_enable(lvs1_1v8)) {
+				pr_err("%s: Unable to enable the regulator:"
+						" lvs1_1v8\n", __func__);
+				return;
+			}
 		}
 		mdelay(1);
+#if 0
 		if (regulator_enable(l1_3v)) {
 			pr_err("%s: Unable to enable the regulator:"
 					" l1_3v\n", __func__);
 			return;
 		}
+#endif
 		/* skip reset for the first time panel power up */
 		if ( init == 1 ) {
 				init = 2;
@@ -198,41 +210,51 @@ static void doubleshot_panel_power(int on)
 				doubleshot_id1_im1_switch(on);
 			} else if (panel_type == PANEL_ID_DOT_SONY ||
 				panel_type == PANEL_ID_DOT_SONY_C3) {
-				mdelay(1);
+
+			hr_msleep(10);
+
+//				mdelay(1);
 				doubleshot_id1_im1_switch(on);
-				mdelay(1);
+			hr_msleep(1);
+//				mdelay(1);
 				gpio_set_value(GPIO_LCM_RST_N, 1);
-				mdelay(10);
+			hr_msleep(10);
+//				mdelay(10);
 				gpio_set_value(GPIO_LCM_RST_N, 0);
-				mdelay(10);
+			hr_msleep(10);
+//				mdelay(10);
 				gpio_set_value(GPIO_LCM_RST_N, 1);
-				mdelay(10);
+			hr_msleep(20);
+//				mdelay(10);
 			} else {
 				pr_err("panel_type=0x%x not support\n", panel_type);
 				return;
 			}
 		}
 	} else {
-		gpio_set_value(GPIO_LCM_RST_N, 0);
-		doubleshot_id1_im1_switch(on);
-		mdelay(120);
-		if (regulator_disable(l1_3v)) {
-			pr_err("%s: Unable to enable the regulator:"
-					" l1_3v\n", __func__);
-			return;
-		}
-		if (system_rev >= 1) {
-			if (regulator_disable(l4_1v8)) {
-				pr_err("%s: Unable to enable the regulator:"
-					" l4_1v8\n", __func__);
-				return;
+			gpio_set_value(GPIO_LCM_RST_N, 0);
+			doubleshot_id1_im1_switch(on);
+			hr_msleep(5);
+	//		mdelay(120);
+
+			if (system_rev >= 1) {
+				if (regulator_disable(l4_1v8)) {
+					pr_err("%s: Unable to enable the regulator:"
+						" l4_1v8\n", __func__);
+					return;
+				}
+			} else {
+				if (regulator_disable(lvs1_1v8)) {
+					pr_err("%s: Unable to enable the regulator:"
+							" lvs1_1v8\n", __func__);
+					return;
+				}
 			}
-		} else {
-		if (regulator_disable(lvs1_1v8)) {
-			pr_err("%s: Unable to enable the regulator:"
-					" lvs1_1v8\n", __func__);
-			return;
-		}
+			hr_msleep(5);
+			if (regulator_disable(l1_3v)) {
+				pr_err("%s: Unable to enable the regulator:"
+						" l1_3v\n", __func__);
+				return;
 			}
 	}
 	return;
