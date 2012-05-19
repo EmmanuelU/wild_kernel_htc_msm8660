@@ -190,6 +190,7 @@ static int enable_quickboot_show(char *buffer, struct kernel_param *kp)
 module_param_call(enable_quickboot, enable_quickboot_store, enable_quickboot_show, NULL, 0664);
 
 #ifdef CONFIG_PM
+#if 0
 static int gpio_event_sleep(struct platform_device *pdev, pm_message_t state)
 {
 	struct gpio_event *ip = platform_get_drvdata(pdev);
@@ -207,6 +208,7 @@ static int gpio_event_wakeup(struct platform_device *pdev)
 		return 0;
 	return gpio_event_call_all_func(ip, GPIO_EVENT_FUNC_RESUME);
 }
+#endif
 #endif
 
 static int gpio_event_probe(struct platform_device *pdev)
@@ -336,8 +338,10 @@ static struct platform_driver gpio_event_driver = {
 		.name	= GPIO_EVENT_DEV_NAME,
 	},
 #if CONFIG_PM
+#if 0
 	.suspend	= gpio_event_sleep,
 	.resume		= gpio_event_wakeup,
+#endif
 #endif
 };
 

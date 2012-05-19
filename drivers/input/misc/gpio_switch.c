@@ -146,6 +146,7 @@ static enum hrtimer_restart gpio_event_switch_timer_func(struct hrtimer *timer)
 
 		input_event(ds->input_devs->dev[key_entry->dev],
 			ds->info->type, key_entry->code, pressed);
+		input_sync(ds->input_devs->dev[key_entry->dev]);
 		if (key_entry->code == SW_LID) {
 			if (ds->info->set_qty_irq && get_kp_irq_mode())
 				ds->info->set_qty_irq(pressed);
@@ -197,6 +198,7 @@ void switch_reprort_keycode(struct gpio_key_state *ks)
 
 	input_event(ds->input_devs->dev[key_entry->dev],
 		ds->info->type, key_entry->code, pressed);
+	input_sync(ds->input_devs->dev[key_entry->dev]);
 	if (key_entry->code == SW_LID && get_kp_irq_mode()) {
 		if (ds->info->set_qty_irq)
 			ds->info->set_qty_irq(pressed);
