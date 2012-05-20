@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -14,7 +14,7 @@
 #define _VCD_CORE_H_
 
 #include <linux/ion.h>
-#include "vcd_api.h"
+#include <media/msm/vcd_api.h>
 #include "vcd_ddl_api.h"
 
 #include "vcd_util.h"
@@ -209,6 +209,7 @@ struct vcd_clnt_ctxt {
 	u32 vcd_enable_ion;
 	struct vcd_clnt_ctxt *next;
 	u32 meta_mode;
+	int secure;
 };
 
 #define VCD_BUFFERPOOL_INUSE_DECREMENT(val) \

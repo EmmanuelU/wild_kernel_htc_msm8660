@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -16,9 +16,9 @@
 #include <linux/regulator/consumer.h>
 #include <mach/clk.h>
 #include <linux/interrupt.h>
-#include "vidc_type.h"
+#include <media/msm/vidc_init.h>
+#include <media/msm/vidc_type.h>
 #include "vcd_res_tracker.h"
-#include "vidc_init.h"
 
 #define MSM_AXI_QOS_NAME "msm_vidc_reg"
 #define AXI_CLK_SCALING
@@ -717,4 +717,39 @@ u32 res_trk_get_enable_ion(void)
 struct ion_client *res_trk_get_ion_client(void)
 {
 	return NULL;
+}
+
+void res_trk_set_mem_type(enum ddl_mem_area mem_type)
+{
+	return;
+}
+
+u32 res_trk_get_disable_fullhd(void)
+{
+	return 0;
+}
+
+int res_trk_check_for_sec_session()
+{
+	return 0;
+}
+
+void res_trk_secure_unset(void)
+{
+	return;
+}
+
+void res_trk_secure_set(void)
+{
+	return;
+}
+
+int res_trk_open_secure_session()
+{
+	return -EINVAL;
+}
+
+int res_trk_close_secure_session()
+{
+	return 0;
 }
