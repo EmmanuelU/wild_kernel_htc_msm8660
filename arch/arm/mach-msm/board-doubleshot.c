@@ -2917,6 +2917,14 @@ static struct htc_headset_mgr_platform_data htc_headset_mgr_data = {
 	.headset_devices	= headset_devices,
 	.headset_config_num	= 0,
 	.headset_config		= 0,
+
+	.hptv_det_hp_gpio	= PM8058_GPIO_PM_TO_SYS(
+				  DOUBLESHOT_AUD_HPTV_DET_HP),
+	.hptv_det_tv_gpio	= PM8058_GPIO_PM_TO_SYS(
+				  DOUBLESHOT_AUD_HPTV_DET_TV),
+	.hptv_sel_gpio		= PM8058_GPIO_PM_TO_SYS(
+				  DOUBLESHOT_AUD_TVOUT_HP_SEL),
+
 };
 
 static struct platform_device htc_headset_mgr = {
@@ -6365,116 +6373,6 @@ error:
 	return rc;
 }
 #endif /* CONFIG_FB_MSM_HDMI_MSM_PANEL */
-
-#ifdef CONFIG_FB_MSM_TVOUT
-static struct regulator *reg_8058_l13;
-
-static int atv_dac_power(int on)
-{
-	int rc = 0;
-	#define _GET_REGULATOR(var, name) do {				\
-		var = regulator_get(NULL, name);			\
-		if (IS_ERR(var)) {					\
-			pr_info("'%s' regulator not found, rc=%ld\n",	\
-				name, IS_ERR(var));			\
-			var = NULL;					\
-			return -ENODEV;					\
-		}							\
-	} while (0)
-
-	if (!reg_8058_l13)
-		_GET_REGULATOR(reg_8058_l13, "8058_l13");
-	#undef _GET_REGULATOR
-
-	if (on) {
-		rc = regulator_set_voltage(reg_8058_l13, 2050000, 2050000);
-		if (rc) {
-			pr_info("%s: '%s' regulator set voltage failed,\
-				rc=%d\n", __func__, "8058_l13", rc);
-			return rc;
-		}
-
-		rc = regulator_enable(reg_8058_l13);
-		if (rc) {
-			pr_err("%s: '%s' regulator enable failed,\
-				rc=%d\n", __func__, "8058_l13", rc);
-			return rc;
-		}
-	} else {
-		rc = regulator_force_disable(reg_8058_l13);
-		if (rc)
-			pr_warning("%s: '%s' regulator disable failed, rc=%d\n",
-				__func__, "8058_l13", rc);
-	}
-	return rc;
-
-}
-#endif
-
-#ifdef CONFIG_FB_MSM_TVOUT
-
-#ifdef CONFIG_MSM_BUS_SCALING
-static struct msm_bus_vectors atv_bus_init_vectors[] = {
-	/* For now, 0th array entry is reserved.
-	 * Please leave 0 as is and don't use it
-	 */
-	{
-		.src = MSM_BUS_MASTER_MDP_PORT0,
-		.dst = MSM_BUS_SLAVE_SMI,
-		.ab = 0,
-		.ib = 0,
-	},
-	/* Master and slaves can be from different fabrics */
-	{
-		.src = MSM_BUS_MASTER_MDP_PORT0,
-		.dst = MSM_BUS_SLAVE_EBI_CH0,
-		.ab = 0,
-		.ib = 0,
-	},
-};
-static struct msm_bus_vectors atv_bus_def_vectors[] = {
-	/* For now, 0th array entry is reserved.
-	 * Please leave 0 as is and don't use it
-	 */
-	{
-		.src = MSM_BUS_MASTER_MDP_PORT0,
-		.dst = MSM_BUS_SLAVE_SMI,
-		.ab = 236390400,
-		.ib = 265939200,
-	},
-	/* Master and slaves can be from different fabrics */
-	{
-		.src = MSM_BUS_MASTER_MDP_PORT0,
-		.dst = MSM_BUS_SLAVE_EBI_CH0,
-		.ab = 236390400,
-		.ib = 265939200,
-	},
-};
-static struct msm_bus_paths atv_bus_scale_usecases[] = {
-	{
-		ARRAY_SIZE(atv_bus_init_vectors),
-		atv_bus_init_vectors,
-	},
-	{
-		ARRAY_SIZE(atv_bus_def_vectors),
-		atv_bus_def_vectors,
-	},
-};
-static struct msm_bus_scale_pdata atv_bus_scale_pdata = {
-	atv_bus_scale_usecases,
-	ARRAY_SIZE(atv_bus_scale_usecases),
-	.name = "atv",
-};
-#endif
-
-static struct tvenc_platform_data atv_pdata = {
-	.poll		 = 0,
-	.pm_vid_en	 = atv_dac_power,
-#ifdef CONFIG_MSM_BUS_SCALING
-	.bus_scale_table = &atv_bus_scale_pdata,
-#endif
-};
-#endif
 
 static void __init msm8x60_cfg_smsc911x(void)
 {

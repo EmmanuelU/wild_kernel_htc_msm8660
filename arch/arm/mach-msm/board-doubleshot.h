@@ -90,7 +90,11 @@
 #ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
 #define MSM_FB_EXT_BUF_SIZE  (1920 * 1080 * 2 * 1) /* 2 bpp x 1 page */
 #else
+#ifdef CONFIG_FB_MSM_TVOUT
+#define MSM_FB_EXT_BUF_SIZE   0x195000 /*tvout = 720 x 576 x 2(bpp) x 2(pages)*/
+#else
 #define MSM_FB_EXT_BUFT_SIZE	0
+#endif
 #endif
 
 #ifdef CONFIG_FB_MSM_OVERLAY_WRITEBACK

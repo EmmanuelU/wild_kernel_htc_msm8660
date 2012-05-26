@@ -3540,7 +3540,7 @@ struct platform_device *msm_fb_add_device(struct platform_device *pdev)
 	 *
 	 */
 	if (type == HDMI_PANEL || type == DTV_PANEL || type == TV_PANEL)
-		pdata->panel_info.fb_num = 1;
+		pdata->panel_info.fb_num = 2; // tbalden, doublebuffer tvout
 	else
 		pdata->panel_info.fb_num = MSM_FB_NUM;
 
