@@ -708,9 +708,9 @@ int mt9v113_set_flip_mirror(struct msm_camera_sensor_info *info)
 	if (info != NULL) {
 		if (info->mirror_mode) {
 			rc = mt9v113_i2c_write(mt9v113_client->addr, 0x098C, 0x2717, WORD_LEN);
-			rc = mt9v113_i2c_write(mt9v113_client->addr, 0x0990, 0x0025, WORD_LEN);
+			rc = mt9v113_i2c_write(mt9v113_client->addr, 0x0990, 0x0024, WORD_LEN); // 25 -> 24
 			rc = mt9v113_i2c_write(mt9v113_client->addr, 0x098C, 0x272D, WORD_LEN);
-			rc = mt9v113_i2c_write(mt9v113_client->addr, 0x0990, 0x0025, WORD_LEN);
+			rc = mt9v113_i2c_write(mt9v113_client->addr, 0x0990, 0x0024, WORD_LEN); // 25 -> 24
 		} else {
 			rc = mt9v113_i2c_write(mt9v113_client->addr, 0x098C, 0x2717, WORD_LEN);
 			rc = mt9v113_i2c_write(mt9v113_client->addr, 0x0990, 0x0026, WORD_LEN);
