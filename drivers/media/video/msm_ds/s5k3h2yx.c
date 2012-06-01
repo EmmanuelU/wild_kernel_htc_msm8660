@@ -247,7 +247,7 @@ struct s5k3h2yx_waitevent{
 };
 
 static DECLARE_WAIT_QUEUE_HEAD(s5k3h2yx_wait_queue);
-DECLARE_MUTEX(s5k3h2yx_sem);
+DEFINE_SEMAPHORE(s5k3h2yx_sem);
 
 
 /*=============================================================*/

@@ -1631,6 +1631,42 @@ static struct platform_device msm_camera_sensor_imx105 = {
 	},
 };
 
+#ifdef CONFIG_S5K3H2YX
+static struct msm_camera_sensor_flash_data flash_s5k3h2yx = {
+	.flash_type = MSM_CAMERA_FLASH_LED,
+	.flash_src = &msm_flash_src
+};
+
+static struct msm_camera_sensor_info msm_camera_sensor_s5k3h2yx_data = {
+	.sensor_name	= "s5k3h2yx",
+	.sensor_reset = 0,
+	.sensor_pwd = 137,
+	.vcm_pwd = 58,
+	.vcm_enable = 1,
+	.camera_power_on = Doubleshot_sensor_vreg_on,
+	.camera_power_off = Doubleshot_sensor_vreg_off,
+	.camera_clk_switch = Doubleshot_maincam_clk_switch,
+	.pdata			= &msm_camera_device_data,
+	.resource		= msm_camera_resources,
+	.num_resources	= ARRAY_SIZE(msm_camera_resources),
+	.flash_data		= &flash_s5k3h2yx,
+	.flash_cfg = &msm_camera_sensor_flash_cfg,
+	.power_down_disable = false, /* true: disable pwd down function */
+	.mirror_mode = 0,
+	.cam_select_pin = CLK_SWITCH,
+	.csi_if			= 1,
+	.dev_node		= 0
+};
+
+struct platform_device msm_camera_sensor_s5k3h2yx = {
+	.name	= "msm_camera_s5k3h2yx",
+	.dev	= {
+		.platform_data = &msm_camera_sensor_s5k3h2yx_data,
+	},
+};
+#endif
+
+
 static struct msm_camera_sensor_flash_data flash_mt9v113 = {
 	.flash_type		= MSM_CAMERA_FLASH_NONE,
 };
@@ -1683,6 +1719,11 @@ static struct i2c_board_info msm_camera_boardinfo[] __initdata = {
 	#ifdef CONFIG_QS_S5K4E1
 	{
 		I2C_BOARD_INFO("qs_s5k4e1", 0x20),
+	},
+	#endif
+	#ifdef CONFIG_S5K3H2YX
+	{
+		I2C_BOARD_INFO("s5k3h2yx", 0x20 >> 1),
 	},
 	#endif
 	#ifdef CONFIG_IMX105
@@ -3326,6 +3367,9 @@ static struct platform_device *doubleshot_devices[] __initdata = {
 #ifdef CONFIG_MSM_CAMERA
 #ifdef CONFIG_IMX105
 	&msm_camera_sensor_imx105,
+#endif
+#ifdef CONFIG_S5K3H2YX
+	&msm_camera_sensor_s5k3h2yx,
 #endif
 	&msm_camera_sensor_webcam,
 
