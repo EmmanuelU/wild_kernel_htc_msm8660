@@ -343,7 +343,7 @@ static struct keyreset_platform_data doubleshot_reset_keys_pdata = {
 	.keys_down = {
 		KEY_POWER,
 		KEY_VOLUMEDOWN,
-		BTN_MOUSE,
+		KEY_F23,
 		0
 	},
 };
