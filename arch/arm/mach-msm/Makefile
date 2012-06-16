@@ -348,6 +348,8 @@ obj-$(CONFIG_MACH_KNIGHT) += display/board-knight-panel.o
 obj-$(CONFIG_MACH_KNIGHT) += board-knight-audio.o
 obj-$(CONFIG_MACH_KNIGHT) += htc_bdaddress.o
 
+obj-$(CONFIG_FORCE_FAST_CHARGE) += fastchg.o
+
 # MSM8x60 boards
 obj-$(CONFIG_MACH_PYRAMID) += board-pyramid.o
 obj-$(CONFIG_MACH_PYRAMID) += board-pyramid-keypad.o
