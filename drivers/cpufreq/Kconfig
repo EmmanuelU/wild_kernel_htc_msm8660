@@ -374,7 +374,7 @@ config CPU_FREQ_GOV_ONDEMAND_2_PHASE
 	help
 	  '2-phase' - This driver adds a new algo to save power
 
-config SEC_LIMIT_MAX_FREQ
+config CPUFREQ_LIMIT_MAX_FREQ
 	bool "Limit Max Freq"
 	depends on CPU_FREQ_GOV_INTELLIDEMAND
 	help
