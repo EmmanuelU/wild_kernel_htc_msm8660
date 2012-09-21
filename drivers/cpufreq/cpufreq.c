@@ -1792,7 +1792,7 @@ error_out:
 	return ret;
 }
 
-#ifdef CONFIG_SEC_LIMIT_MAX_FREQ // limit max freq
+#ifdef CONFIG_CPUFREQ_LIMIT_MAX_FREQ // limit max freq
 enum {
 	SET_MIN = 0,
 	SET_MAX
@@ -1800,7 +1800,7 @@ enum {
 
 int cpufreq_set_limits_off(int cpu, unsigned int limit, unsigned int value)
 {
-	int ret = -EINVAL;	
+	int ret = -EINVAL;
 	unsigned long flags;
 
 	if (!(limit == SET_MIN || limit == SET_MAX))
@@ -1826,7 +1826,7 @@ int cpufreq_set_limits_off(int cpu, unsigned int limit, unsigned int value)
 		if (per_cpu(cpufreq_policy_save, cpu).min)
 			per_cpu(cpufreq_policy_save, cpu).min = value;
 		else
-			goto out_put_module;		
+			goto out_put_module;
 	}
 	ret = 0;
 	pr_info("%s: Setting [min/max:0/1] = %d frequency of cpu[%d]  to %d\n",  __func__, limit, cpu, value);
@@ -1852,8 +1852,8 @@ int cpufreq_set_limits(int cpu, unsigned int limit, unsigned int value)
 
 	cur_policy = cpufreq_cpu_get(cpu);
 	if (!cur_policy)
-		goto out;	
-	if (lock_policy_rwsem_write(cpu) < 0)		
+		goto out;
+	if (lock_policy_rwsem_write(cpu) < 0)
 		goto out_put_freq;
 
 	memcpy(&new_policy, cur_policy, sizeof(struct cpufreq_policy));
@@ -1865,13 +1865,13 @@ int cpufreq_set_limits(int cpu, unsigned int limit, unsigned int value)
 		{
 			new_policy.min = value;
 			ret = __cpufreq_set_policy(cur_policy, &new_policy);
-			if(ret < 0) 	
+			if(ret < 0)
 				goto out_unlock;
 
 			cur_policy->user_policy.min = cur_policy->min;
 		}
 
-		new_policy.max = value;	
+		new_policy.max = value;
 	}
 	else
 	{
@@ -1883,7 +1883,7 @@ int cpufreq_set_limits(int cpu, unsigned int limit, unsigned int value)
 	}
 
 	ret = __cpufreq_set_policy(cur_policy, &new_policy);
-	if(ret < 0)		
+	if(ret < 0)
 		goto out_unlock;
 
 	if (limit == SET_MAX)
@@ -1904,7 +1904,7 @@ out:
 int cpufreq_get_limits(int cpu, unsigned int limit)
 {
 	struct cpufreq_policy *cur_policy;
-	int ret = -EINVAL;	
+	int ret = -EINVAL;
 	unsigned int value = 0;
 	if (!(limit == SET_MIN || limit == SET_MAX))
 		goto out;
@@ -1912,12 +1912,12 @@ int cpufreq_get_limits(int cpu, unsigned int limit)
 		goto out;
 	cur_policy = cpufreq_cpu_get(cpu);
 	if (!cur_policy)
-		goto out;	
-	if (lock_policy_rwsem_write(cpu) < 0)		
+		goto out;
+	if (lock_policy_rwsem_write(cpu) < 0)
 		goto out_put_freq;
 
 	if (limit == SET_MAX)
-		value = cur_policy->max;	
+		value = cur_policy->max;
 	else
 		value = cur_policy->min;
 
@@ -1928,7 +1928,7 @@ int cpufreq_get_limits(int cpu, unsigned int limit)
 out_put_freq:
 	cpufreq_cpu_put(cur_policy);
 out:
-	return ret;		
+	return ret;
 }
 #endif
 
