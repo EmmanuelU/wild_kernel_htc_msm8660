@@ -136,6 +136,13 @@ config CPU_FREQ_DEFAULT_GOV_HOTPLUG
 	  the help section of the driver. Fallback governor will be the
 	  performance governor.
 
+config CPU_FREQ_DEFAULT_GOV_LULZACTIVEQ
+	bool "lulzactiveq"
+	select CPU_FREQ_GOV_LULZACTIVEQ
+        select CPU_FREQ_GOV_PERFORMANCE
+	help
+		Use the CPUFreq governor 'lulzactiveQ' as default.
+
 endchoice
 
 config CPU_FREQ_GOV_PERFORMANCE
