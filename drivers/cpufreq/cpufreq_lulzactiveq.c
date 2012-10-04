@@ -306,10 +306,10 @@ static int hotplug_freq[4][2] = {
 static int cpufreq_governor_lulzactive(struct cpufreq_policy *policy,
 		unsigned int event);
 
-#ifndef CONFIG_CPU_FREQ_DEFAULT_GOV_LULZACTIVE
+#ifndef CONFIG_CPU_FREQ_DEFAULT_GOV_LULZACTIVEQ
 static
 #endif
-struct cpufreq_governor cpufreq_gov_lulzactive = {
+struct cpufreq_governor cpufreq_gov_lulzactiveq = {
     .name = "lulzactiveq",
 	.governor = cpufreq_governor_lulzactive,
 	.max_transition_latency = 10000000,
@@ -2101,7 +2101,7 @@ static int __init cpufreq_lulzactive_init(void)
 	spin_lock_init(&down_cpumask_lock);
 	mutex_init(&set_speed_lock);
 
-	return cpufreq_register_governor(&cpufreq_gov_lulzactive);
+	return cpufreq_register_governor(&cpufreq_gov_lulzactiveq);
 
 err_freeuptask:
 	kfree(hotplug_history);
@@ -2119,7 +2119,7 @@ module_init(cpufreq_lulzactive_init);
 
 static void __exit cpufreq_lulzactive_exit(void)
 {
-	cpufreq_unregister_governor(&cpufreq_gov_lulzactive);
+	cpufreq_unregister_governor(&cpufreq_gov_lulzactiveq);
 	kthread_stop(up_task);
 	put_task_struct(up_task);
 	destroy_workqueue(dvfs_workqueue);
