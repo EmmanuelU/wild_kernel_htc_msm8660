@@ -14,6 +14,7 @@ obj-$(CONFIG_CPU_FREQ_GOV_INTELLIDEMAND)+= cpufreq_intellidemand.o
 
 #New Governors
 obj-$(CONFIG_CPU_FREQ_GOV_LULZACTIVE)	+= cpufreq_lulzactive.o
+obj-$(CONFIG_CPU_FREQ_GOV_ONDEMANDX)	+= cpufreq_ondemandx.o
 
 #Hotplugging Governors
 obj-$(CONFIG_CPU_FREQ_GOV_HOTPLUG)	+= cpufreq_hotplug.o
