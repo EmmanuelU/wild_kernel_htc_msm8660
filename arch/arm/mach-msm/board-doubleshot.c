@@ -2309,8 +2309,8 @@ static int configure_uart_gpios(int on)
 }
 
 static struct msm_serial_hs_platform_data msm_uart_dm1_pdata = {
-	.wakeup_irq = -1,
-	.inject_rx_on_wakeup = 0,
+	.inject_rx_on_wakeup = 1,
+	.rx_to_inject = 0xFD,	
 	.gpio_config = configure_uart_gpios,
 	.exit_lpm_cb = bcm_bt_lpm_exit_lpm_locked,
 };
