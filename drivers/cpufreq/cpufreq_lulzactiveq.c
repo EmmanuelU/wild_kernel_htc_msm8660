@@ -44,7 +44,7 @@
 #define LULZACTIVE_AUTHOR	"tegrak"
 
 // if you changed some codes for optimization, just write your name here.
-#define LULZACTIVE_TUNER "gokhanmoral-robertobsc"
+#define LULZACTIVE_TUNER "sv"
 
 static atomic_t active_count = ATOMIC_INIT(0);
 
@@ -124,7 +124,7 @@ static unsigned long down_sample_time;
 /*
  * CPU freq will be increased if measured load > inc_cpu_load;
  */
-#define DEFAULT_INC_CPU_LOAD 80
+#define DEFAULT_INC_CPU_LOAD 70
 static unsigned long inc_cpu_load;
 
 /*
@@ -273,7 +273,7 @@ static unsigned int get_nr_run_avg(void)
 #define DEF_MIN_CPU_LOCK			(0)
 #define DEF_UP_NR_CPUS				(1)
 #define DEF_CPU_UP_RATE				(10)
-#define DEF_CPU_DOWN_RATE			(20)
+#define DEF_CPU_DOWN_RATE			(30)
 #define DEF_START_DELAY				(0)
 
 #define HOTPLUG_DOWN_INDEX			(0)
@@ -292,13 +292,13 @@ static int hotplug_freq[4][2] = {
 };
 #else
 static int hotplug_rq[4][2] = {
-	{0, 200}, {200, 200}, {200, 300}, {300, 0}
+	{0, 350}, {300, 300}, {300, 300}, {300, 0}
 };
 
 static int hotplug_freq[4][2] = {
-	{0, 800000},
-	{500000, 800000},
-	{500000, 800000},
+	{0, 1080000},
+	{500000, 1080000},
+	{500000, 1080000},
 	{500000, 0}
 };
 #endif
