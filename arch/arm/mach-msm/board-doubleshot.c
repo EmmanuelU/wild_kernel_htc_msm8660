@@ -1601,7 +1601,7 @@ static struct msm_camera_sensor_flash_data flash_imx105 = {
 
 static struct camera_flash_cfg msm_camera_sensor_flash_cfg = {
 	.low_temp_limit		= 5,
-	.low_cap_limit		= 30,
+	.low_cap_limit		= 5,
 };
 
 static struct msm_camera_sensor_info msm_camera_sensor_imx105_data = {
