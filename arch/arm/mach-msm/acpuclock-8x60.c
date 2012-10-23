@@ -48,7 +48,7 @@ extern unsigned int max_capped;
 #define L_VAL_SCPLL_CAL_MAX	0x1C /* = 1512 MHz with 27MHz source */
 
 #define MAX_VDD_SC		1350000 /* uV */
-#define MIN_VDD_SC		 500000 /* uV */
+#define MIN_VDD_SC		 300000 /* uV */
 #define MAX_VDD_MEM		1350000 /* uV */
 #define MAX_VDD_DIG		1300000 /* uV */
 #define MAX_AXI			 310500 /* KHz */
@@ -291,7 +291,7 @@ static struct clkctl_acpu_speed acpu_freq_tbl_nom[] = {
 
 /* SCPLL frequencies = 2 * 27 MHz * L_VAL */
 static struct clkctl_acpu_speed acpu_freq_tbl_fast[] = {
-  { {1, 1},  96000,  ACPU_PLL_8, 3, 1, 0, 0,    L2(1),   600000, 0x03006000},
+  { {1, 1},  96000,  ACPU_PLL_8, 3, 1, 0, 0,    L2(1),   500000, 0x03006000},
   /* MAX_AXI row is used to source CPU cores and L2 from the AFAB clock. */
   { {0, 0},  MAX_AXI, ACPU_AFAB,  1, 0, 0, 0,    L2(0),   750000, 0x03006000},
   { {1, 1},  196000,  ACPU_PLL_8, 3, 0, 0, 0,    L2(1),   750000, 0x03006000},
