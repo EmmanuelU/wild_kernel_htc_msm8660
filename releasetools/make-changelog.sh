@@ -4,4 +4,4 @@ then
 	rm changelog.txt
 fi
 
-git log --after="yesterday" > changelog.txt
+git log --after="1 day ago" > changelog.txt
