@@ -32,3 +32,7 @@ cd anykernel
 zip -r9 ../kernel-zip/$DATE.zip *
 
 cd ..
+
+#copy new changelog to kernel-zip folder:
+cp changelog.txt kernel-zip/$DATE.txt
+
