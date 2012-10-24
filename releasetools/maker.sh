@@ -41,5 +41,5 @@ make modules
 cd releasetools
 
 #create zip file:
-./make-zip.sh $DATE
+./make-zip.sh master-$DATE
 
