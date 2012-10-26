@@ -10,8 +10,14 @@ DATE=`date +%Y-%m-%d-%H-%M`
 #go to parent directory:
 cd ..
 
+
+
 #make sure that the exp branch is checked out:
-git checkout exp
+if [ "$1" != "master" ]; then
+	git checkout exp
+else
+	git checkout master
+fi
 
 #update repository:
 git pull origin
