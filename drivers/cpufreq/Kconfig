@@ -204,6 +204,10 @@ config CPU_FREQ_DEFAULT_GOV_LULZACTIVEQ
 	help
 		Use the CPUFreq governor 'lulzactiveQ' as default.
 
+config CPU_FREQ_DEFAULT_GOV_PEGASUSQ
+	bool "pegasusq"
+	select CPU_FREQ_GOV_PEGASUSQ
+
 config CPU_FREQ_DEFAULT_GOV_ONDEMANDX
 	bool "ondemandx"
 	select CPU_FREQ_GOV_ONDEMANDX
@@ -438,6 +442,9 @@ config CPU_FREQ_GOV_LULZACTIVEQ
         depends on CPU_FREQ
         help
           'lulzactiveq' - hotplug mechanism added in lulzactive
+
+config CPU_FREQ_GOV_PEGASUSQ
+	tristate "'pegasusq' cpufreq policy governor"
 
 config INTELLI_MAX_ACTIVE_FREQ
 	int "Max Active Freq for Intellidemand"
