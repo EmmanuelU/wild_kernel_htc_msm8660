@@ -743,6 +743,7 @@ static void __init msm_fb_add_devices(void)
 #ifdef CONFIG_FB_MSM_TVOUT
 	msm_fb_register_device("tvenc", &atv_pdata);
 	msm_fb_register_device("tvout_device", NULL);
+	atv_dac_power(0);
 #endif
 }
 
