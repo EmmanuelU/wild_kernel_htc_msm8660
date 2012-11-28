@@ -1190,6 +1190,11 @@ long audio_aio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		}
 		audio->enabled = 0;
 		audio->drv_status &= ~ADRV_STATUS_PAUSE;
+		if (audio->drv_status & ADRV_STATUS_FSYNC) {
+			pr_debug("%s[%p] Waking up the audio_aio_fsync\n",
+					__func__, audio);
+			wake_up(&audio->write_wait);
+		}
 		mutex_unlock(&audio->lock);
 		break;
 	}
@@ -1226,6 +1231,11 @@ long audio_aio_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		mutex_lock(&audio->lock);
 		audio->rflush = 1;
 		audio->wflush = 1;
+		if (audio->drv_status & ADRV_STATUS_FSYNC) {
+			pr_debug("%s[%p] Waking up the audio_aio_fsync\n",
+				__func__, audio);
+			wake_up(&audio->write_wait);
+		}
 		/* Flush DSP */
 		rc = audio_aio_flush(audio);
 		/* Flush input / Output buffer in software*/
