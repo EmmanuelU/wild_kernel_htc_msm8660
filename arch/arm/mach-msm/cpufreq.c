@@ -90,7 +90,7 @@ static void set_cpu_work(struct work_struct *work)
 #endif
 
 #ifdef CONFIG_CPU_FREQ_GOV_INTELLIDEMAND
-extern bool lmf_screen_state;
+static bool lmf_screen_state;
 #endif
 
 static void msm_cpu_early_suspend(struct early_suspend *h)
