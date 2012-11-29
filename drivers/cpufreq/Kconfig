@@ -158,6 +158,13 @@ config CPU_FREQ_DEFAULT_GOV_LAGFREE
 	help
 		Use the CPUFreq governor 'lagfree' as default.
 		
+config CPU_FREQ_DEFAULT_GOV_SAKURACTIVE
+	bool "sakuractive"
+	select CPU_FREQ_GOV_SAKURACTIVE
+	select CPU_FREQ_GOV_PERFORMANCE
+	help
+		Use the CPUFreq governor 'sakuractive' as default.
+		
 config CPU_FREQ_DEFAULT_GOV_HOTPLUG
 	bool "hotplug"
 	select CPU_FREQ_GOV_HOTPLUG
@@ -340,6 +347,26 @@ config CPU_FREQ_GOV_LAGFREE
           For details, take a look at linux/Documentation/cpu-freq.
 
           If in doubt, say N.
+		  
+	config CPU_FREQ_GOV_SAKURACTIVE
+	tristate "'sakuractive' cpufreq governor"
+	depends on CPU_FREQ && NO_HZ && HOTPLUG_CPU
+	help
+	  'sakuractive' - this driver mimics the frequency scaling behavior
+	  in 'ondemand', but with several key differences.  First is
+	  that frequency transitions use the CPUFreq table directly,
+	  instead of incrementing in a percentage of the maximum
+	  available frequency.  Second 'sakuractive' will offline auxillary
+	  CPUs when the system is idle, and online those CPUs once the
+	  system becomes busy again.  This last feature is needed for
+	  architectures which transition to low power states when only
+	  the "master" CPU is online, or for thermally constrained
+	  devices.
+
+	  If you don't have one of these architectures or devices, use
+	  'ondemand' instead.
+
+	  If in doubt, say N.
 
 config CPU_FREQ_GOV_HOTPLUG
        tristate "'hotplug' cpufreq governor"
