@@ -18,6 +18,7 @@ obj-$(CONFIG_CPU_FREQ_GOV_SMARTASS2)    += cpufreq_smartass2.o
 obj-$(CONFIG_CPU_FREQ_GOV_SAVAGEDZEN)  += cpufreq_savagedzen.o
 obj-$(CONFIG_CPU_FREQ_GOV_SCARY)  += cpufreq_scary.o
 obj-$(CONFIG_CPU_FREQ_GOV_LAZY)  += cpufreq_lazy.o
+obj-$(CONFIG_CPU_FREQ_GOV_LAGFREE)  += cpufreq_lagfree.o
 obj-$(CONFIG_CPU_FREQ_GOV_ONDEMANDX)	+= cpufreq_ondemandx.o
 
 #Hotplugging Governors
