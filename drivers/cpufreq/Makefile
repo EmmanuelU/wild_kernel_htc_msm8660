@@ -21,6 +21,7 @@ obj-$(CONFIG_CPU_FREQ_GOV_LAZY)  += cpufreq_lazy.o
 obj-$(CONFIG_CPU_FREQ_GOV_LAGFREE)  += cpufreq_lagfree.o
 obj-$(CONFIG_CPU_FREQ_GOV_SAKURACTIVE)  += cpufreq_sakuractive.o
 obj-$(CONFIG_CPU_FREQ_GOV_WHEATLEY)  += cpufreq_wheatley.o
+obj-$(CONFIG_CPU_FREQ_GOV_BADASS)	+= cpufreq_badass.o
 obj-$(CONFIG_CPU_FREQ_GOV_ONDEMANDX)	+= cpufreq_ondemandx.o
 
 #Hotplugging Governors
