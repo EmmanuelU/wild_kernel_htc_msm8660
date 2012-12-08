@@ -124,7 +124,7 @@ static void doubleshot_panel_power(int on)
 			}
 		}
 
-		ret = regulator_set_voltage(l1_3v, 3100000, 3100000);
+		ret = regulator_set_voltage(l1_3v, 2850000, 2850000);
 		if (ret) {
 			pr_err("%s: error setting l1_3v voltage\n", __func__);
 			goto fail;
