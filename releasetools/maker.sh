@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "$0" )" && pwd )"
 cd "$DIR"
 
 #get current date/time:
-DATE=`date +%Y-%m-%d-%H-%M`
+DATE=`date +%Y-%m-%d_%H-%M`
 
 #go to parent directory:
 cd ..
