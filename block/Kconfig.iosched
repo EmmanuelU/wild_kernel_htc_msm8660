@@ -127,7 +127,6 @@ choice
 
 	config DEFAULT_VR
 		bool "V(R)" if IOSCHED_VR=y
-
 endchoice
 
 config DEFAULT_IOSCHED
