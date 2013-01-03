@@ -842,10 +842,9 @@ static void audio_aio_async_write(struct q6audio_aio *audio,
 	}
 	param.msw_ts = buf_node->meta_info.meta_in.ntimestamp.highpart;
 	param.lsw_ts = buf_node->meta_info.meta_in.ntimestamp.lowpart;
+	param.flags  = buf_node->meta_info.meta_in.nflags;
 	/* If no meta_info enaled, indicate no time stamp valid */
-	if (audio->buf_cfg.meta_info_enable)
-		param.flags = 0;
-	else
+	if (!audio->buf_cfg.meta_info_enable)
 		param.flags = 0xFF00;
 
 	if (buf_node->meta_info.meta_in.nflags & AUDIO_DEC_EOF_SET)
