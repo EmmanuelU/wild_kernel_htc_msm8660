@@ -1,11 +1,13 @@
 /*
- * BFQ-v4 for 3.0: data structures and common functions prototypes.
+ * BFQ-v5r1 for 3.0: data structures and common functions prototypes.
  *
  * Based on ideas and code from CFQ:
  * Copyright (C) 2003 Jens Axboe <axboe@kernel.dk>
  *
  * Copyright (C) 2008 Fabio Checconi <fabio@gandalf.sssup.it>
  *		      Paolo Valente <paolo.valente@unimore.it>
+ *
+ * Copyright (C) 2010 Paolo Valente <paolo.valente@unimore.it>
  */
 
 #ifndef _BFQ_H
@@ -299,6 +301,8 @@ struct bfq_queue {
  *                                   (in jiffies)
  * @bfq_raising_max_softrt_rate: max service-rate for a soft real-time queue,
  *			         sectors per seconds
+ * @RT_prod: cached value of the product R*T used for computing the maximum
+ * 	     duration of the weight raising automatically
  * @oom_bfqq: fallback dummy bfqq for extreme OOM conditions
  *
  * All the fields are protected by the @queue lock.
@@ -361,6 +365,7 @@ struct bfq_data {
 	unsigned int bfq_raising_min_idle_time;
 	unsigned int bfq_raising_min_inter_arr_async;
 	unsigned int bfq_raising_max_softrt_rate;
+	u64 RT_prod;
 
 	struct bfq_queue oom_bfqq;
 };

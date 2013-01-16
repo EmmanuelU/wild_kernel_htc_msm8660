@@ -7,6 +7,8 @@
  * Copyright (C) 2008 Fabio Checconi <fabio@gandalf.sssup.it>
  *		      Paolo Valente <paolo.valente@unimore.it>
  *
+ * Copyright (C) 2010 Paolo Valente <paolo.valente@unimore.it>
+ *
  * Licensed under the GPL-2 as detailed in the accompanying COPYING.BFQ file.
  *
  * BFQ is a proportional share disk scheduling algorithm based on the
@@ -118,12 +120,31 @@ static DEFINE_IDA(cic_index_ida);
 /* Shift used for peak rate fixed precision calculations. */
 #define BFQ_RATE_SHIFT		16
 
+/*
+ * The duration of the weight raising for interactive applications is
+ * computed automatically (as default behaviour), using the following
+ * formula: duration = (R / r) * T, where r is the peak rate of the
+ * disk, and R and T are two reference parameters. In particular, R is
+ * the peak rate of a reference disk, and T is about the maximum time
+ * for starting popular large applications on that disk, under BFQ and
+ * while reading two files in parallel. Finally, BFQ uses two
+ * different pairs (R, T) depending on whether the disk is rotational
+ * or non-rotational.
+ */
+#define T_rot			(msecs_to_jiffies(5500))
+#define T_nonrot		(msecs_to_jiffies(2000))
+/* Next two quantities are in sectors/usec, left-shifted by BFQ_RATE_SHIFT */
+#define R_rot			17415
+#define R_nonrot		34791
+
 #define BFQ_SERVICE_TREE_INIT	((struct bfq_service_tree)		\
 				{ RB_ROOT, RB_ROOT, NULL, NULL, 0, 0 })
 
 #define RQ_CIC(rq)		\
 	((struct cfq_io_context *) (rq)->elevator_private[0])
 #define RQ_BFQQ(rq)		((rq)->elevator_private[1])
+
+static inline void bfq_schedule_dispatch(struct bfq_data *bfqd);
 
 #include "bfq-ioc.c"
 #include "bfq-sched.c"
@@ -418,12 +439,25 @@ static void bfq_updated_next_req(struct bfq_data *bfqd,
 	bfq_activate_bfqq(bfqd, bfqq);
 }
 
+static inline unsigned int bfq_wrais_duration(struct bfq_data *bfqd)
+{
+	u64 dur;
+
+	if (bfqd->bfq_raising_max_time > 0)
+		return bfqd->bfq_raising_max_time;
+
+	dur = bfqd->RT_prod;
+	do_div(dur, bfqd->peak_rate);
+
+	return dur;
+}
+
 static void bfq_add_rq_rb(struct request *rq)
 {
 	struct bfq_queue *bfqq = RQ_BFQQ(rq);
 	struct bfq_entity *entity = &bfqq->entity;
 	struct bfq_data *bfqd = bfqq->bfqd;
-	struct request *next_rq, *prev;
+	struct request *__alias, *next_rq, *prev;
 	unsigned long old_raising_coeff = bfqq->raising_coeff;
 	int idle_for_long_time = bfqq->budget_timeout +
 		bfqd->bfq_raising_min_idle_time < jiffies;
@@ -432,7 +466,12 @@ static void bfq_add_rq_rb(struct request *rq)
 	bfqq->queued[rq_is_sync(rq)]++;
 	bfqd->queued++;
 
-	elv_rb_add(&bfqq->sort_list, rq);
+	/*
+	 * Looks a little odd, but the first insert might return an alias,
+	 * if that happens, put the alias on the dispatch list.
+	 */
+	while ((__alias = elv_rb_add(&bfqq->sort_list, rq)) != NULL)
+		bfq_dispatch_insert(bfqd->queue, __alias);
 
 	/*
 	 * Check if this request is a better next-serve candidate.
@@ -463,9 +502,12 @@ static void bfq_add_rq_rb(struct request *rq)
 		 */
 		if(old_raising_coeff == 1 && (idle_for_long_time || soft_rt)) {
 			bfqq->raising_coeff = bfqd->bfq_raising_coeff;
-			bfqq->raising_cur_max_time = idle_for_long_time ?
-				bfqd->bfq_raising_max_time :
-				bfqd->bfq_raising_rt_max_time;
+			if (idle_for_long_time)
+				bfqq->raising_cur_max_time =
+					bfq_wrais_duration(bfqd);
+			else
+				bfqq->raising_cur_max_time =
+					bfqd->bfq_raising_rt_max_time;
 			bfq_log_bfqq(bfqd, bfqq,
 				     "wrais starting at %llu msec,"
 				     "rais_max_time %u",
@@ -475,7 +517,7 @@ static void bfq_add_rq_rb(struct request *rq)
 		} else if (old_raising_coeff > 1) {
 			if (idle_for_long_time)
 				bfqq->raising_cur_max_time =
-					bfqd->bfq_raising_max_time;
+					bfq_wrais_duration(bfqd);
 			else if (bfqq->raising_cur_max_time ==
 				 bfqd->bfq_raising_rt_max_time &&
 				 !soft_rt) {
@@ -498,7 +540,7 @@ add_bfqq_busy:
 			bfqq->last_rais_start_finish +
                         bfqd->bfq_raising_min_inter_arr_async < jiffies) {
                         bfqq->raising_coeff = bfqd->bfq_raising_coeff;
-			bfqq->raising_cur_max_time = bfqd->bfq_raising_max_time;
+			bfqq->raising_cur_max_time = bfq_wrais_duration(bfqd);
 
 			entity->ioprio_changed = 1;
 			bfq_log_bfqq(bfqd, bfqq,
@@ -807,8 +849,10 @@ static struct bfq_queue *bfq_close_cooperator(struct bfq_data *bfqd,
  */
 static inline unsigned long bfq_max_budget(struct bfq_data *bfqd)
 {
-	return bfqd->budgets_assigned < 194 ? bfq_default_max_budget :
-		bfqd->bfq_max_budget;
+	if (bfqd->budgets_assigned < 194)
+		return bfq_default_max_budget;
+	else
+		return bfqd->bfq_max_budget;
 }
 
 /*
@@ -817,8 +861,10 @@ static inline unsigned long bfq_max_budget(struct bfq_data *bfqd)
  */
 static inline unsigned long bfq_min_budget(struct bfq_data *bfqd)
 {
-	return bfqd->budgets_assigned < 194 ? bfq_default_max_budget / 32 :
-		bfqd->bfq_max_budget / 32;
+	if (bfqd->budgets_assigned < 194)
+		return bfq_default_max_budget / 32;
+	else
+		return bfqd->bfq_max_budget / 32;
 }
 
 /*
@@ -894,9 +940,11 @@ static void bfq_arm_slice_timer(struct bfq_data *bfqd)
 static void bfq_set_budget_timeout(struct bfq_data *bfqd)
 {
 	struct bfq_queue *bfqq = bfqd->active_queue;
-	unsigned int timeout_coeff =
-		bfqq->raising_cur_max_time == bfqd->bfq_raising_rt_max_time ?
-		1 : (bfqq->entity.weight / bfqq->entity.orig_weight);
+	unsigned int timeout_coeff;
+	if (bfqq->raising_cur_max_time == bfqd->bfq_raising_rt_max_time)
+		timeout_coeff = 1;
+	else
+		timeout_coeff = bfqq->entity.weight / bfqq->entity.orig_weight;
 
 	bfqd->last_budget_start = ktime_get();
 
@@ -1207,7 +1255,10 @@ static int bfq_update_peak_rate(struct bfq_data *bfqd, struct bfq_queue *bfqq,
 	if (!bfq_bfqq_sync(bfqq) || bfq_bfqq_budget_new(bfqq))
 		return 0;
 
-	delta = compensate ? bfqd->last_idling_start : ktime_get();
+	if (compensate)
+		delta = bfqd->last_idling_start;
+	else
+		delta = ktime_get();
 	delta = ktime_sub(delta, bfqd->last_budget_start);
 	usecs = ktime_to_us(delta);
 
@@ -2673,10 +2724,19 @@ static void *bfq_init_queue(struct request_queue *q)
 
 	bfqd->bfq_raising_coeff = 20;
 	bfqd->bfq_raising_rt_max_time = msecs_to_jiffies(300);
-	bfqd->bfq_raising_max_time = msecs_to_jiffies(7500);
+	bfqd->bfq_raising_max_time = 0;
 	bfqd->bfq_raising_min_idle_time = msecs_to_jiffies(2000);
 	bfqd->bfq_raising_min_inter_arr_async = msecs_to_jiffies(500);
 	bfqd->bfq_raising_max_softrt_rate = 7000;
+
+	/* Initially estimate the device's peak rate as the reference rate */
+	if (blk_queue_nonrot(bfqd->queue)) {
+		bfqd->RT_prod = R_nonrot * T_nonrot;
+		bfqd->peak_rate = R_nonrot;
+	} else {
+		bfqd->RT_prod = R_rot * T_rot;
+		bfqd->peak_rate = R_rot;
+	}
 
 	return bfqd;
 }
@@ -2724,11 +2784,21 @@ static ssize_t bfq_var_store(unsigned long *var, const char *page, size_t count)
 	return count;
 }
 
+static ssize_t bfq_raising_max_time_show(struct elevator_queue *e, char *page)
+{
+	struct bfq_data *bfqd = e->elevator_data;
+	return sprintf(page, "%d\n", bfqd->bfq_raising_max_time > 0 ?
+		       bfqd->bfq_raising_max_time :
+		       bfq_wrais_duration(bfqd));
+}
+
 static ssize_t bfq_weights_show(struct elevator_queue *e, char *page)
 {
 	struct bfq_queue *bfqq;
 	struct bfq_data *bfqd = e->elevator_data;
 	ssize_t num_char = 0;
+
+	spin_lock_irq(bfqd->queue->queue_lock);
 
 	num_char += sprintf(page + num_char, "Active:\n");
 	list_for_each_entry(bfqq, &bfqd->active_list, bfqq_list) {
@@ -2750,6 +2820,9 @@ static ssize_t bfq_weights_show(struct elevator_queue *e, char *page)
 					bfqq->last_rais_start_finish),
 				jiffies_to_msecs(bfqq->raising_cur_max_time));
 	}
+
+	spin_unlock_irq(bfqd->queue->queue_lock);
+
 	return num_char;
 }
 
@@ -2774,7 +2847,6 @@ SHOW_FUNCTION(bfq_timeout_sync_show, bfqd->bfq_timeout[BLK_RW_SYNC], 1);
 SHOW_FUNCTION(bfq_timeout_async_show, bfqd->bfq_timeout[BLK_RW_ASYNC], 1);
 SHOW_FUNCTION(bfq_low_latency_show, bfqd->low_latency, 0);
 SHOW_FUNCTION(bfq_raising_coeff_show, bfqd->bfq_raising_coeff, 0);
-SHOW_FUNCTION(bfq_raising_max_time_show, bfqd->bfq_raising_max_time, 1);
 SHOW_FUNCTION(bfq_raising_rt_max_time_show, bfqd->bfq_raising_rt_max_time, 1);
 SHOW_FUNCTION(bfq_raising_min_idle_time_show, bfqd->bfq_raising_min_idle_time,
 	1);
