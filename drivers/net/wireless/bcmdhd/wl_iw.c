@@ -1998,7 +1998,7 @@ static int iwpriv_get_assoc_list(struct net_device *dev,
 	p_mac_str = mac_lst;
 	p_mac_str_end = &mac_lst[sizeof(mac_lst)-1];
 
-	for (i = 0; i < 8; i++) { 
+	for (i = 0; i < sta_maclist->count; i++) { 
 		struct ether_addr * id = &sta_maclist->ea[i];
 		if (!ETHER_ISNULLADDR(id->octet)) {
 			scb_val_t scb_val;
@@ -6444,9 +6444,7 @@ fail:
 	return ret;
 }
 #endif 
-#ifndef AP_ONLY
 static int last_auto_channel = 6;
-#endif
 
 static int
 get_softap_auto_channel(struct net_device *dev, struct ap_profile *ap)
