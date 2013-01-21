@@ -380,7 +380,9 @@ KBUILD_CFLAGS   := -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -marm -mtune=cortex-a8 -march=armv7-a \
 		   -funswitch-loops -fpredictive-commoning -fgcse-after-reload \
 		   -fmodulo-sched -fmodulo-sched-allow-regmoves \
-		   -mfpu=neon
+		   -mfpu=neon \
+		   -mno-unaligned-access
+
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL := -fgcse-lm -fgcse-sm -fsched-spec-load -fforce-addr -ffast-math -fsingle-precision-constant -mtune=cortex-a8 -march=armv7-a -mfpu=neon -ftree-vectorize -funswitch-loops
 KBUILD_AFLAGS   := -D__ASSEMBLY__
