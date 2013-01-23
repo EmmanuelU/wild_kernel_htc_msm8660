@@ -9,6 +9,7 @@
 #define KGSL_CONTEXT_NO_GMEM_ALLOC	2
 #define KGSL_CONTEXT_SUBMIT_IB_LIST	4
 #define KGSL_CONTEXT_CTX_SWITCH	8
+#define KGSL_CONTEXT_PREAMBLE	16
 
 /* Memory allocayion flags */
 #define KGSL_MEMFLAGS_GPUREADONLY	0x01000000
@@ -33,7 +34,7 @@
 #define KGSL_CLK_MEM_IFACE 0x00000010
 #define KGSL_CLK_AXI	0x00000020
 
-#define KGSL_MAX_PWRLEVELS 5
+#define KGSL_MAX_PWRLEVELS 7
 
 #define KGSL_CONVERT_TO_MBPS(val) \
 	(val*1000*1000U)
@@ -51,6 +52,7 @@ enum kgsl_user_mem_type {
 	KGSL_USER_MEM_TYPE_ASHMEM	= 0x00000001,
 	KGSL_USER_MEM_TYPE_ADDR		= 0x00000002,
 	KGSL_USER_MEM_TYPE_ION		= 0x00000003,
+	KGSL_USER_MEM_TYPE_MAX		= 0x00000004,
 };
 
 struct kgsl_devinfo {
@@ -139,47 +141,33 @@ struct kgsl_version {
 #define KGSL_2D1_IRQ		"kgsl_2d1_irq"
 
 #if defined(CONFIG_MSM_KGSL)
+
+struct kgsl_device_iommu_data {
+	const char **iommu_ctx_names;
+	int iommu_ctx_count;
+	unsigned int physstart;
+	unsigned int physend;
+};
+
 struct kgsl_device_platform_data {
 	struct kgsl_pwrlevel pwrlevel[KGSL_MAX_PWRLEVELS];
 	int init_level;
+	int max_level;
 	int num_levels;
 	int (*set_grp_async)(void);
 	unsigned int idle_timeout;
 	unsigned int nap_allowed;
 	unsigned int clk_map;
+	unsigned int idle_needed;
 	struct msm_bus_scale_pdata *bus_scale_table;
-	const char *iommu_user_ctx_name;
-	const char *iommu_priv_ctx_name;
-};
+#if !defined(CONFIG_MSM_KGSL_ADRENO200) && !defined(CONFIG_MSM_KGSL_ADRENO205)
+	struct kgsl_device_iommu_data *iommu_data;
+	int iommu_count;
 #else
-struct kgsl_grp_clk_name {
-	const char *clk;
-	const char *pclk;
-};
-
-struct kgsl_device_pwr_data {
-	struct kgsl_pwrlevel pwrlevel[KGSL_MAX_PWRLEVELS];
-	int init_level;
-	int num_levels;
-	int (*set_grp_async)(void);
-	unsigned int idle_timeout;
-	unsigned int nap_allowed;
-};
-
-struct kgsl_clk_data {
-	struct kgsl_grp_clk_name name;
-	struct msm_bus_scale_pdata *bus_scale_table;
-};
-
-struct kgsl_device_platform_data {
-	struct kgsl_device_pwr_data pwr_data;
-	struct kgsl_clk_data clk;
-	/* imem_clk_name is for 3d only, not used in 2d devices */
-	struct kgsl_grp_clk_name imem_clk_name;
 	const char *iommu_user_ctx_name;
 	const char *iommu_priv_ctx_name;
-};
 #endif
+};
 
 #endif
 
@@ -482,4 +470,6 @@ int kgsl_gem_obj_addr(int drm_fd, int handle, unsigned long *start,
 #define kgsl_gem_obj_addr(...) 0
 #endif
 #endif
+#endif
 #endif /* _MSM_KGSL_H */
+
