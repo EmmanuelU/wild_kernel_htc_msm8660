@@ -1,6 +1,6 @@
 VERSION = 3
 PATCHLEVEL = 0
-SUBLEVEL = 59
+SUBLEVEL = 60
 EXTRAVERSION = r9-exp-sv
 NAME = Sneaky Weasel
 
