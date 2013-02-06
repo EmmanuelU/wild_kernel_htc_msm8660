@@ -80,4 +80,3 @@ void msm_idle_stats_update_event(struct msm_idle_stats_device *device,
 
 #endif  /* __ARCH_ARM_MACH_MSM_IDLE_STATS_DEVICE_H */
 
-
