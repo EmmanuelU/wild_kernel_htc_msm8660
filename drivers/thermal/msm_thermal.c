@@ -24,7 +24,7 @@
 
 //max thermal limit
 #define DEF_ALLOWED_MAX_HIGH 76
-#define DEF_ALLOWED_MAX_FREQ 384000
+#define DEF_ALLOWED_MAX_FREQ 972000
 
 //mid thermal limit
 #define DEF_ALLOWED_MID_HIGH 72
@@ -35,7 +35,7 @@
 #define DEF_ALLOWED_LOW_FREQ 972000
 
 //Sampling interval
-#define DEF_THERMAL_CHECK_MS 1000
+#define DEF_THERMAL_CHECK_MS 1250
 
 static int enabled;
 
