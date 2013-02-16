@@ -1,6 +1,6 @@
 #
 # Automatically generated make config: don't edit
-# Linux/arm 3.0.59r9-exp-sv Kernel Configuration
+# Linux/arm 3.0.62 Kernel Configuration
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -2606,8 +2606,6 @@ CONFIG_FUSE_FS=y
 # CD-ROM/DVD Filesystems
 #
 # CONFIG_ISO9660_FS is not set
-# CONFIG_JOLIET is not set
-# CONFIG_ZISOFS is not set
 # CONFIG_UDF_FS is not set
 
 #
@@ -2730,6 +2728,7 @@ CONFIG_NLS_ISO8859_1=y
 # CONFIG_NLS_KOI8_R is not set
 # CONFIG_NLS_KOI8_U is not set
 CONFIG_NLS_UTF8=y
+# CONFIG_DYNAMIC_FSYNC is not set
 
 #
 # Kernel hacking
@@ -2752,6 +2751,7 @@ CONFIG_DEBUG_FS=y
 # CONFIG_STACKTRACE is not set
 CONFIG_DEBUG_BUGVERBOSE=y
 # CONFIG_DEBUG_MEMORY_INIT is not set
+CONFIG_FRAME_POINTER=y
 CONFIG_RCU_CPU_STALL_TIMEOUT=60
 # CONFIG_RCU_CPU_STALL_VERBOSE is not set
 # CONFIG_LKDTM is not set
@@ -2901,8 +2901,6 @@ CONFIG_CRC32=y
 CONFIG_LIBCRC32C=y
 CONFIG_ZLIB_INFLATE=y
 CONFIG_ZLIB_DEFLATE=y
-CONFIG_LZO_COMPRESS=y
-CONFIG_LZO_DECOMPRESS=y
 # CONFIG_XZ_DEC is not set
 # CONFIG_XZ_DEC_BCJ is not set
 CONFIG_DECOMPRESS_GZIP=y
