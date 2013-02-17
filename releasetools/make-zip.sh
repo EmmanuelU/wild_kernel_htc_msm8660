@@ -25,6 +25,11 @@ else
 	DATE=$DATE-NOWIFI
 fi
 
+if [ -e "../fs/ntfs.ko" ]
+then
+	cp -f ../fs/ntfs/ntfs.ko anykernel/system/lib/modules/ntfs.ko
+fi
+
 #copy new changelog to ANYKERNEL folder:
 cp -f changelog.txt anykernel/changelog.txt
 
