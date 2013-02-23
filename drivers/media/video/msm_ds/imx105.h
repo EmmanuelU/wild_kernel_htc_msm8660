@@ -1,4 +1,4 @@
-/* Copyright (c) 2011, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010, Code Aurora Forum. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -44,21 +44,14 @@ struct imx105_reg {
 	uint16_t inittbl_size;
 	struct imx105_i2c_reg_conf const *prev_tbl;
 	uint16_t prevtbl_size;
+	struct imx105_i2c_reg_conf const *video_tbl;
+	uint16_t videotbl_size;
 	struct imx105_i2c_reg_conf const *snap_tbl;
 	uint16_t snaptbl_size;
-// Start LGE_BSP_CAMERA::john.park@lge.com 2011-04-27  For 1080p 
-	struct imx105_i2c_reg_conf const *prev_1080_tbl;
-	uint16_t prevtbl_1080_size;
-// End LGE_BSP_CAMERA::john.park@lge.com 2011-04-27  For 1080p
+	struct imx105_i2c_reg_conf const *vcm_tbl;
+	uint16_t vcmtbl_size;
 
-// Start LGE_BSP_CAMERA : shutter time reg table - jonghwan.ko@lge.com 
-	struct imx105_i2c_reg_conf const *shutter_tbl;
-	uint16_t shuttertbl_size;
-	struct imx105_i2c_reg_conf const *shutter2_tbl;
-	uint16_t shutter2tbl_size;
-	struct imx105_i2c_reg_conf const *shutter2_1080p_tbl;
-	uint16_t shutter2_1080ptbl_size;
-// End LGE_BSP_CAMERA : shutter time reg table - jonghwan.ko@lge.com 	
+
 };
 
 
@@ -72,17 +65,14 @@ enum imx105_test_mode_t {
 enum imx105_resolution_t {
 	QTR_SIZE,
 	FULL_SIZE,
-// Start LGE_BSP_CAMERA::john.park@lge.com 2011-04-27  For 1080p 
-	FHD_SIZE,
-// End LGE_BSP_CAMERA::john.park@lge.com 2011-04-27  For 1080p
+	QVGA_SIZE,
+	VIDEO_SIZE,
 	INVALID_SIZE
 };
 enum imx105_setting {
 	RES_PREVIEW,
 	RES_CAPTURE,
-// Start LGE_BSP_CAMERA::john.park@lge.com 2011-04-27  For 1080p 
-	RES_PREVIEW_1080
-// End LGE_BSP_CAMERA::john.park@lge.com 2011-04-27  For 1080p
+	RES_VIDEO
 };
 enum imx105_reg_update {
 	/* Sensor egisters that need to be updated during initialization */
@@ -94,7 +84,6 @@ enum imx105_reg_update {
 	/* Not valid update */
 	UPDATE_INVALID
 };
-
 
 
 #endif /* IMX105_H */
