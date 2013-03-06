@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -149,14 +149,8 @@ static void idlestats_sleep(struct kgsl_device *device,
 			struct kgsl_pwrscale *pwrscale)
 {
 	struct idlestats_priv *priv = pwrscale->priv;
-
-	/* HTC FIXME: msm_idle_stats_update_event() is not porting to master-msm-3.0 */
-#if 0
 	msm_idle_stats_update_event(&priv->idledev,
 		MSM_IDLE_STATS_EVENT_IDLE_TIMER_EXPIRED);
-#else
-	priv->idledev.stats->event |= MSM_IDLE_STATS_EVENT_IDLE_TIMER_EXPIRED;
-#endif
 }
 
 static int idlestats_init(struct kgsl_device *device,
