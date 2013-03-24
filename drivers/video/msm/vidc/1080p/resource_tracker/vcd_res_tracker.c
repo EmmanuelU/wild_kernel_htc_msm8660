@@ -436,6 +436,7 @@ int res_trk_update_bus_perf_level(struct vcd_dev_ctxt *dev_ctxt, u32 perf_level)
 
 	if (dev_ctxt->reqd_perf_lvl + dev_ctxt->curr_perf_lvl == 0)
 		bus_clk_index = 2;
+
 	bus_clk_index = (bus_clk_index << 1) + (client_type + 1);
 	VCDRES_MSG_LOW("%s(), bus_clk_index = %d", __func__, bus_clk_index);
 	VCDRES_MSG_LOW("%s(),context.pcl = %x", __func__, resource_context.pcl);
@@ -551,7 +552,9 @@ void res_trk_init(struct device *device, u32 irq)
 	} else {
 		memset(&resource_context, 0, sizeof(resource_context));
 		mutex_init(&resource_context.lock);
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 		mutex_init(&resource_context.secure_lock);
+#endif
 		resource_context.device = device;
 		resource_context.irq_num = irq;
 		resource_context.vidc_platform_data =
@@ -559,10 +562,12 @@ void res_trk_init(struct device *device, u32 irq)
 		if (resource_context.vidc_platform_data) {
 			resource_context.memtype =
 			resource_context.vidc_platform_data->memtype;
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 			resource_context.fw_mem_type =
 			resource_context.vidc_platform_data->memtype;
 			resource_context.cmd_mem_type =
 			resource_context.vidc_platform_data->memtype;
+#endif
 			if (resource_context.vidc_platform_data->enable_ion) {
 				resource_context.res_ion_client =
 					res_trk_create_ion_client();
@@ -571,10 +576,12 @@ void res_trk_init(struct device *device, u32 irq)
 							__func__);
 					return;
 				}
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 				resource_context.fw_mem_type =
 				ION_MM_FIRMWARE_HEAP_ID;
 				resource_context.cmd_mem_type =
 				ION_CP_MFC_HEAP_ID;
+#endif
 			}
 			resource_context.disable_dmx =
 			resource_context.vidc_platform_data->disable_dmx;
@@ -595,9 +602,8 @@ void res_trk_init(struct device *device, u32 irq)
 			VIDC_FW_SIZE, DDL_KILO_BYTE(128))) {
 			pr_err("%s() Firmware buffer allocation failed",
 				   __func__);
-			if (!res_trk_check_for_sec_session())
-				memset(&resource_context.firmware_addr, 0,
-						sizeof(resource_context.firmware_addr));
+			memset(&resource_context.firmware_addr, 0,
+			   sizeof(resource_context.firmware_addr));
 		}
 	}
 }
@@ -620,25 +626,31 @@ u32 res_trk_get_firmware_addr(struct ddl_buf_addr *firm_addr)
 		return -EINVAL;
 	}
 	memcpy(firm_addr, &resource_context.firmware_addr,
-			sizeof(struct ddl_buf_addr));
+		sizeof(struct ddl_buf_addr));
 	return 0;
 }
 
+
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 int res_trk_get_mem_type(void)
 {
 	int mem_type = -1;
 	switch (resource_context.res_mem_type) {
 	case DDL_FW_MEM:
 		mem_type = resource_context.fw_mem_type;
+        if (mem_type == 0 && res_trk_get_enable_ion())
+            mem_type = ION_MM_FIRMWARE_HEAP_ID;
 		break;
 	case DDL_MM_MEM:
 		mem_type = resource_context.memtype;
+        if (mem_type == 0 && res_trk_get_enable_ion())
+            mem_type = ION_CP_MM_HEAP_ID;
 		break;
 	case DDL_CMD_MEM:
 		if (res_trk_check_for_sec_session())
 			mem_type = resource_context.cmd_mem_type;
 		else
-			mem_type = resource_context.memtype;
+			mem_type = resource_context.cmd_mem_type;
 		break;
 	default:
 		return mem_type;
@@ -646,11 +658,17 @@ int res_trk_get_mem_type(void)
 	if (resource_context.vidc_platform_data->enable_ion) {
 		if (res_trk_check_for_sec_session())
 			mem_type = (ION_HEAP(mem_type) | ION_SECURE);
-		else
+		else {
 			mem_type = ION_HEAP(mem_type);
+        }
 	}
 	return mem_type;
 }
+#else
+u32 res_trk_get_mem_type(void){
+	return resource_context.memtype;
+}
+#endif
 
 u32 res_trk_get_enable_ion(void)
 {
@@ -733,6 +751,7 @@ int res_trk_disable_iommu_clocks(void)
 	return 0;
 }
 
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 int res_trk_check_for_sec_session()
 {
 	int rc;
@@ -741,26 +760,16 @@ int res_trk_check_for_sec_session()
 	mutex_unlock(&resource_context.secure_lock);
 	return rc;
 }
-
-void res_trk_secure_unset(void)
-{
-	mutex_lock(&resource_context.secure_lock);
-	resource_context.secure_session = 0;
-	mutex_unlock(&resource_context.secure_lock);
-}
-
-void res_trk_secure_set(void)
-{
-	mutex_lock(&resource_context.secure_lock);
-	resource_context.secure_session = 1;
-	mutex_unlock(&resource_context.secure_lock);
-}
-
 int res_trk_open_secure_session()
 {
 	int rc;
 	mutex_lock(&resource_context.secure_lock);
-
+	if (resource_context.secure_session) {
+		pr_err("Secure session already open");
+		rc = -EBUSY;
+		goto error_open;
+	}
+	resource_context.secure_session = 1;
 	rc = res_trk_enable_iommu_clocks();
 	if (rc) {
 		pr_err("IOMMU clock enabled failed while open");
@@ -795,3 +804,4 @@ error_close:
 	mutex_unlock(&resource_context.secure_lock);
 	return rc;
 }
+#endif
