@@ -63,15 +63,15 @@ enum ion_heap_type {
  */
 
 enum ion_heap_ids {
+	ION_HEAP_SYSTEM_ID = -1, /* depreciated */
+	ION_HEAP_SYSTEM_CONTIG_ID = -1, /* depreciated ID */
+	ION_HEAP_SMI_ID = -1, /* depreciated ID */
+	ION_HEAP_AUDIO_ID = -1, /* depreciated ID */
+	ION_HEAP_ADSP2_ID = -1, /* depreciated ID */
+
 	INVALID_HEAP_ID = -1,
-	/* In a system with the "Mini Ion Upgrade" (such as this one)
-	 * the heap_mask and caching flag end up sharing a spot in
-	 * ion_allocation_data.flags. We should make sure to never use
-	 * the 0th bit for a heap because that's where the caching bit
-	 * ends up.
-	 */
-	ION_BOGUS_HEAP_DO_NOT_USE = 0,
 	ION_CP_MM_HEAP_ID = 8,
+	ION_CP_ROTATOR_HEAP_ID = 9,
 	ION_CP_MFC_HEAP_ID = 12,
 	ION_CP_WB_HEAP_ID = 16, /* 8660 only */
 	ION_CAMERA_HEAP_ID = 20, /* 8660 only */
@@ -103,17 +103,19 @@ enum ion_fixed_position {
  */
 #define ION_HEAP(bit) (1 << (bit))
 
+#define ION_KMALLOC_HEAP_NAME	"kmalloc"
 #define ION_VMALLOC_HEAP_NAME	"vmalloc"
-#define ION_AUDIO_HEAP_NAME	"audio"
-#define ION_SF_HEAP_NAME	"sf"
-#define ION_MM_HEAP_NAME	"mm"
-#define ION_CAMERA_HEAP_NAME	"camera_preview"
-#define ION_IOMMU_HEAP_NAME	"iommu"
-#define ION_MFC_HEAP_NAME	"mfc"
-#define ION_WB_HEAP_NAME	"wb"
-#define ION_MM_FIRMWARE_HEAP_NAME	"mm_fw"
-#define ION_QSECOM_HEAP_NAME	"qsecom"
-#define ION_FMEM_HEAP_NAME	"fmem"
+#define ION_AUDIO_HEAP_NAME     "audio"
+#define ION_SF_HEAP_NAME		"sf"
+#define ION_MM_HEAP_NAME		"mm"
+#define ION_ROTATOR_HEAP_NAME   "rotator"
+#define ION_CAMERA_HEAP_NAME    "camera_preview"
+#define ION_IOMMU_HEAP_NAME     "iommu"
+#define ION_MFC_HEAP_NAME       "mfc"
+#define ION_WB_HEAP_NAME        "wb"
+#define ION_MM_FIRMWARE_HEAP_NAME   "mm_fw"
+#define ION_QSECOM_HEAP_NAME    "qsecom"
+#define ION_FMEM_HEAP_NAME      "fmem"
 
 #define CACHED          1
 #define UNCACHED        0
@@ -123,6 +125,12 @@ enum ion_fixed_position {
 #define ION_SET_CACHE(__cache)  ((__cache) << ION_CACHE_SHIFT)
 
 #define ION_IS_CACHED(__flags)	((__flags) & (1 << ION_CACHE_SHIFT))
+
+/*
+ * This flag allows clients when mapping into the IOMMU to specify to
+ * defer un-mapping from the IOMMU until the buffer memory is freed.
+ */
+#define ION_IOMMU_UNMAP_DELAYED 1
 
 #ifdef __KERNEL__
 #include <linux/err.h>
@@ -245,8 +253,8 @@ struct ion_co_heap_pdata {
 struct ion_platform_data {
 	unsigned int has_outer_cache;
 	int nr;
-	int (*request_region)(void *);
-	int (*release_region)(void *);
+	void (*request_region)(void *);
+	void (*release_region)(void *);
 	void *(*setup_region)(void);
 	struct ion_platform_heap heaps[];
 };
@@ -325,6 +333,9 @@ void ion_free(struct ion_client *client, struct ion_handle *handle);
 int ion_phys(struct ion_client *client, struct ion_handle *handle,
 	     ion_phys_addr_t *addr, size_t *len);
 
+struct sg_table *ion_sg_table(struct ion_client *client,
+			      struct ion_handle *handle);
+
 /**
  * ion_map_kernel - create mapping for the given handle
  * @client:	the client
@@ -362,6 +373,8 @@ struct scatterlist *ion_map_dma(struct ion_client *client,
  * @handle:	handle to unmap
  */
 void ion_unmap_dma(struct ion_client *client, struct ion_handle *handle);
+
+struct ion_handle *ion_import_dma_buf(struct ion_client *client, int fd);
 
 /**
  * ion_share() - given a handle, obtain a buffer to pass to other clients
@@ -568,6 +581,12 @@ static inline int ion_phys(struct ion_client *client,
 	return -ENODEV;
 }
 
+static inline struct sg_table *ion_sg_table(struct ion_client *client,
+			      struct ion_handle *handle)
+{
+	return ERR_PTR(-ENODEV);
+}
+
 static inline void *ion_map_kernel(struct ion_client *client,
 	struct ion_handle *handle, unsigned long flags)
 {
@@ -600,6 +619,11 @@ static inline struct ion_handle *ion_import(struct ion_client *client,
 
 static inline struct ion_handle *ion_import_fd(struct ion_client *client,
 	int fd)
+{
+	return ERR_PTR(-ENODEV);
+}
+
+static inline struct ion_handle *ion_import_dma_buf(struct ion_client *client, int fd)
 {
 	return ERR_PTR(-ENODEV);
 }

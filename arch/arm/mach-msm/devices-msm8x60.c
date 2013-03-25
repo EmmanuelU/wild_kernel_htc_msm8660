@@ -2528,6 +2528,7 @@ struct msm_vidc_platform_data vidc_platform_data = {
 	.memtype = MEMTYPE_SMI_KERNEL,
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 	.enable_ion = 1,
+	.cp_enabled = 0,
 #else
 	.enable_ion = 0,
 #endif
