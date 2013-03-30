@@ -24,6 +24,9 @@
 #ifdef CONFIG_OPTICALJOYSTICK_CRUCIAL
 #include <linux/curcial_oj.h>
 #endif
+#ifdef CONFIG_MACH_DOUBLESHOT
+#include <linux/jiffies.h>
+#endif
 
 #ifdef CONFIG_ARCH_MSM8X60
 static struct workqueue_struct *ki_queue;
@@ -189,12 +192,21 @@ static enum hrtimer_restart gpio_event_input_timer_func(struct hrtimer *timer)
 }
 #endif
 
-void keypad_reprort_keycode(struct gpio_key_state *ks)
+
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
+
+static unsigned short last_pressed = 0;
+static int press_time_init = 0;
+static unsigned long last_pressed_time;
+static unsigned long BETWEEN_PRESS_MIN_DIFF = 20;
+
+void keypad_report_keycode(struct gpio_key_state *ks)
 {
 	struct gpio_input_state *ds = ks->ds;
 	int keymap_index;
 	const struct gpio_event_direct_entry *key_entry;
 	int pressed;
+	int report;
 
 	if (ds == NULL) {
 		KEY_LOGE("%s, (ds == NULL) failed\n", __func__);
@@ -211,33 +223,62 @@ void keypad_reprort_keycode(struct gpio_key_state *ks)
 	pressed = gpio_get_value(key_entry->gpio) ^
 			!(ds->info->flags & GPIOEDF_ACTIVE_HIGH);
 		if (ds->info->flags & GPIOEDF_PRINT_KEYS)
-			pr_info("keypad_reprort_keycode: key %d-%d, %d "
+			pr_info("keypad_report_keycode: key %d-%d, %d "
 				"(%d) changed to %d\n",
 				ds->info->type, key_entry->code, keymap_index,
 				key_entry->gpio, pressed);
 
+	report = 1;
+	// fix for the all too often happening accidental key press repetitions
+	if (pressed)
+	{
+		if (key_entry->code == last_pressed)
+		{
+			if (press_time_init == 0)
+			{
+				press_time_init = 1;
+				last_pressed_time = jiffies;
+			} else
+			{
+				if ( time_before( jiffies, last_pressed_time + BETWEEN_PRESS_MIN_DIFF ) )
+				{
+					report = 0; // too close
+				} else
+				{
+				    last_pressed_time = jiffies;
+				}
+			}
+		} else
+		{
+			last_pressed_time = jiffies;
+		}
+		last_pressed = key_entry->code;
+	}
+
+	if (report) 
+	{
 #ifdef CONFIG_OPTICALJOYSTICK_CRUCIAL
 		if (ds->info->info.oj_btn && key_entry->code == BTN_MOUSE) {
 			curcial_oj_send_key(BTN_MOUSE, pressed);
-			pr_info("keypad_reprort_keycode: OJ key %d-%d, %d "
-				"(%d) changed to %d\n",
-				ds->info->type, key_entry->code, keymap_index,
-				key_entry->gpio, pressed);
+			KEY_LOGD("%s:OJ key %d-%d, %d (%d) changed to %d\n", __func__,
+					ds->info->type, key_entry->code, keymap_index,
+					key_entry->gpio, pressed);
 		} else
 #endif
 		input_event(ds->input_devs->dev[key_entry->dev],
 				ds->info->type, key_entry->code, pressed);
-	input_sync(ds->input_devs->dev[key_entry->dev]);
-
+		input_sync(ds->input_devs->dev[key_entry->dev]);
+	}
 }
 
 #ifdef CONFIG_ARCH_MSM8X60
 static void keypad_do_work(struct work_struct *w)
 {
 	struct gpio_key_state *ks = container_of(w, struct gpio_key_state, work);
-	keypad_reprort_keycode(ks);
+	keypad_report_keycode(ks);
 }
 #endif
+#endif /* CONFIG_MFD_MAX8957 || CONFIG_MACH_DOUBLESHOT */
 
 static irqreturn_t gpio_event_input_irq_handler(int irq, void *dev_id)
 {
@@ -280,7 +321,7 @@ static irqreturn_t gpio_event_input_irq_handler(int irq, void *dev_id)
 #ifdef CONFIG_ARCH_MSM8X60
 			queue_work(ki_queue, &ks->work);
 #else
-			keypad_reprort_keycode(ks);
+			keypad_report_keycode(ks);
 #endif
 	}
 	return IRQ_HANDLED;
