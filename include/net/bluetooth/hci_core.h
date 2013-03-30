@@ -304,6 +304,7 @@ struct hci_conn {
 	__u8		auth_initiator;
 	__u8		power_save;
 	__u16		disc_timeout;
+	__u16		conn_timeout;
 	unsigned long	pend;
 
 	__u8		remote_cap;
@@ -321,6 +322,7 @@ struct hci_conn {
 	struct timer_list disc_timer;
 	struct timer_list idle_timer;
 	struct delayed_work	rssi_update_work;
+	struct timer_list encrypt_pause_timer;
 
 	struct work_struct work_add;
 	struct work_struct work_del;
@@ -586,10 +588,7 @@ static inline void hci_chan_hold(struct hci_chan *chan)
 }
 int hci_chan_put(struct hci_chan *chan);
 
-struct hci_chan *hci_chan_accept(struct hci_conn *hcon,
-				struct hci_ext_fs *tx_fs,
-				struct hci_ext_fs *rx_fs);
-struct hci_chan *hci_chan_create(struct hci_conn *hcon,
+struct hci_chan *hci_chan_create(struct hci_chan *chan,
 				struct hci_ext_fs *tx_fs,
 				struct hci_ext_fs *rx_fs);
 void hci_chan_modify(struct hci_chan *chan,
@@ -599,6 +598,10 @@ void hci_chan_modify(struct hci_chan *chan,
 struct hci_conn *hci_connect(struct hci_dev *hdev, int type,
 					__u16 pkt_type, bdaddr_t *dst,
 					__u8 sec_level, __u8 auth_type);
+struct hci_conn *hci_le_connect(struct hci_dev *hdev, __u16 pkt_type,
+					bdaddr_t *dst, __u8 sec_level,
+					__u8 auth_type,
+					struct bt_le_params *le_params);
 int hci_conn_check_link_mode(struct hci_conn *conn);
 int hci_conn_security(struct hci_conn *conn, __u8 sec_level, __u8 auth_type);
 int hci_conn_change_link_key(struct hci_conn *conn);
