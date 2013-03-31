@@ -23,11 +23,11 @@
 #define DEF_TEMP_SENSOR      0
 
 //max thermal limit
-#define DEF_ALLOWED_MAX_HIGH 76
-#define DEF_ALLOWED_MAX_FREQ 972000
+#define DEF_ALLOWED_MAX_HIGH 72
+#define DEF_ALLOWED_MAX_FREQ 384000
 
 //mid thermal limit
-#define DEF_ALLOWED_MID_HIGH 72
+#define DEF_ALLOWED_MID_HIGH 65
 #define DEF_ALLOWED_MID_FREQ 648000
 
 //low thermal limit
