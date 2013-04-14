@@ -208,6 +208,13 @@ static ssize_t htc_battery_show_batt_attr(struct device *dev,
 	return battery_core_info.func.func_show_batt_attr(attr, buf);
 }
 
+static ssize_t htc_battery_show_cc_attr(struct device *dev,
+					struct device_attribute *attr,
+					char *buf)
+{
+		return battery_core_info.func.func_show_cc_attr(attr, buf);
+}
+
 static ssize_t htc_battery_set_delta(struct device *dev,
 				struct device_attribute *attr,
 				const char *buf, size_t count)
@@ -354,6 +361,7 @@ static struct device_attribute htc_battery_attrs[] = {
 	HTC_BATTERY_ATTR(batt_state),
 
 	__ATTR(batt_attr_text, S_IRUGO, htc_battery_show_batt_attr, NULL),
+	__ATTR(batt_power_meter, S_IRUGO, htc_battery_show_cc_attr, NULL),
 };
 
 static struct device_attribute htc_set_delta_attrs[] = {
@@ -618,7 +626,8 @@ int htc_battery_core_update_changed(void)
 	}
 
 	mutex_lock(&battery_core_info.info_lock);
-	if (battery_core_info.rep.charging_source != new_batt_info_rep.charging_source) {
+	if ((battery_core_info.rep.charging_source != new_batt_info_rep.charging_source) ||
+		(battery_core_info.rep.charging_enabled != new_batt_info_rep.charging_enabled)) {
 		if (CHARGER_BATTERY == battery_core_info.rep.charging_source ||
 			CHARGER_BATTERY == new_batt_info_rep.charging_source)
 			is_send_batt_uevent = 1;
@@ -742,6 +751,9 @@ int htc_battery_core_register(struct device *dev,
 	if (htc_battery->func_show_batt_attr)
 		battery_core_info.func.func_show_batt_attr =
 					htc_battery->func_show_batt_attr;
+	if (htc_battery->func_show_cc_attr)
+		battery_core_info.func.func_show_cc_attr =
+					htc_battery->func_show_cc_attr;
 	if (htc_battery->func_get_battery_info)
 		battery_core_info.func.func_get_battery_info =
 					htc_battery->func_get_battery_info;
