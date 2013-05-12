@@ -651,9 +651,9 @@ static struct tvenc_platform_data atv_pdata = {
 #define BRI_SETTING_DEF                 143
 #define BRI_SETTING_MAX                 255
 
-#define PWM_MIN              		9	/* 3.5% of max pwm */
+#define PWM_MIN              		7	//9	/* 3.5% of max pwm */
 #define PWM_DEFAULT			90	//140	/* 55% of max pwm  */
-#define PWM_MAX				232	//255	/* 100% of max pwm */
+#define PWM_MAX				230	//255	/* 100% of max pwm */
 
 static unsigned char doubleshot_shrink_pwm(int val)
 {
