@@ -25,7 +25,9 @@
 #include <linux/fs.h>
 #include <linux/miscdevice.h>
 #include <linux/uaccess.h>
+#ifdef CONFIG_DEBUG_FS
 #include <linux/debugfs.h>
+#endif
 #include <linux/scatterlist.h>
 #include <linux/crypto.h>
 #include <crypto/hash.h>
@@ -266,9 +268,13 @@ struct qcedev_stat {
 };
 
 static struct qcedev_stat _qcedev_stat[MAX_QCE_DEVICE];
+#ifdef CONFIG_DEBUG_FS
 static struct dentry *_debug_dent;
+#endif
 static char _debug_read_buf[DEBUG_MAX_RW_BUF];
+#ifdef CONFIG_DEBUG_FS
 static int _debug_qcedev[MAX_QCE_DEVICE];
+#endif
 
 static struct qcedev_control *qcedev_minor_to_control(unsigned n)
 {
@@ -2113,6 +2119,7 @@ static const struct file_operations _debug_stats_ops = {
 	.write =        _debug_stats_write,
 };
 
+#ifdef CONFIG_DEBUG_FS
 static int _qcedev_debug_init(void)
 {
 	int rc;
@@ -2144,20 +2151,25 @@ err:
 	debugfs_remove_recursive(_debug_dent);
 	return rc;
 }
+#endif
 
 static int qcedev_init(void)
 {
+#ifdef CONFIG_DEBUG_FS
 	int rc;
 
 	rc = _qcedev_debug_init();
 	if (rc)
 		return rc;
+#endif
 	return platform_driver_register(&qcedev_plat_driver);
 }
 
 static void qcedev_exit(void)
 {
+#ifdef CONFIG_DEBUG_FS
 	debugfs_remove_recursive(_debug_dent);
+#endif
 	platform_driver_unregister(&qcedev_plat_driver);
 }
 
