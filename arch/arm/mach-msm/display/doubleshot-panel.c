@@ -664,10 +664,10 @@ static unsigned char doubleshot_shrink_pwm(int val)
 		shrink_br = PWM_MIN;
 	} else if ((val >= BRI_SETTING_MIN) && (val <= BRI_SETTING_DEF)) {
 		shrink_br = (PWM_DEFAULT - PWM_MIN) * (val - BRI_SETTING_MIN) /
-		(BRI_SETTING_DEF - BRI_SETTING_MIN);
+		(BRI_SETTING_DEF - BRI_SETTING_MIN) + PWM_MIN;
 	} else if ((val > BRI_SETTING_DEF) && (val <= BRI_SETTING_MAX)) {
 		shrink_br = (PWM_MAX - PWM_DEFAULT) * (val - BRI_SETTING_DEF) /
-		(BRI_SETTING_MAX - BRI_SETTING_DEF);
+		(BRI_SETTING_MAX - BRI_SETTING_DEF) + PWM_DEFAULT;
 	} else
 		shrink_br = PWM_MAX;
 
