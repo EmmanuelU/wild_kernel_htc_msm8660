@@ -265,7 +265,6 @@ struct mmc_host {
 	struct delayed_work	detect;
 	struct delayed_work	remove;
 	struct wake_lock	detect_wake_lock;
-        const char		*wlock_name;
 	int                     detect_change;  /* card detect flag */
 
 	const struct mmc_bus_ops *bus_ops;	/* current bus driver */
@@ -315,7 +314,6 @@ struct mmc_host {
 		ktime_t wtime_drv;	   /* Wr time  MMC Host  */
 		ktime_t start;
 	} perf;
-	bool perf_enable;
 #endif
 	unsigned long		private[0] ____cacheline_aligned;
 };

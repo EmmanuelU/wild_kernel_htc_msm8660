@@ -1232,12 +1232,6 @@ msmsdcc_start_command_deferred(struct msmsdcc_host *host,
 		}
 	}
 
-	/* Clear CDR_EN bit for write operations */
-	if (host->tuning_needed && cmd->mrq->data &&
-			(cmd->mrq->data->flags & MMC_DATA_WRITE))
-		writel_relaxed((readl_relaxed(host->base + MCI_DLL_CONFIG) &
-				~MCI_CDR_EN), host->base + MCI_DLL_CONFIG);
-
 	if ((cmd->flags & MMC_RSP_R1B) == MMC_RSP_R1B) {
 		*c |= MCI_CPSM_PROGENA;
 		host->prog_enable = 1;
@@ -2617,10 +2611,6 @@ msmsdcc_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 	/* Select free running MCLK as input clock of cm_dll_sdc4 */
 	clk |= (2 << 23);
 
-	/* Clear IO_PAD_PWR_SWITCH while powering off the card */
-	if (!ios->vdd)
-		host->io_pad_pwr_switch = 0;
-
 	if (host->io_pad_pwr_switch)
 		clk |= IO_PAD_PWR_SWITCH;
 
@@ -2972,10 +2962,6 @@ static int msmsdcc_start_signal_voltage_switch(struct mmc_host *mmc,
 	unsigned long flags;
 	int rc = 0;
 
-	spin_lock_irqsave(&host->lock, flags);
-	host->io_pad_pwr_switch = 0;
-	spin_unlock_irqrestore(&host->lock, flags);
-
 	if (ios->signal_voltage == MMC_SIGNAL_VOLTAGE_330) {
 		/* Change voltage level of VDDPX to high voltage */
 		rc = msmsdcc_set_vddp_high_vol(host);
@@ -3221,9 +3207,10 @@ static int msmsdcc_config_cm_sdc4_dll_phase(struct msmsdcc_host *host,
 						u8 phase)
 {
 	int rc = 0;
-	u8 grey_coded_phase_table[] = {0x0, 0x1, 0x3, 0x2, 0x6, 0x7, 0x5, 0x4,
-					0xC, 0xD, 0xF, 0xE, 0xA, 0xB, 0x9,
-					0x8};
+	u8 grey_coded_phase_table[] = {0x0, 0x1, 0x3, 0x2, 0x6,
+					0x7, 0x5, 0x4, 0x8, 0x9,
+					0xB, 0xA, 0xE, 0xF, 0xD,
+					0xC};
 	unsigned long flags;
 	u32 config;
 
@@ -3280,28 +3267,22 @@ out:
  * Select the 3/4 of the range and configure the DLL with the
  * selected DLL clock output phase.
 */
-static int find_most_appropriate_phase(struct msmsdcc_host *host,
+
+static u8 find_most_appropriate_phase(struct msmsdcc_host *host,
 				u8 *phase_table, u8 total_phases)
 {
-	int ret;
+	u8 ret, temp;
 	u8 ranges[16][16] = { {0}, {0} };
 	u8 phases_per_row[16] = {0};
 	int row_index = 0, col_index = 0, selected_row_index = 0, curr_max = 0;
-	int i, cnt, phase_0_raw_index = 0, phase_15_raw_index = 0;
-	bool phase_0_found = false, phase_15_found = false;
+	int cnt;
 
-	if (total_phases > 16) {
-		pr_err("%s: %s: invalid argument: total_phases=%d\n",
-			mmc_hostname(host->mmc), __func__, total_phases);
-		return -EINVAL;
-	}
-
-	for (cnt = 0; cnt < total_phases; cnt++) {
+	for (cnt = 0; cnt <= total_phases; cnt++) {
 		ranges[row_index][col_index] = phase_table[cnt];
 		phases_per_row[row_index] += 1;
 		col_index++;
 
-		if ((cnt + 1) == total_phases) {
+		if ((cnt + 1) > total_phases) {
 			continue;
 		/* check if next phase in phase_table is consecutive or not */
 		} else if ((phase_table[cnt] + 1) != phase_table[cnt + 1]) {
@@ -3310,50 +3291,15 @@ static int find_most_appropriate_phase(struct msmsdcc_host *host,
 		}
 	}
 
-	/* Check if phase-0 is present in first valid window? */
-	if (!ranges[0][0]) {
-		phase_0_found = true;
-		phase_0_raw_index = 0;
-		/* Check if cycle exist between 2 valid windows */
-		for (cnt = 1; cnt <= row_index; cnt++) {
-			if (phases_per_row[cnt]) {
-				for (i = 0; i <= phases_per_row[cnt]; i++) {
-					if (ranges[cnt][i] == 15) {
-						phase_15_found = true;
-						phase_15_raw_index = cnt;
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	/* If 2 valid windows form cycle then merge them as single window */
-	if (phase_0_found && phase_15_found) {
-		/* number of phases in raw where phase 0 is present */
-		u8 phases_0 = phases_per_row[phase_0_raw_index];
-		/* number of phases in raw where phase 15 is present */
-		u8 phases_15 = phases_per_row[phase_15_raw_index];
-
-		cnt = 0;
-		for (i = phases_15; i < (phases_15 + phases_0); i++) {
-			ranges[phase_15_raw_index][i] =
-				ranges[phase_0_raw_index][cnt];
-			cnt++;
-		}
-		phases_per_row[phase_0_raw_index] = 0;
-		phases_per_row[phase_15_raw_index] = phases_15 + phases_0;
-	}
-
-	for (cnt = 0; cnt <= row_index; cnt++) {
+	for (cnt = 0; cnt <= total_phases; cnt++) {
 		if (phases_per_row[cnt] > curr_max) {
 			curr_max = phases_per_row[cnt];
 			selected_row_index = cnt;
 		}
 	}
 
-	i = ((curr_max * 3) / 4) - 1;
-	ret = (int)ranges[selected_row_index][i];
+	temp = ((curr_max * 3) / 4);
+	ret = ranges[selected_row_index][temp];
 
 	return ret;
 }
@@ -3426,19 +3372,13 @@ static int msmsdcc_execute_tuning(struct mmc_host *mmc)
 			!memcmp(data_buf, cmd19_tuning_block, 64)) {
 			/* tuning is successful with this tuning point */
 			tuned_phases[tuned_phase_cnt++] = phase;
-			pr_debug("%s: %s: found good phase = %d\n",
-				mmc_hostname(mmc), __func__, phase);
 		}
 	} while (++phase < 16);
 
 	if (tuned_phase_cnt) {
-		rc = find_most_appropriate_phase(host, tuned_phases,
+		tuned_phase_cnt--;
+		phase = find_most_appropriate_phase(host, tuned_phases,
 							tuned_phase_cnt);
-		if (rc < 0)
-			goto kfree;
-		else
-			phase = (u8)rc;
-
 		/*
 		 * Finally set the selected phase in delay
 		 * line hw block.
@@ -4477,7 +4417,7 @@ msmsdcc_probe(struct platform_device *pdev)
 	mmc->caps |= plat->mmc_bus_width;
 
 	mmc->caps |= MMC_CAP_MMC_HIGHSPEED | MMC_CAP_SD_HIGHSPEED;
-	mmc->caps |= MMC_CAP_WAIT_WHILE_BUSY | MMC_CAP_ERASE;
+	mmc->caps |= MMC_CAP_WAIT_WHILE_BUSY;
 
 	if (is_sd_platform(host->plat) || is_mmc_platform(host->plat))
 		mmc->caps |= MMC_CAP_ERASE;
@@ -4996,13 +4936,6 @@ static int msmsdcc_suspend(struct device *dev)
 		 * the host so that any resume requests after this will
 		 * simple become pm usage counter increment operations.
 		 */
-    pm_runtime_get_noresume(dev);
-    /* If there is pending detect work abort runtime suspend */
-    if (unlikely(work_busy(&mmc->detect.work)))
-      rc = -EAGAIN;
-    else
-      rc = mmc_suspend_host(mmc);
-    pm_runtime_put_noidle(dev);
 
 /* HTC_WIFI_START */
 			/*Disable suspend function for wifi slot*/
@@ -5043,7 +4976,7 @@ static int msmsdcc_suspend(struct device *dev)
 		if (rc && wake_lock_active(&host->sdio_suspend_wlock))
 			wake_unlock(&host->sdio_suspend_wlock);
 	}
-	pr_debug("%s: %s: ends with err=%d\n", mmc_hostname(mmc), __func__, rc);
+	pr_debug("%s: %s: end\n", mmc_hostname(mmc), __func__);
 	return rc;
 }
 

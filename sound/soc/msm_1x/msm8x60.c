@@ -36,7 +36,6 @@
 #include <asm/mach-types.h>
 #include <mach/qdsp6v3/snddev_icodec.h>
 #include <mach/qdsp6v3/audio_dev_ctl.h>
-#include <mach/qdsp6v3/q6voice.h>
 #include <mach/qdsp6v3/q6afe.h>
 
 #define LOOPBACK_ENABLE         0x1
@@ -82,9 +81,9 @@ static int msm_v_call_info(struct snd_kcontrol *kcontrol,
 			struct snd_ctl_elem_info *uinfo)
 {
 	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
-	uinfo->count = 2; /* start, session_id */
+	uinfo->count = 1;
 	uinfo->value.integer.min = 0;
-	uinfo->value.integer.max = SESSION_ID_BASE + MAX_VOC_SESSIONS;
+	uinfo->value.integer.max = 1;
 	return 0;
 }
 
@@ -92,7 +91,6 @@ static int msm_v_call_get(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol)
 {
 	ucontrol->value.integer.value[0] = 0;
-	ucontrol->value.integer.value[1] = 0;
 	return 0;
 }
 
@@ -100,24 +98,14 @@ static int msm_v_call_put(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol)
 {
 	int start = ucontrol->value.integer.value[0];
-	u32 session_id = ucontrol->value.integer.value[1];
-
-	if ((session_id != 0) &&
-	    ((session_id < SESSION_ID_BASE) ||
-	     (session_id >= SESSION_ID_BASE + MAX_VOC_SESSIONS))) {
-		pr_err("%s: Invalid session_id 0x%x\n", __func__, session_id);
-
-		return -EINVAL;
-	}
-
 	if (start) {
 		pr_aud_info("[ALSA] msm_start_voice");
 		broadcast_event(AUDDEV_EVT_START_VOICE, DEVICE_IGNORE,
-							session_id);
+							SESSION_IGNORE);
 	} else {
 		pr_aud_info("[ALSA] msm_end_voice");
 		broadcast_event(AUDDEV_EVT_END_VOICE, DEVICE_IGNORE,
-							session_id);
+							SESSION_IGNORE);
 	}
 	return 0;
 }
@@ -126,9 +114,9 @@ static int msm_v_mute_info(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_info *uinfo)
 {
 	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
-	uinfo->count = 3; /* dir, mute, session_id */
+	uinfo->count = 2;
 	uinfo->value.integer.min = 0;
-	uinfo->value.integer.max = SESSION_ID_BASE + MAX_VOC_SESSIONS;
+	uinfo->value.integer.max = 2;
 	return 0;
 }
 
@@ -136,8 +124,6 @@ static int msm_v_mute_get(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol)
 {
 	ucontrol->value.integer.value[0] = 0;
-	ucontrol->value.integer.value[1] = 0;
-	ucontrol->value.integer.value[2] = 0;
 	return 0;
 }
 
@@ -146,26 +132,17 @@ static int msm_v_mute_put(struct snd_kcontrol *kcontrol,
 {
 	int dir = ucontrol->value.integer.value[0];
 	int mute = ucontrol->value.integer.value[1];
-	u32 session_id = ucontrol->value.integer.value[2];
-
-	if ((session_id != 0) &&
-	    ((session_id < SESSION_ID_BASE) ||
-	     (session_id >= SESSION_ID_BASE + MAX_VOC_SESSIONS))) {
-		pr_err("%s: Invalid session_id 0x%x\n", __func__, session_id);
-
-		return -EINVAL;
-	}
-
-	return msm_set_voice_mute(dir, mute, session_id);
+	pr_aud_info("[ALSA] msm_set_voice_tx_mute: mute %d\n", mute);
+	return msm_set_voice_mute(dir, mute);
 }
 
 static int msm_v_volume_info(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_info *uinfo)
 {
 	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
-	uinfo->count = 3; /* dir, volume, session_id */
+	uinfo->count = 2; /* Volume */
 	uinfo->value.integer.min = 0;
-	uinfo->value.integer.max = SESSION_ID_BASE + MAX_VOC_SESSIONS;
+	uinfo->value.integer.max = 100;
 	return 0;
 }
 
@@ -173,8 +150,6 @@ static int msm_v_volume_get(struct snd_kcontrol *kcontrol,
 				struct snd_ctl_elem_value *ucontrol)
 {
 	ucontrol->value.integer.value[0] = 0;
-	ucontrol->value.integer.value[1] = 0;
-	ucontrol->value.integer.value[2] = 0;
 	return 0;
 }
 
@@ -183,17 +158,9 @@ static int msm_v_volume_put(struct snd_kcontrol *kcontrol,
 {
 	int dir = ucontrol->value.integer.value[0];
 	int volume = ucontrol->value.integer.value[1];
-	u32 session_id = ucontrol->value.integer.value[2];
 
-	if ((session_id != 0) &&
-	    ((session_id < SESSION_ID_BASE) ||
-	     (session_id >= SESSION_ID_BASE + MAX_VOC_SESSIONS))) {
-		pr_err("%s: Invalid session_id 0x%x\n", __func__, session_id);
-
-		return -EINVAL;
-	}
 	pr_aud_info("[ALSA] msm_set_voice_rx_vol: volume %d\n", volume);
-	return msm_set_voice_vol(dir, volume, session_id);
+	return msm_set_voice_vol(dir, volume);
 }
 
 static int msm_volume_info(struct snd_kcontrol *kcontrol,
@@ -1016,31 +983,6 @@ static int msm_loopback_put(struct snd_kcontrol *kcontrol,
 	return rc;
 }
 
-static int msm_voc_session_info(struct snd_kcontrol *kcontrol,
-				struct snd_ctl_elem_info *uinfo)
-{
-	uinfo->type = SNDRV_CTL_ELEM_TYPE_INTEGER;
-	uinfo->count = 1;
-	uinfo->value.integer.min = 0;
-	uinfo->value.integer.max = SESSION_ID_BASE + MAX_VOC_SESSIONS;
-	return 0;
-}
-
-static int msm_voice_session_get(struct snd_kcontrol *kcontrol,
-				struct snd_ctl_elem_value *ucontrol)
-{
-	ucontrol->value.integer.value[0] =
-					voice_get_session_id("Voice session");
-	return 0;
-}
-
-static int msm_voip_session_get(struct snd_kcontrol *kcontrol,
-				struct snd_ctl_elem_value *ucontrol)
-{
-	ucontrol->value.integer.value[0] = voice_get_session_id("VoIP session");
-	return 0;
-}
-
 static struct snd_kcontrol_new snd_dev_controls[AUDIO_DEV_CTL_MAX_DEV];
 
 static int snd_dev_ctl_index(int idx)
@@ -1114,16 +1056,6 @@ static struct snd_kcontrol_new snd_msm_secondary_controls[] = {
 			pcm_route_info, pcm_route_get_tx, pcm_route_put_tx, 0),
 	MSM_EXT("Sound Device Loopback", msm_loopback_info,
 			msm_loopback_get, msm_loopback_put, 0),
-	MSM_EXT("VoiceVolume Ext",
-		      msm_v_volume_info, msm_v_volume_get, msm_v_volume_put, 0),
-	MSM_EXT("VoiceMute Ext",
-			msm_v_mute_info, msm_v_mute_get, msm_v_mute_put, 0),
-	MSM_EXT("Voice Call Ext",
-			msm_v_call_info, msm_v_call_get, msm_v_call_put, 0),
-	MSM_EXT("Voice session",
-			msm_voc_session_info, msm_voice_session_get, NULL, 0),
-	MSM_EXT("VoIP session",
-			msm_voc_session_info, msm_voip_session_get, NULL, 0),
 };
 
 static int msm_new_mixer(struct snd_soc_codec *codec)
