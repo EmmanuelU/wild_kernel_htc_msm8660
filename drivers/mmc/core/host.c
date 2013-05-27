@@ -31,7 +31,6 @@
 static void mmc_host_classdev_release(struct device *dev)
 {
 	struct mmc_host *host = cls_dev_to_mmc_host(dev);
-        kfree(host->wlock_name);
 	kfree(host);
 }
 
@@ -285,10 +284,8 @@ struct mmc_host *mmc_alloc_host(int extra, struct device *dev)
 
 	spin_lock_init(&host->lock);
 	init_waitqueue_head(&host->wq);
-        host->wlock_name = kasprintf(GFP_KERNEL,
-		"%s_detect", mmc_hostname(host));
 	wake_lock_init(&host->detect_wake_lock, WAKE_LOCK_SUSPEND,
-			host->wlock_name);
+		kasprintf(GFP_KERNEL, "%s_detect", mmc_hostname(host)));
 	INIT_DELAYED_WORK(&host->detect, mmc_rescan);
 	INIT_DELAYED_WORK(&host->remove, mmc_remove_sd_card);
 	INIT_DELAYED_WORK_DEFERRABLE(&host->disable, mmc_host_deeper_disable);
@@ -356,23 +353,18 @@ set_perf(struct device *dev, struct device_attribute *attr,
 {
 	int64_t value;
 	struct mmc_host *host = dev_get_drvdata(dev);
-
 	sscanf(buf, "%lld", &value);
-	spin_lock(&host->lock);
 	if (!value) {
+		spin_lock(&host->lock);
 		memset(&host->perf, 0, sizeof(host->perf));
-		host->perf_enable = false;
-	} else {
-		host->perf_enable = true;
+		spin_unlock(&host->lock);
 	}
-	spin_unlock(&host->lock);
 
 	return count;
 }
 
 static DEVICE_ATTR(perf, S_IRUGO | S_IWUSR,
 		show_perf, set_perf);
-
 #endif
 
 static struct attribute *dev_attrs[] = {

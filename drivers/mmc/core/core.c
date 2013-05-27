@@ -131,21 +131,17 @@ void mmc_request_done(struct mmc_host *host, struct mmc_request *mrq)
 
 		if (mrq->data) {
 #ifdef CONFIG_MMC_PERF_PROFILING
-			if (host->perf_enable) {
-				diff = ktime_sub(ktime_get(), host->perf.start);
-				if (mrq->data->flags == MMC_DATA_READ) {
-					host->perf.rbytes_drv +=
-							mrq->data->bytes_xfered;
-					host->perf.rtime_drv =
-						ktime_add(host->perf.rtime_drv,
-							diff);
-				} else {
-					host->perf.wbytes_drv +=
+			diff = ktime_sub(ktime_get(), host->perf.start);
+			if (mrq->data->flags == MMC_DATA_READ) {
+				host->perf.rbytes_drv +=
 						mrq->data->bytes_xfered;
-					host->perf.wtime_drv =
-						ktime_add(host->perf.wtime_drv,
-							diff);
-				}
+				host->perf.rtime_drv =
+					ktime_add(host->perf.rtime_drv, diff);
+			} else {
+				host->perf.wbytes_drv +=
+						 mrq->data->bytes_xfered;
+				host->perf.wtime_drv =
+					ktime_add(host->perf.wtime_drv, diff);
 			}
 #endif
 			pr_debug("%s:     %d bytes transferred: %d\n",
@@ -223,8 +219,7 @@ mmc_start_request(struct mmc_host *host, struct mmc_request *mrq)
 			mrq->stop->mrq = mrq;
 		}
 #ifdef CONFIG_MMC_PERF_PROFILING
-		if (host->perf_enable)
-			host->perf.start = ktime_get();
+		host->perf.start = ktime_get();
 #endif
 	}
 	mmc_host_clk_hold(host);
@@ -522,6 +517,13 @@ int __mmc_claim_host(struct mmc_host *host, atomic_t *abort)
 	might_sleep();
 
 	add_wait_queue(&host->wq, &wait);
+#ifdef CONFIG_PM_RUNTIME
+	while (mmc_dev(host)->power.runtime_status == RPM_SUSPENDING) {
+		if (host->suspend_task == current)
+			break;
+		msleep(15);
+	}
+#endif
 
 	spin_lock_irqsave(&host->lock, flags);
 	while (1) {
@@ -661,7 +663,7 @@ EXPORT_SYMBOL(mmc_release_host);
  * Internal function that does the actual ios call to the host driver,
  * optionally printing some debug output.
  */
-void mmc_set_ios(struct mmc_host *host)
+static inline void mmc_set_ios(struct mmc_host *host)
 {
 	struct mmc_ios *ios = &host->ios;
 
@@ -675,7 +677,6 @@ void mmc_set_ios(struct mmc_host *host)
 		mmc_set_ungated(host);
 	host->ops->set_ios(host, ios);
 }
-EXPORT_SYMBOL(mmc_set_ios);
 
 /*
  * Control chip select pin on a host.
