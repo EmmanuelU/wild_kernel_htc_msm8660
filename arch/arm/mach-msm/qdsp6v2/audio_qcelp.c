@@ -19,12 +19,10 @@
 
 #define FRAME_SIZE_DEC_QCELP  ((32) + sizeof(struct dec_meta_in))
 
-#ifdef CONFIG_MACH_VILLEC2
 #undef pr_info
 #undef pr_err
 #define pr_info(fmt, ...) pr_aud_info(fmt, ##__VA_ARGS__)
 #define pr_err(fmt, ...) pr_aud_err(fmt, ##__VA_ARGS__)
-#endif
 
 #ifdef CONFIG_DEBUG_FS
 static const struct file_operations audio_qcelp_debug_fops = {

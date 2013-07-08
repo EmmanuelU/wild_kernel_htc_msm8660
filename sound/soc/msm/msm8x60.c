@@ -32,10 +32,7 @@
 #include <mach/qdsp6v2/audio_dev_ctl.h>
 #include <mach/qdsp6v2/q6voice.h>
 
-#ifdef CONFIG_MACH_VILLEC2
-#include <linux/mfd/msm-adie-codec.h>
 #include "../../../arch/arm/mach-msm/qdsp6v2/snddev_icodec.h"
-#endif
 
 #define LOOPBACK_ENABLE		0x1
 #define LOOPBACK_DISABLE	0x0
@@ -107,7 +104,6 @@ static int msm_v_call_put(struct snd_kcontrol *kcontrol,
 		return -EINVAL;
 	}
 
-#ifdef CONFIG_MACH_VILLEC2
 	if (start) {
 		pr_aud_info("[ALSA] msm_start_voice");
 		broadcast_event(AUDDEV_EVT_START_VOICE, DEVICE_IGNORE,
@@ -117,14 +113,6 @@ static int msm_v_call_put(struct snd_kcontrol *kcontrol,
 		broadcast_event(AUDDEV_EVT_END_VOICE, DEVICE_IGNORE,
 							session_id);
 	}
-#else
-	if (start)
-		broadcast_event(AUDDEV_EVT_START_VOICE, DEVICE_IGNORE,
-							session_id);
-	else
-		broadcast_event(AUDDEV_EVT_END_VOICE, DEVICE_IGNORE,
-							session_id);
-#endif
 	return 0;
 }
 
@@ -162,9 +150,7 @@ static int msm_v_mute_put(struct snd_kcontrol *kcontrol,
 		return -EINVAL;
 	}
 
-#ifdef CONFIG_MACH_VILLEC2
 	pr_aud_info("[ALSA] msm_set_voice_tx_mute: mute %d, session_id: %d\n", mute, session_id);
-#endif
 	return msm_set_voice_mute(dir, mute, session_id);
 }
 
@@ -202,9 +188,7 @@ static int msm_v_volume_put(struct snd_kcontrol *kcontrol,
 		return -EINVAL;
 	}
 
-#ifdef CONFIG_MACH_VILLEC2
 	pr_aud_info("[ALSA] msm_set_voice_rx_vol: volume %d, session_id: %d\n", volume, session_id);
-#endif
 	return msm_set_voice_vol(dir, volume, session_id);
 }
 
@@ -233,10 +217,7 @@ static int msm_volume_put(struct snd_kcontrol *kcontrol,
 	int factor = ucontrol->value.integer.value[2];
 	u64 session_mask = 0;
 
-#ifdef CONFIG_MACH_VILLEC2
 	pr_aud_info("[ALSA] msm_set_volume: volume %d\n", volume);
-#endif
-
 	if (factor > 10000)
 		return -EINVAL;
 
@@ -284,22 +265,12 @@ static int msm_voice_put(struct snd_kcontrol *kcontrol,
 	int set = ucontrol->value.integer.value[2];
 	u64 session_mask;
 
-#ifdef CONFIG_MACH_VILLEC2
-	int i = 0, j = 0;
-	struct snddev_icodec_state *icodec;
-	struct adie_codec_hwsetting_entry *rx_entry;
-	struct adie_codec_hwsetting_entry *tx_entry;
-
 	pr_aud_info("[ALSA] msm_route_voice: "
 		"tx %d, rx %d, set %d\n",
 		(int) ucontrol->value.integer.value[1],
 		(int) ucontrol->value.integer.value[0],
 		set);
-#else
-	if (!set)
-		return -EPERM;
-#endif
-	
+
 	rx_dev_id = ucontrol->value.integer.value[0];
 	rx_dev_info = audio_dev_ctrl_find_dev(rx_dev_id);
 
@@ -317,29 +288,6 @@ static int msm_voice_put(struct snd_kcontrol *kcontrol,
 	pr_debug("%s:route cfg %d STREAM_VOICE_RX type\n",
 		__func__, rx_dev_id);
 
-#ifdef CONFIG_MACH_VILLEC2
-	
-	
-	if (rx_dev_info->copp_id == PRIMARY_I2S_RX) {
-		icodec = (struct snddev_icodec_state *)rx_dev_info->private_data;
-		rx_entry = icodec->data->profile->settings;
-		j = icodec->data->profile->setting_sz;
-		if (set) {
-			for (i = 0; i < j; i++)
-				if (rx_entry[i].voc_action != NULL) {
-					rx_entry[i].actions = rx_entry[i].voc_action;
-					rx_entry[i].action_sz = rx_entry[i].voc_action_sz;
-			}
-		} else {
-			for (i = 0; i < j; i++)
-				if (rx_entry[i].midi_action != NULL) {
-					rx_entry[i].actions = rx_entry[i].midi_action;
-					rx_entry[i].action_sz = rx_entry[i].midi_action_sz;
-				}
-		}
-	}
-#endif
-
 	msm_set_voc_route(rx_dev_info, AUDIO_ROUTE_STREAM_VOICE_RX,
 				rx_dev_id);
 
@@ -348,8 +296,6 @@ static int msm_voice_put(struct snd_kcontrol *kcontrol,
 
 	broadcast_event(AUDDEV_EVT_DEV_CHG_VOICE, rx_dev_id, session_mask);
 
-
-	
 	tx_dev_id = ucontrol->value.integer.value[1];
 	tx_dev_info = audio_dev_ctrl_find_dev(tx_dev_id);
 
@@ -367,35 +313,11 @@ static int msm_voice_put(struct snd_kcontrol *kcontrol,
 	pr_debug("%s:route cfg %d %d type\n",
 		__func__, tx_dev_id, AUDIO_ROUTE_STREAM_VOICE_TX);
 
-#ifdef CONFIG_MACH_VILLEC2
-	
-	
-	if (tx_dev_info->copp_id == PRIMARY_I2S_TX) {
-		icodec = (struct snddev_icodec_state *)tx_dev_info->private_data;
-		tx_entry = icodec->data->profile->settings;
-		j = icodec->data->profile->setting_sz;
-		if (set) {
-			for (i = 0; i < j; i++)
-				if (tx_entry[i].voc_action != NULL) {
-					tx_entry[i].actions = tx_entry[i].voc_action;
-					tx_entry[i].action_sz = tx_entry[i].voc_action_sz;
-				}
-		} else {
-			for (i = 0; i < j; i++)
-				if (tx_entry[i].midi_action != NULL) {
-					tx_entry[i].actions = tx_entry[i].midi_action;
-					tx_entry[i].action_sz = tx_entry[i].midi_action_sz;
-				}
-		}
-	}
-#endif
-
 	msm_set_voc_route(tx_dev_info, AUDIO_ROUTE_STREAM_VOICE_TX,
 				tx_dev_id);
 
 	broadcast_event(AUDDEV_EVT_DEV_CHG_VOICE, tx_dev_id, session_mask);
 
-#ifdef CONFIG_MACH_VILLEC2
 	if (set) {
 		if (rx_dev_info->opened)
 			broadcast_event(AUDDEV_EVT_DEV_RDY, rx_dev_id,	session_mask);
@@ -403,13 +325,6 @@ static int msm_voice_put(struct snd_kcontrol *kcontrol,
 		if (tx_dev_info->opened)
 			broadcast_event(AUDDEV_EVT_DEV_RDY, tx_dev_id, session_mask);
 	}
-#else
-	if (rx_dev_info->opened)
-		broadcast_event(AUDDEV_EVT_DEV_RDY, rx_dev_id,	session_mask);
-
-	if (tx_dev_info->opened)
-		broadcast_event(AUDDEV_EVT_DEV_RDY, tx_dev_id, session_mask);
-#endif
 
 	return rc;
 }
@@ -455,28 +370,17 @@ static int msm_device_put(struct snd_kcontrol *kcontrol,
 		return rc;
 	}
 	pr_info("%s:device %s set %d\n", __func__, dev_info->name, set);
-
-#ifdef CONFIG_MACH_VILLEC2
 	pr_aud_info("[ALSA] msm_en_device (dev %s, id %d, enable %d, opened %d)\n",
 		dev_info->name, route_cfg.dev_id, set, dev_info->opened);
-#endif
-
 	if (set) {
 		if (!dev_info->opened) {
 			set_freq = dev_info->sample_rate;
-#ifdef CONFIG_MACH_VILLEC2
 			if (!msm_device_is_voice(route_cfg.dev_id) && msm_get_call_state()) {
-#else
-			if (!msm_device_is_voice(route_cfg.dev_id)) {
-#endif
 				msm_get_voc_freq(&tx_freq, &rx_freq);
 				if (dev_info->capability & SNDDEV_CAP_TX)
 					set_freq = tx_freq;
-#ifdef CONFIG_MACH_VILLEC2
 				if (dev_info->capability & SNDDEV_CAP_RX)
 					set_freq = rx_freq;
-#endif
-
 				if (set_freq == 0)
 					set_freq = dev_info->sample_rate;
 			} else
@@ -632,10 +536,8 @@ static int msm_route_put(struct snd_kcontrol *kcontrol,
 	u64 session_mask = 0;
 	route_cfg.dev_id = ucontrol->value.integer.value[1];
 
-#ifdef CONFIG_MACH_VILLEC2
 	pr_aud_info("[ALSA] msm_route_stream: session %d, dev %d, enable %d\n",
 		session_id, route_cfg.dev_id, set);
-#endif
 	if (ucontrol->id.numid == 2)
 		route_cfg.stream_type =	AUDIO_ROUTE_STREAM_PLAYBACK;
 	else
@@ -754,10 +656,8 @@ static int msm_device_volume_put(struct snd_kcontrol *kcontrol,
 
 	pr_debug("%s:dev_id = %d, volume = %d\n", __func__, dev_id, volume);
 
-#ifdef CONFIG_MACH_VILLEC2
 	pr_aud_info("[ALSA] msm_set_device_volume: dev %d, volume %d\n",
 		dev_id, volume);
-#endif
 
 	dev_info = audio_dev_ctrl_find_dev(dev_id);
 

@@ -31,12 +31,10 @@
 
 #define DSP_FRAME_HDR_LEN 1
 
-#ifdef CONFIG_MACH_VILLEC2
 #undef pr_info
 #undef pr_err
 #define pr_info(fmt, ...) pr_aud_info(fmt, ##__VA_ARGS__)
 #define pr_err(fmt, ...) pr_aud_err(fmt, ##__VA_ARGS__)
-#endif
 
 enum audio_mvs_state_type {
 	AUDIO_MVS_CLOSED,

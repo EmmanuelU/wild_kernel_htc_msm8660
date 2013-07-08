@@ -29,12 +29,10 @@
 #define SNDDEV_MI2S_CLK_RATE(freq) \
 	(((freq) * (SNDDEV_MI2S_PCM_SZ)) << (SNDDEV_MI2S_MUL_FACTOR))
 
-#ifdef CONFIG_MACH_VILLEC2
 #undef pr_info
 #undef pr_err
 #define pr_info(fmt, ...) pr_aud_info(fmt, ##__VA_ARGS__)
 #define pr_err(fmt, ...) pr_aud_err(fmt, ##__VA_ARGS__)
-#endif
 
 struct snddev_mi2s_drv_state {
 

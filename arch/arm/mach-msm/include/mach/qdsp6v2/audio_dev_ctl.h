@@ -102,9 +102,7 @@ void msm_release_voc_thread(void);
 
 int snddev_voice_set_volume(int vol, int path);
 
-#ifdef CONFIG_MACH_VILLEC2
 int msm_get_call_state(void);
-#endif
 
 struct auddev_evt_voc_devinfo {
 	u32 dev_type; 
@@ -217,7 +215,5 @@ int msm_get_voice_state(void);
 int msm_enable_incall_recording(int popp_id, int rec_mode, int rate,
 				int channel_mode);
 int msm_disable_incall_recording(uint32_t popp_id, uint32_t rec_mode);
-#ifdef CONFIG_MACH_VILLEC2
 void msm_set_voc_freq(int tx_freq, int rx_freq);
-#endif
 #endif

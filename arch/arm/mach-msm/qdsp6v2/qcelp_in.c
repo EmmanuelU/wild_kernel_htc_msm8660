@@ -28,12 +28,10 @@
 
 #define FRAME_SIZE		(1 + ((35+sizeof(struct meta_out_dsp)) * 10))
 
-#ifdef CONFIG_MACH_VILLEC2
 #undef pr_info
 #undef pr_err
 #define pr_info(fmt, ...) pr_aud_info(fmt, ##__VA_ARGS__)
 #define pr_err(fmt, ...) pr_aud_err(fmt, ##__VA_ARGS__)
-#endif
 
 static long qcelp_in_ioctl(struct file *file,
 				unsigned int cmd, unsigned long arg)

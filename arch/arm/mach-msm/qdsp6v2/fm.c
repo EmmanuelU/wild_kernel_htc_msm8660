@@ -43,12 +43,10 @@
 #define FM_DISABLE	0x0
 #define FM_COPP		0x7
 
-#ifdef CONFIG_MACH_VILLEC2
 #undef pr_info
 #undef pr_err
 #define pr_info(fmt, ...) pr_aud_info(fmt, ##__VA_ARGS__)
 #define pr_err(fmt, ...) pr_aud_err(fmt, ##__VA_ARGS__)
-#endif
 
 struct audio {
 	struct mutex lock;

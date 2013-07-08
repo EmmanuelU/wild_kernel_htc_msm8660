@@ -45,8 +45,6 @@
 #define SNDDEV_VREG_LOW_POWER_LOAD (36000)
 #define SNDDEV_VREG_HIGH_POWER_LOAD (56000)
 
-#ifdef CONFIG_MACH_VILLEC2
-
 #undef pr_info
 #undef pr_err
 #define pr_info(fmt, ...) pr_aud_info(fmt, ##__VA_ARGS__)
@@ -54,18 +52,8 @@
 
 static struct q6v2audio_icodec_ops default_audio_ops;
 static struct q6v2audio_icodec_ops *audio_ops = &default_audio_ops;
-#endif
 
 bool msm_codec_i2s_slave_mode;
-
-#ifndef CONFIG_MACH_VILLEC2 
-struct snddev_icodec_state {
-	struct snddev_icodec_data *data;
-	struct adie_codec_path *adie_path;
-	u32 sample_rate;
-	u32 enabled;
-};
-#endif
 
 struct snddev_icodec_drv_state {
 	struct mutex rx_lock;
@@ -146,49 +134,19 @@ static int msm_snddev_rx_mclk_request(void)
 {
 	int rc = 0;
 
-#ifndef CONFIG_MACH_VILLEC2
-	rc = gpio_request(the_msm_cdcclk_ctl_state.rx_mclk,
-		"MSM_SNDDEV_RX_MCLK");
-	if (rc < 0) {
-		pr_err("%s: GPIO request for MSM SNDDEV RX failed\n", __func__);
-		return rc;
-	}
-	the_msm_cdcclk_ctl_state.rx_mclk_requested = 1;
-#endif
 	return rc;
 }
 static int msm_snddev_tx_mclk_request(void)
 {
 	int rc = 0;
 
-#ifndef CONFIG_MACH_VILLEC2
-	rc = gpio_request(the_msm_cdcclk_ctl_state.tx_mclk,
-		"MSM_SNDDEV_TX_MCLK");
-	if (rc < 0) {
-		pr_err("%s: GPIO request for MSM SNDDEV TX failed\n", __func__);
-		return rc;
-	}
-	the_msm_cdcclk_ctl_state.tx_mclk_requested = 1;
-#endif
 	return rc;
 }
 static void msm_snddev_rx_mclk_free(void)
 {
-#ifndef CONFIG_MACH_VILLEC2
-	if (the_msm_cdcclk_ctl_state.rx_mclk_requested) {
-		gpio_free(the_msm_cdcclk_ctl_state.rx_mclk);
-		the_msm_cdcclk_ctl_state.rx_mclk_requested = 0;
-	}
-#endif
 }
 static void msm_snddev_tx_mclk_free(void)
 {
-#ifndef CONFIG_MACH_VILLEC2
-	if (the_msm_cdcclk_ctl_state.tx_mclk_requested) {
-		gpio_free(the_msm_cdcclk_ctl_state.tx_mclk);
-		the_msm_cdcclk_ctl_state.tx_mclk_requested = 0;
-	}
-#endif
 }
 static int get_msm_cdcclk_ctl_gpios(struct platform_device *pdev)
 {
@@ -972,12 +930,10 @@ int snddev_icodec_set_device_volume(struct msm_snddev_info *dev_info,
 	return rc;
 }
 
-#ifdef CONFIG_MACH_VILLEC2
 void htc_8x60_register_icodec_ops(struct q6v2audio_icodec_ops *ops)
 {
 	audio_ops = ops;
 }
-#endif
 
 static int snddev_icodec_probe(struct platform_device *pdev)
 {
@@ -985,9 +941,7 @@ static int snddev_icodec_probe(struct platform_device *pdev)
 	struct snddev_icodec_data *pdata;
 	struct msm_snddev_info *dev_info;
 	struct snddev_icodec_state *icodec;
-#ifdef CONFIG_MACH_VILLEC2
 	static int first_time = 1;
-#endif
 
 	if (!pdev || !pdev->dev.platform_data) {
 		printk(KERN_ALERT "Invalid caller\n");
@@ -1038,7 +992,6 @@ static int snddev_icodec_probe(struct platform_device *pdev)
 	} else {
 		dev_info->dev_ops.enable_anc = NULL;
 	}
-#ifdef CONFIG_MACH_VILLEC2
 	if (first_time) {
 		if (audio_ops->is_msm_i2s_slave)
 			msm_codec_i2s_slave_mode = audio_ops->is_msm_i2s_slave();
@@ -1049,7 +1002,6 @@ static int snddev_icodec_probe(struct platform_device *pdev)
 			__func__, msm_codec_i2s_slave_mode);
 		first_time = 0;
 	}
-#endif
 error:
 	return rc;
 }
@@ -1065,7 +1017,6 @@ static struct platform_driver snddev_icodec_driver = {
   .driver = { .name = "snddev_icodec" }
 };
 
-#ifdef CONFIG_MACH_VILLEC2 
 int update_aic3254_info(struct aic3254_info *info)
 {
 	struct msm_snddev_info *dev_info;
@@ -1087,7 +1038,6 @@ int update_aic3254_info(struct aic3254_info *info)
 
 	return rc;
 }
-#endif 
 
 module_param(msm_codec_i2s_slave_mode, bool, 0);
 MODULE_PARM_DESC(msm_codec_i2s_slave_mode, "Set MSM to I2S slave clock mode");

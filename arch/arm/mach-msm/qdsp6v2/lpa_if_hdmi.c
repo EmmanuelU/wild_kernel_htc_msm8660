@@ -32,12 +32,10 @@
 
 #define HDMI_AUDIO_FIFO_WATER_MARK	4
 
-#ifdef CONFIG_MACH_VILLEC2
 #undef pr_info
 #undef pr_err
 #define pr_info(fmt, ...) pr_aud_info(fmt, ##__VA_ARGS__)
 #define pr_err(fmt, ...) pr_aud_err(fmt, ##__VA_ARGS__)
-#endif
 
 struct audio_buffer {
 	dma_addr_t phys;
