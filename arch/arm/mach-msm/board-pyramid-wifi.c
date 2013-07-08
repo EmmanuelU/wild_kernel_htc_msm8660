@@ -76,8 +76,8 @@ int __init pyramid_init_wifi_mem(void)
 static struct resource pyramid_wifi_resources[] = {
 	[0] = {
 		.name		= "bcmdhd_wlan_irq",
-		.start		= MSM_GPIO_TO_INT(VILLEC2_GPIO_WIFI_IRQ),
-		.end		= MSM_GPIO_TO_INT(VILLEC2_GPIO_WIFI_IRQ),
+		.start		= MSM_GPIO_TO_INT(PYRAMID_GPIO_WIFI_IRQ),
+		.end		= MSM_GPIO_TO_INT(PYRAMID_GPIO_WIFI_IRQ),
 #ifdef HW_OOB
 		.flags          = IORESOURCE_IRQ | IORESOURCE_IRQ_HIGHLEVEL | IORESOURCE_IRQ_SHAREABLE,
 #else

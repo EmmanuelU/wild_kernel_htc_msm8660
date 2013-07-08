@@ -24,6 +24,9 @@
 #include "board-pyramid.h"
 
 #include <linux/mfd/pmic8058.h>
+
+#include <mach/board-msm8660.h>
+
 static char *keycaps = "--qwerty";
 #undef MODULE_PARAM_PREFIX
 #define MODULE_PARAM_PREFIX "board_pyramid."
@@ -44,15 +47,15 @@ static void config_gpio_table(uint32_t *table, int len)
 
 static struct gpio_event_direct_entry pyramid_keypad_input_map[] = {
 	{
-		.gpio = VILLEC2_GPIO_KEY_POWER,
+		.gpio = PYRAMID_GPIO_KEY_POWER,
 		.code = KEY_POWER,
 	},
 	{
-		.gpio = VILLEC2_VOL_UP,
+		.gpio = PM8058_GPIO_PM_TO_SYS(PYRAMID_VOL_UP),
 		.code = KEY_VOLUMEUP,
 	},
 	{
-		.gpio = VILLEC2_VOL_DN,
+		.gpio = PM8058_GPIO_PM_TO_SYS(PYRAMID_VOL_DN),
 		.code = KEY_VOLUMEDOWN,
 	 },
 };
@@ -60,12 +63,8 @@ static struct gpio_event_direct_entry pyramid_keypad_input_map[] = {
 static void pyramid_setup_input_gpio(void)
 {
 	uint32_t inputs_gpio_table[] = {
-		GPIO_CFG(VILLEC2_GPIO_KEY_POWER, 0, GPIO_CFG_INPUT,
-			GPIO_CFG_PULL_UP, GPIO_CFG_2MA),
-		GPIO_CFG(VILLEC2_GPIO_KEY_VOL_UP, 0, GPIO_CFG_INPUT,
-			GPIO_CFG_PULL_UP, GPIO_CFG_2MA),
-		GPIO_CFG(VILLEC2_GPIO_KEY_VOL_DOWN, 0, GPIO_CFG_INPUT,
-			GPIO_CFG_PULL_UP, GPIO_CFG_2MA),
+		GPIO_CFG(PYRAMID_GPIO_KEY_POWER, 0, GPIO_CFG_INPUT,
+			GPIO_CFG_PULL_UP, GPIO_CFG_4MA),
 	};
 
 	config_gpio_table(inputs_gpio_table, ARRAY_SIZE(inputs_gpio_table));
