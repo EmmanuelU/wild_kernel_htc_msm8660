@@ -2604,10 +2604,18 @@ config MACH_MONARUDO
 	  Support for the HTC APQ8064 MONARUDO.
 
 config MACH_VILLEC2
-        depends on ARCH_MSM8X60
-        bool "VILLEC2"
-        help
-          Support for the HTC VILLEC2 device.
+	depends on ARCH_MSM8X60
+	bool "VILLEC2"
+	help
+	  Support for the HTC VILLEC2 device.
+
+config MACH_PYRAMID
+	depends on ARCH_MSM8X60
+	default n
+	bool "Pyramid"
+	select FB_MSM_MIPI_DSI
+	help
+	  Support for the Pyramid device.
 
 config HTC_HEADSET_ONE_WIRE
 	tristate "HTC 1-wire headset detection driver"
@@ -2639,4 +2647,3 @@ config IO_FOOTPRINT
 	help
 	  Provides support for light-weight tracing of CPU register read/write
 endif
-

@@ -226,9 +226,6 @@ ifdef CONFIG_BT
 	obj-$(CONFIG_MACH_MONARUDO) += board-monarudo-rfkill.o  htc_bdaddress.o
 endif
 
-#ifdef CONFIG_MSM_CAMERA_V4L2
-#	obj-$(CONFIG_ARCH_MSM8X60) += board-msm8x60-camera.o
-#endif
 obj-$(CONFIG_ARCH_FSM9XXX) += devices-fsm9xxx.o
 obj-$(CONFIG_ARCH_FSM9XXX) += clock-fsm9xxx.o clock-local.o acpuclock-fsm9xxx.o
 obj-$(CONFIG_ARCH_FSM9XXX) += dfe-fsm9xxx.o rfic-fsm9xxx.o
@@ -358,6 +355,15 @@ obj-$(CONFIG_MACH_VILLEC2) += board-villec2-mmc.o board-villec2-wifi.o htc_wifi_
 #obj-$(CONFIG_MACH_VILLEC2) += board-villec2-mmc.o
 obj-$(CONFIG_MACH_VILLEC2) += htc_util.o
 obj-$(CONFIG_MACH_VILLEC2) += board-villec2-audio.o
+
+obj-$(CONFIG_MACH_PYRAMID) += board-pyramid.o devices_htc.o
+obj-$(CONFIG_MACH_PYRAMID) += board-pyramid-keypad.o 
+obj-$(CONFIG_MACH_PYRAMID) += board-pyramid-camera.o htc_awb_cal.o
+obj-$(CONFIG_MACH_PYRAMID) += htc_bdaddress.o board-pyramid-rfkill.o
+obj-$(CONFIG_MACH_PYRAMID) += board-pyramid-mmc.o board-pyramid-wifi.o htc_wifi_nvs.o
+obj-$(CONFIG_MACH_PYRAMID) += htc_util.o
+obj-$(CONFIG_MACH_PYRAMID) += board-pyramid-audio.o
+obj-$(CONFIG_MACH_PYRAMID) += board-pyramid-display.o
 
 CFLAGS_msm_vibrator.o += -Idrivers/staging/android
 CFLAGS_board-9615.o += -Idrivers/usb/gadget
