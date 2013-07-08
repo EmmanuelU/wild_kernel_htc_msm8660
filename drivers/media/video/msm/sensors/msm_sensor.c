@@ -427,7 +427,7 @@ int32_t msm_sensor_write_exp_gain1_ex(struct msm_sensor_ctrl_t *s_ctrl,
 }
 
 int32_t msm_sensor_write_exp_gain2_ex(struct msm_sensor_ctrl_t *s_ctrl,
-		int mode, uint16_t gain, uint32_t line) 
+		int mode, uint16_t gain, uint16_t dig_gain, uint32_t line) 
 {
 	uint32_t fl_lines, ll_pclk, ll_ratio;
 	uint8_t offset;
@@ -445,7 +445,6 @@ int32_t msm_sensor_write_exp_gain2_ex(struct msm_sensor_ctrl_t *s_ctrl,
 		line = fl_lines - offset;
 	} else {
 		ll_pclk = ll_pclk * fps_divider / Q10;
-		line = line / fps_divider;
 	}
 
 	s_ctrl->func_tbl->sensor_group_hold_on(s_ctrl);
