@@ -1417,7 +1417,7 @@ void broadcast_event(u32 evt_id, u32 dev_id, u64 session_id)
 		clnt_id = callback->clnt_id;
 		memset(evt_payload, 0, sizeof(union auddev_evt_data));
 
-		if (evt_id == AUDDEV_EVT_START_VOICE)
+		if (evt_id == AUDDEV_EVT_START_VOICE || evt_id == AUDDEV_EVT_DEV_CHG_VOICE)
 			routing_info.call_state = 1;
 		if (evt_id == AUDDEV_EVT_END_VOICE)
 			routing_info.call_state = 0;
