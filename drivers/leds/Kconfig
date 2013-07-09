@@ -603,6 +603,11 @@ config FLASHLIGHT_TPS61310
         help
           Say Y here to enable the TI TPS61310 flashlight
 
+config FLASHLIGHT_AAT1271
+	tristate "flashlight AAT1271"
+	help
+	  Say Y here to enable the AAT flashlight
+
 config LEDS_TRIGGER_SLEEP
 	tristate "LED Sleep Mode Trigger"
 	depends on LEDS_TRIGGERS && HAS_EARLYSUSPEND

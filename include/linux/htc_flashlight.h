@@ -50,6 +50,17 @@ enum flashlight_mode_flags {
 
 };
 
+#ifdef CONFIG_FLASHLIGHT_AAT1271
+struct flashlight_platform_data {
+	void (*gpio_init) (void);
+	uint32_t torch;
+	uint32_t flash;
+	uint32_t flash_duration_ms;
+	uint8_t led_count;
+};
+int aat1271_flashlight_control(int mode);
+#endif
+
 #ifdef CONFIG_FLASHLIGHT_AAT
 struct flashlight_platform_data {
 	void (*gpio_init) (void);
