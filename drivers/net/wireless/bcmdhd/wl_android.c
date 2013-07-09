@@ -36,11 +36,6 @@
 #include <dngl_stats.h>
 #include <dhd.h>
 #include <bcmsdbus.h>
-/* HTC_CSP_START */
-#ifdef CONFIG_PERFLOCK
-#include <mach/perflock.h>
-#endif
-/* HTC_CSP_END */
 #ifdef WL_CFG80211
 #include <wl_cfg80211.h>
 #endif
@@ -52,6 +47,8 @@
 #include <linux/wifi_tiwlan.h>
 #endif
 #endif /* CONFIG_WIFI_CONTROL_FUNC */
+
+#include <mach/msm_bus.h>
 
 /*
  * Android private command strings, PLEASE define new private commands here
@@ -428,7 +425,68 @@ typedef enum traffic_ind {
 static int traffic_stats_flag = TRAFFIC_STATS_NORMAL;
 static unsigned long current_traffic_count = 0;
 static unsigned long last_traffic_count = 0;
-extern struct perf_lock wlan_perf_lock;
+
+#ifdef CONFIG_PERFLOCK
+#include <mach/perflock.h>
+#endif
+
+#ifdef CONFIG_PERFLOCK
+struct perf_lock *wlan_perf_lock;
+#endif
+
+struct msm_bus_scale_pdata *bus_scale_table = NULL;
+uint32_t bus_perf_client = 0;
+
+void wlan_lock_perf(void)
+{
+	unsigned ret;
+#ifdef CONFIG_PERFLOCK
+	if (!is_perf_lock_active(wlan_perf_lock))
+		perf_lock(wlan_perf_lock);
+#endif
+	
+	if (bus_perf_client) {
+		ret = msm_bus_scale_client_update_request(
+				bus_perf_client, 1);
+		if (ret)
+			printf("%s: Failed to vote for "
+					"bus bandwidth %d\n", __func__, ret);
+	}
+}
+
+void wlan_unlock_perf(void)
+{
+	unsigned ret;
+#ifdef CONFIG_PERFLOCK
+	if (is_perf_lock_active(wlan_perf_lock))
+		perf_unlock(wlan_perf_lock);
+#endif
+	
+	if (bus_perf_client) {
+		ret = msm_bus_scale_client_update_request(
+				bus_perf_client, 0);
+		if (ret)
+			printf("%s: Failed to devote "
+					"for bus bw %d\n", __func__, ret);
+	}
+}
+
+void wlan_init_perf(void)
+{
+#ifdef CONFIG_PERFLOCK
+	wlan_perf_lock = perflock_acquire("bcmdhd");
+	perf_lock_init(wlan_perf_lock, TYPE_PERF_LOCK, PERF_LOCK_HIGHEST, "bcmdhd");
+#endif
+}
+
+void wlan_deinit_perf(void)
+{
+#ifdef CONFIG_PERLOCK
+	if (is_perf_lock_active(wlan_perf_lock))
+		perf_unlock(wlan_perf_lock);
+	perflock_release("bcmdhd");
+#endif
+}
 
 static void wl_android_traffic_monitor(struct net_device *dev)
 {
@@ -445,19 +503,13 @@ static void wl_android_traffic_monitor(struct net_device *dev)
 		if (traffic_stats_flag == TRAFFIC_STATS_NORMAL) {
 			if (traffic_diff > TRAFFIC_HIGH_WATER_MARK) {
 				traffic_stats_flag = TRAFFIC_STATS_HIGH;
-#ifdef CONFIG_PERFLOCK
-				if (!is_perf_lock_active(&wlan_perf_lock))
-					perf_lock(&wlan_perf_lock);
-#endif
+				wlan_lock_perf();
 				printf("lock cpu here, traffic-count=%ld\n", traffic_diff / 3);
 			}
 		} else {
 			if (traffic_diff < TRAFFIC_LOW_WATER_MARK) {
 				traffic_stats_flag = TRAFFIC_STATS_NORMAL;
-#ifdef CONFIG_PERFLOCK
-				if (is_perf_lock_active(&wlan_perf_lock))
-					perf_unlock(&wlan_perf_lock);
-#endif
+				wlan_unlock_perf();
 				printf("unlock cpu here, traffic-count=%ld\n", traffic_diff / 3);
 			}
 		}
@@ -2148,6 +2200,7 @@ int wl_android_init(void)
 	mutex_init(&wl_wificall_mutex);
 	mutex_init(&wl_wifionoff_mutex);
 /*HTC_CSP_END*/
+	wlan_init_perf();
 	return ret;
 }
 
@@ -2155,6 +2208,7 @@ int wl_android_exit(void)
 {
 	int ret = 0;
 
+	wlan_deinit_perf();
 	return ret;
 }
 

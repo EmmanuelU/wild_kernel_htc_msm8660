@@ -120,7 +120,7 @@ u32 wl_dbg_level = WL_DBG_ERR ;
 /* Set this to 1 to use a seperate interface (p2p0)
  *  for p2p operations.
  */
-#define ENABLE_P2P_INTERFACE	0
+#define ENABLE_P2P_INTERFACE	1
 
 /* This is to override regulatory domains defined in cfg80211 module (reg.c)
  * By default world regulatory domain defined in reg.c puts the flags NL80211_RRF_PASSIVE_SCAN
@@ -3591,8 +3591,15 @@ wl_cfg80211_mgmt_tx(struct wiphy *wiphy, struct net_device *ndev,
 	struct ieee80211_channel *channel, bool offchan,
 	enum nl80211_channel_type channel_type,
 	bool channel_type_valid, unsigned int wait,
-	const u8* buf, size_t len, u64 *cookie)
-{
+	const u8* buf, size_t len,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
+	bool no_cck,
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 3, 0)
+	bool dont_wait_for_ack,
+#endif
+	u64 *cookie)
+{	
 	struct ether_addr primary_mac;
 	wl_action_frame_t *action_frame;
 	wl_af_params_t *af_params;
@@ -4964,6 +4971,15 @@ wl_notify_connect_status(struct wl_priv *wl, struct net_device *ndev,
 				goto exit;
 		isfree = true;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)
+		if (event == WLC_E_ASSOC_IND && reason == DOT11_SC_SUCCESS) {
+			cfg80211_rx_mgmt(ndev, freq, 0, mgmt_frame, len, GFP_ATOMIC);
+		} else if (event == WLC_E_DISASSOC_IND) {
+			cfg80211_rx_mgmt(ndev, freq, 0, mgmt_frame, len, GFP_ATOMIC);
+		} else if ((event == WLC_E_DEAUTH_IND) || (event == WLC_E_DEAUTH)) {
+			cfg80211_rx_mgmt(ndev, freq, 0, mgmt_frame, len, GFP_ATOMIC);
+		}
+#else
 		if (event == WLC_E_ASSOC_IND && reason == DOT11_SC_SUCCESS) {
 			cfg80211_rx_mgmt(ndev, freq, mgmt_frame, len, GFP_ATOMIC);
 		} else if (event == WLC_E_DISASSOC_IND) {
@@ -4971,6 +4987,7 @@ wl_notify_connect_status(struct wl_priv *wl, struct net_device *ndev,
 		} else if ((event == WLC_E_DEAUTH_IND) || (event == WLC_E_DEAUTH)) {
 			cfg80211_rx_mgmt(ndev, freq, mgmt_frame, len, GFP_ATOMIC);
 		}
+#endif
 
 	} else {
 		WL_DBG(("wl_notify_connect_status : event %d status : %d \n",
@@ -5559,7 +5576,11 @@ wl_notify_rx_mgmt_frame(struct wl_priv *wl, struct net_device *ndev,
 		mgmt_frame = (u8 *)((wl_event_rx_frame_data_t *)rxframe + 1);
 	}
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 4, 0)
+	cfg80211_rx_mgmt(ndev, freq, 0, mgmt_frame, mgmt_frame_len, GFP_ATOMIC);
+#else
 	cfg80211_rx_mgmt(ndev, freq, mgmt_frame, mgmt_frame_len, GFP_ATOMIC);
+#endif
 
 	WL_DBG(("%s: mgmt_frame_len (%d) , e->datalen (%d), channel (%d), freq (%d)\n", __func__,
 		mgmt_frame_len, ntoh32(e->datalen), channel, freq));

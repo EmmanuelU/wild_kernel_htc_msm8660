@@ -42,12 +42,6 @@
 #include <linux/ethtool.h>
 #include <linux/fcntl.h>
 #include <linux/fs.h>
-/* HTC_CSP_START */
-#include <linux/ioprio.h>
-#ifdef CONFIG_PERFLOCK
-#include <mach/perflock.h>
-#endif
-/* HTC_CSP_END */
 
 #include <asm/uaccess.h>
 #include <asm/unaligned.h>
@@ -2125,23 +2119,6 @@ static void dhd_watchdog(ulong data)
 	DHD_OS_WAKE_UNLOCK(&dhd->pub);
 }
 
-/* HTC_CSP_START */
-extern int wlan_ioprio_idle;
-static int prev_wlan_ioprio_idle=0;
-static inline void set_wlan_ioprio(void)
-{
-        int ret, prio;
-
-        if(wlan_ioprio_idle == 1){
-                prio = ((IOPRIO_CLASS_IDLE << IOPRIO_CLASS_SHIFT) | 0);
-        } else {
-                prio = ((IOPRIO_CLASS_NONE << IOPRIO_CLASS_SHIFT) | 4);
-        }
-        ret = set_task_ioprio(current, prio);
-        DHD_DEFAULT(("set_wlan_ioprio: prio=0x%X, ret=%d\n", prio, ret));
-}
-/* HTC_CSP_END */
-
 #ifdef DHDTHREAD
 static int
 dhd_dpc_thread(void *data)
@@ -2167,12 +2144,6 @@ dhd_dpc_thread(void *data)
 
 	/* Run until signal received */
 	while (1) {
-        /* HTC_CSP_START */
-        if(prev_wlan_ioprio_idle != wlan_ioprio_idle){
-            set_wlan_ioprio();
-            prev_wlan_ioprio_idle = wlan_ioprio_idle;
-        }
-        /* HTC_CSP_END */
 		if (down_interruptible(&tsk->sema) == 0) {
 			if (dhd->dhd_force_exit== TRUE)
 				break;
@@ -3076,7 +3047,11 @@ static struct net_device_ops dhd_ops_pri = {
 	.ndo_do_ioctl = dhd_ioctl_entry,
 	.ndo_start_xmit = dhd_start_xmit,
 	.ndo_set_mac_address = dhd_set_mac_address,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0))
+	.ndo_set_rx_mode = dhd_set_multicast_list,
+#else
 	.ndo_set_multicast_list = dhd_set_multicast_list,
+#endif
 };
 
 static struct net_device_ops dhd_ops_virt = {
@@ -3084,7 +3059,11 @@ static struct net_device_ops dhd_ops_virt = {
 	.ndo_do_ioctl = dhd_ioctl_entry,
 	.ndo_start_xmit = dhd_start_xmit,
 	.ndo_set_mac_address = dhd_set_mac_address,
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0))
+	.ndo_set_rx_mode = dhd_set_multicast_list,
+#else
 	.ndo_set_multicast_list = dhd_set_multicast_list,
+#endif
 };
 #endif /* (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31)) */
 
@@ -4416,10 +4395,8 @@ dhd_free(dhd_pub_t *dhdp)
 	}
 }
 
-/* HTC_CSP_START */
-extern struct perf_lock wlan_perf_lock;
-/* HTC_CSP_END */
 extern void disable_dev_wlc_ioctl(void);
+extern void wlan_unlock_perf(void);
 static void __exit
 dhd_module_cleanup(void)
 {
@@ -4452,12 +4429,7 @@ dhd_module_cleanup(void)
 #endif /* CONFIG_WIFI_CONTROL_FUNC */
 	wl_android_exit();
 
-/* HTC_CSP_START */
-#ifdef CONFIG_PERLOCK
-        if (is_perf_lock_active(&wlan_perf_lock))
-            perf_unlock(&wlan_perf_lock);
-#endif
-/* HTC_CSP_END */
+	wlan_unlock_perf();
 
 	/* Call customer gpio to turn off power with WL_REG_ON signal */
 	dhd_customer_gpio_wlan_ctrl(WLAN_POWER_OFF);
