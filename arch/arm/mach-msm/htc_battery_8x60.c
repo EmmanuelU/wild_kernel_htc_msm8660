@@ -719,13 +719,6 @@ static long htc_batt_ioctl(struct file *filp,
 		}
 		mutex_unlock(&htc_batt_info.info_lock);
 
-#ifdef CONFIG_MACH_VILLEC2
-	if(htc_batt_info.rep.batt_id == 3)
-		tps_set_hv_battery(1);
-	else
-		tps_set_hv_battery(0);
-#endif
-
 		BATT_LOG("ioctl: battery level update: %u",
 			htc_batt_info.rep.level);
 

@@ -91,7 +91,6 @@ static enum power_supply_property htc_battery_properties[] = {
 	POWER_SUPPLY_PROP_PRESENT,
 	POWER_SUPPLY_PROP_TECHNOLOGY,
 	POWER_SUPPLY_PROP_CAPACITY,
-	POWER_SUPPLY_PROP_OVERLOAD,
 };
 
 static enum power_supply_property htc_power_properties[] = {
@@ -538,9 +537,6 @@ static int htc_battery_get_property(struct power_supply *psy,
 			val->intval = 100;
 		mutex_unlock(&battery_core_info.info_lock);
 		break;
-	case POWER_SUPPLY_PROP_OVERLOAD:
-		val->intval = battery_core_info.rep.overload;
-		break;
 	default:
 		return -EINVAL;
 	}
@@ -557,11 +553,6 @@ static int htc_power_get_property(struct power_supply *psy,
 	mutex_lock(&battery_core_info.info_lock);
 
 	charger = battery_core_info.rep.charging_source;
-
-#if 0
-	if (battery_core_info.rep.batt_id == 255)
-		charger = CHARGER_BATTERY;
-#endif
 
 	mutex_unlock(&battery_core_info.info_lock);
 
@@ -643,10 +634,6 @@ static ssize_t htc_battery_show_property(struct device *dev,
 	case BATT_STATE:
 		i += scnprintf(buf + i, PAGE_SIZE - i, "%d\n",
 				battery_core_info.rep.batt_state);
-		break;
-	case OVERLOAD:
-		i += scnprintf(buf + i, PAGE_SIZE - i, "%d\n",
-				battery_core_info.rep.overload);
 		break;
 	default:
 		i = -EINVAL;
@@ -833,20 +820,6 @@ int htc_battery_core_update_changed(void)
 			battery_core_info.rep.batt_id = 66;
 		}
 	}
-#if 0
-	battery_core_info.rep.batt_vol = new_batt_info_rep.batt_vol;
-	battery_core_info.rep.batt_id = new_batt_info_rep.batt_id;
-	battery_core_info.rep.batt_temp = new_batt_info_rep.batt_temp;
-	battery_core_info.rep.batt_current = new_batt_info_rep.batt_current;
-	battery_core_info.rep.batt_discharg_current = new_batt_info_rep.batt_discharg_current;
-	battery_core_info.rep.level = new_batt_info_rep.level;
-	battery_core_info.rep.charging_source = new_batt_info_rep.charging_source;
-	battery_core_info.rep.charging_enabled = new_batt_info_rep.charging_enabled;
-	battery_core_info.rep.full_bat = new_batt_info_rep.full_bat;
-	battery_core_info.rep.over_vchg = new_batt_info_rep.over_vchg;
-	battery_core_info.rep.temp_fault = new_batt_info_rep.temp_fault;
-	battery_core_info.rep.batt_state = new_batt_info_rep.batt_state;
-#endif
 
 	if (battery_core_info.rep.charging_source == CHARGER_BATTERY)
 		battery_core_info.htc_charge_full = 0;
@@ -871,12 +844,11 @@ int htc_battery_core_update_changed(void)
 	battery_core_info.update_time = jiffies;
 	mutex_unlock(&battery_core_info.info_lock);
 
-	BATT_LOG("ID=%d,level=%d,level_raw=%d,vol=%d,temp=%d,current=%d,"
+	BATT_LOG("ID=%d,level=%d,vol=%d,temp=%d,current=%d,"
 		"chg_src=%d,chg_en=%d,full_bat=%d,over_vchg=%d,"
-		"batt_state=%d,overload=%d,ui_chg_full=%d",
+		"batt_state=%d,ui_chg_full=%d",
 			battery_core_info.rep.batt_id,
 			battery_core_info.rep.level,
-			battery_core_info.rep.level_raw,
 			battery_core_info.rep.batt_vol,
 			battery_core_info.rep.batt_temp,
 			battery_core_info.rep.batt_current,
@@ -885,7 +857,6 @@ int htc_battery_core_update_changed(void)
 			battery_core_info.rep.full_bat,
 			battery_core_info.rep.over_vchg,
 			battery_core_info.rep.batt_state,
-			battery_core_info.rep.overload,
 			battery_core_info.htc_charge_full);
 
 
@@ -980,14 +951,12 @@ int htc_battery_core_register(struct device *dev,
 	battery_core_info.rep.batt_temp = 285;
 	battery_core_info.rep.batt_current = 162;
 	battery_core_info.rep.level = 66;
-	battery_core_info.rep.level_raw = 0;
 	battery_core_info.rep.full_bat = 1580000;
 	battery_core_info.rep.full_level = 100;
 	
 	battery_core_info.rep.temp_fault = -1;
 	
 	battery_core_info.rep.batt_state = 0;
-	battery_core_info.rep.overload = 0;
 
 	battery_over_loading = 0;
 

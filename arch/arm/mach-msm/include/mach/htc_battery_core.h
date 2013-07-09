@@ -50,7 +50,6 @@ enum {
 	FULL_BAT,
 	OVER_VCHG,
 	BATT_STATE,
-	OVERLOAD,
 };
 
 enum htc_batt_rt_attr {
@@ -66,7 +65,6 @@ struct battery_info_reply {
 	s32 batt_current;
 	u32 batt_discharg_current;
 	u32 level;
-	u32 level_raw;
 	u32 charging_source;
 	u32 charging_enabled;
 	u32 full_bat;
@@ -74,7 +72,6 @@ struct battery_info_reply {
 	u32 over_vchg;
 	s32 temp_fault;
 	u32 batt_state;
-	u32 overload;
 };
 
 struct htc_battery_core {
