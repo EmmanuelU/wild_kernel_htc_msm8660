@@ -37,8 +37,8 @@
 #include <linux/slab.h>
 #include <mach/board.h>
 
-#define DPS(x...) printk(KERN_DEBUG "[PS][ISL29029] " x)
-#define DLS(x...) printk(KERN_DEBUG "[LS][ISL29029] " x)
+#define DPS(x...) ({ if (0) printk(KERN_DEBUG "[PS][ISL29029] " x); })
+#define DLS(x...) ({ if (0) printk(KERN_DEBUG "[LS][ISL29029] " x); })
 #define IPS(x...) printk(KERN_INFO "[PS][ISL29029] " x)
 #define ILS(x...) printk(KERN_INFO "[LS][ISL29029] " x)
 #define EPS(x...) printk(KERN_ERR "[PS][ISL29029 ERROR] " x)
@@ -416,7 +416,7 @@ static void report_lsensor_input_event(struct isl29029_info *lpi)
 		if (ret < 0)
 			ELS("%s: set_lsensor_range fail\n", __func__);
 
-		ILS("ALS_ADC = 0x%03X, Level = %d, l_thd equal 0, h_thd(raw_adc_value+1) = 0x%x \n",
+		DLS("ALS_ADC = 0x%03X, Level = %d, l_thd equal 0, h_thd(raw_adc_value+1) = 0x%x \n",
 			adc_value, level,  raw_adc_value + 1);
 	} else if (i < 10) {
 		ret = set_lsensor_range((i == 0) ? 0 :
@@ -426,10 +426,10 @@ static void report_lsensor_input_event(struct isl29029_info *lpi)
 			ELS("%s: set_lsensor_range fail\n", __func__);
 
 		if (i == 0)
-			ILS("ALS_ADC = 0x%03X, Level = %d, l_thd equal 0, h_thd = 0x%x \n",
+			DLS("ALS_ADC = 0x%03X, Level = %d, l_thd equal 0, h_thd = 0x%x \n",
 				adc_value, level,  *(lpi->cali_table + i));
 		else
-			ILS("ALS_ADC = 0x%03X, Level = %d, l_thd equal = 0x%x, h_thd = 0x%x \n",
+			DLS("ALS_ADC = 0x%03X, Level = %d, l_thd equal = 0x%x, h_thd = 0x%x \n",
 				adc_value, level, *(lpi->cali_table + (i - 1)) + 1, *(lpi->cali_table + i));
 	} else
 		ILS("%s: i = %d\n", __func__, i);
@@ -582,7 +582,7 @@ static void sensor_irq_do_work(struct work_struct *work)
 		return;
 	}
 	reg_config = buffer[0];
-	IPS("isl_irq: CONFIG = 0x%x, INT_PIN = %d, INT = 0x%x\n",
+	DPS("isl_irq: CONFIG = 0x%x, INT_PIN = %d, INT = 0x%x\n",
 		reg_config, value1, intrrupt);
 
 	if (intrrupt & ISL29029_INT_PROX_FLAG) {
