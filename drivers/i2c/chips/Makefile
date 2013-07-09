@@ -26,6 +26,8 @@ obj-$(CONFIG_SENSORS_BMA250)	+= bma250.o
 obj-$(CONFIG_BOSCH_BMA250)      += bma250_bosch.o
 obj-$(CONFIG_VP_A1028)          += a1028.o
 obj-$(CONFIG_TPS65200)          += tps65200.o
+obj-$(CONFIG_INPUT_ISL29028)	+= isl29028.o
+obj-$(CONFIG_INPUT_ISL29029)	+= isl29029.o
 ifeq ($(CONFIG_I2C_DEBUG_CHIP),y)
 EXTRA_CFLAGS += -DDEBUG
 endif
