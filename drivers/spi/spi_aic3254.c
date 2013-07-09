@@ -26,6 +26,9 @@
 #include <linux/clk.h>
 #include <linux/wakelock.h>
 #include <linux/rtc.h>
+#include <linux/module.h>
+#include <linux/pm_qos.h>
+#include <mach/cpuidle.h>
 
 static struct spi_device *codec_dev;
 static struct mutex lock;
@@ -45,7 +48,7 @@ struct ecodec_aic3254_state {
 	int enabled;
 	struct clk *rx_mclk;
 	struct clk *rx_sclk;
-	struct wake_lock idlelock;
+	struct pm_qos_request pm_qos_req;
 	struct wake_lock wakelock;
 };
 static struct ecodec_aic3254_state codec_clk;
@@ -119,61 +122,6 @@ static int32_t spi_write_table(CODEC_SPI_CMD *cmds, int num)
 	return status;
 }
 
-static int32_t spi_write_table_parsepage(CODEC_SPI_CMD *cmds, int num)
-{
-	int i;
-	int bulk_counter;
-	int status = 0;
-	struct spi_message	m;
-	struct spi_transfer	tx_addr;
-	unsigned char page_select = (unsigned char)0;
-	unsigned int reg_long1, reg_long2;
-
-	if (codec_dev == NULL) {
-		status = -ESHUTDOWN;
-		return status;
-	}
-
-	i = 0;
-
-	while (i < num) {
-		if (cmds[i].reg == page_select) {
-			/* select page */
-			codec_spi_write(cmds[i].reg, cmds[i].data);
-			i++;
-		} else {
-			spi_message_init(&m);
-			memset(bulk_tx, 0, MINIDSP_COL_MAX * 2 * \
-				sizeof(uint8_t));
-			memset(&tx_addr, 0, sizeof(struct spi_transfer));
-
-			bulk_counter = 0;
-			bulk_tx[bulk_counter] = cmds[i].reg << 1;
-			bulk_tx[bulk_counter + 1] = cmds[i].data;
-			bulk_counter += 2;
-
-			do {
-				reg_long1 = (unsigned int)cmds[i].reg;
-				reg_long2 = (unsigned int)cmds[i+1].reg;
-				if (reg_long2 == (reg_long1+1)) {
-					bulk_tx[bulk_counter] = cmds[i+1].data;
-					bulk_counter++;
-				}
-				i++;
-			} while (reg_long2 == (reg_long1+1));
-
-			tx_addr.tx_buf = bulk_tx;
-			tx_addr.len = (bulk_counter);
-			tx_addr.cs_change = 1;
-			tx_addr.bits_per_word = 8;
-			spi_message_add_tail(&tx_addr, &m);
-			status = spi_sync(codec_dev, &m);
-		}
-	}
-
-	return status;
-}
-
 static int aic3254_config(CODEC_SPI_CMD *cmds, int size)
 {
 	int i, retry, ret;
@@ -236,11 +184,7 @@ static int aic3254_config(CODEC_SPI_CMD *cmds, int size)
 			}
 		}
 	} else {
-		/* use bulk to transfer large data */
-		if (codec_dev->ext_gpio_cs != 0)
-			spi_write_table_parsepage(cmds, size);
-		else
-			spi_write_table(cmds, size);
+		spi_write_table(cmds, size);
 	}
 	if (ctl_ops->spibus_enable)
 		ctl_ops->spibus_enable(0);
@@ -1026,14 +970,15 @@ static void spi_aic3254_prevent_sleep(void)
 	struct ecodec_aic3254_state *codec_drv = &codec_clk;
 
 	wake_lock(&codec_drv->wakelock);
-	wake_lock(&codec_drv->idlelock);
+	pm_qos_update_request(&codec_drv->pm_qos_req,
+			msm_cpuidle_get_deep_idle_latency());
 }
 
 static void spi_aic3254_allow_sleep(void)
 {
 	struct ecodec_aic3254_state *codec_drv = &codec_clk;
 
-	wake_unlock(&codec_drv->idlelock);
+	pm_qos_update_request(&codec_drv->pm_qos_req, PM_QOS_DEFAULT_VALUE);
 	wake_unlock(&codec_drv->wakelock);
 }
 
@@ -1087,8 +1032,8 @@ static int __init spi_aic3254_init(void)
 	}
 #endif
 
-	wake_lock_init(&codec_drv->idlelock, WAKE_LOCK_IDLE,
-			"aic3254_lock");
+	pm_qos_add_request(&codec_drv->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
+			PM_QOS_DEFAULT_VALUE);
 	wake_lock_init(&codec_drv->wakelock, WAKE_LOCK_SUSPEND,
 			"aic3254_suspend_lock");
 
@@ -1098,18 +1043,9 @@ module_init(spi_aic3254_init);
 
 static void __exit spi_aic3254_exit(void)
 {
-	struct ecodec_aic3254_state *codec_drv =  &codec_clk;
-
 	spi_unregister_driver(&spi_aic3254);
 	misc_deregister(&aic3254_misc);
 
-	wake_lock_destroy(&codec_drv->wakelock);
-	wake_lock_destroy(&codec_drv->idlelock);
-
-#if defined(CONFIG_ARCH_MSM7X30)
-	clk_put(codec_drv->rx_mclk);
-	clk_put(codec_drv->rx_sclk);
-#endif
 	return;
 }
 module_exit(spi_aic3254_exit);

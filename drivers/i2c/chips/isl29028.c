@@ -148,8 +148,9 @@ struct isl29028_info {
 
 static struct isl29028_info *lp_info;
 
-/*static uint32_t als_kadc;*/
 static uint32_t ps_threshold;
+
+extern unsigned int als_kadc;
 
 static int I2C_RxData(char *rxData, int length)
 {

@@ -27,10 +27,10 @@
 #include <linux/freezer.h>
 #include <mach/tpa2051d3.h>
 #include <linux/mutex.h>
+#include <linux/module.h>
 
 #include <linux/gpio.h>
 #include <linux/mfd/pm8xxx/pm8921.h>
-
 
 #ifdef CONFIG_AMP_TPA2051D3_ON_GPIO
 #define DEBUG (1)
@@ -221,7 +221,6 @@ static int tpa2051d3_release(struct inode *inode, struct file *file)
 }
 void set_amp(int on, char *i2c_command)
 {
-	pr_info("%s: %d\n", __func__, on);
 	mutex_lock(&spk_amp_lock);
 	if (on && !last_spkamp_state) {
 		if (tpa2051_i2c_write(i2c_command, AMP_ON_CMD_LEN) == 0) {
@@ -310,7 +309,6 @@ int update_amp_parameter(int mode)
 	}
 	return 0;
 }
-
 
 static long tpa2051d3_ioctl(struct file *file, unsigned int cmd,
 	   unsigned long arg)

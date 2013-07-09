@@ -34,6 +34,7 @@
 #ifdef __KERNEL__
 #include <linux/module.h>
 #endif
+#include <linux/delay.h>
 
 #include "mpu.h"
 #include "mlos.h"
