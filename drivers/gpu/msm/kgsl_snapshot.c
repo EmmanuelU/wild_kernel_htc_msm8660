@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -10,6 +10,7 @@
  * GNU General Public License for more details.
  */
 
+#include <linux/vmalloc.h>
 #include <linux/time.h>
 #include <linux/sysfs.h>
 #include <linux/utsname.h>
@@ -138,7 +139,7 @@ static int snapshot_os(struct kgsl_device *device,
  * register
  */
 
-int kgsl_snapshot_dump_indexed_regs(struct kgsl_device *device,
+static int kgsl_snapshot_dump_indexed_regs(struct kgsl_device *device,
 	void *snapshot, int remain, void *priv)
 {
 	struct kgsl_snapshot_indexed_registers *iregs = priv;
@@ -163,7 +164,6 @@ int kgsl_snapshot_dump_indexed_regs(struct kgsl_device *device,
 
 	return (iregs->count * 4) + sizeof(*header);
 }
-EXPORT_SYMBOL(kgsl_snapshot_dump_indexed_regs);
 
 /*
  * kgsl_snapshot_dump_regs - helper function to dump device registers
@@ -218,6 +218,23 @@ int kgsl_snapshot_dump_regs(struct kgsl_device *device, void *snapshot,
 	return (count * 8) + sizeof(*header);
 }
 EXPORT_SYMBOL(kgsl_snapshot_dump_regs);
+
+void *kgsl_snapshot_indexed_registers(struct kgsl_device *device,
+		void *snapshot, int *remain,
+		unsigned int index, unsigned int data, unsigned int start,
+		unsigned int count)
+{
+	struct kgsl_snapshot_indexed_registers iregs;
+	iregs.index = index;
+	iregs.data = data;
+	iregs.start = start;
+	iregs.count = count;
+
+	return kgsl_snapshot_add_section(device,
+		 KGSL_SNAPSHOT_SECTION_INDEXED_REGS, snapshot,
+		 remain, kgsl_snapshot_dump_indexed_regs, &iregs);
+}
+EXPORT_SYMBOL(kgsl_snapshot_indexed_registers);
 
 /*
  * kgsl_snapshot - construct a device snapshot
@@ -282,12 +299,6 @@ int kgsl_device_snapshot(struct kgsl_device *device, int hang)
 	/* Freeze the snapshot on a hang until it gets read */
 	device->snapshot_frozen = (hang) ? 1 : 0;
 
-	/* log buffer info to aid in ramdump recovery */
-	KGSL_DRV_ERR(device, "snapshot created at va %p pa %lx size %d\n",
-			device->snapshot, __pa(device->snapshot),
-			device->snapshot_size);
-	if (hang)
-		sysfs_notify(&device->snapshot_kobj, NULL, "timestamp");
 	return 0;
 }
 EXPORT_SYMBOL(kgsl_device_snapshot);
@@ -437,7 +448,7 @@ int kgsl_device_snapshot_init(struct kgsl_device *device)
 	int ret;
 
 	if (device->snapshot == NULL)
-		device->snapshot = kzalloc(KGSL_SNAPSHOT_MEMSIZE, GFP_KERNEL);
+		device->snapshot = vmalloc(KGSL_SNAPSHOT_MEMSIZE);
 
 	if (device->snapshot == NULL)
 		return -ENOMEM;
@@ -480,7 +491,7 @@ void kgsl_device_snapshot_close(struct kgsl_device *device)
 
 	kobject_put(&device->snapshot_kobj);
 
-	kfree(device->snapshot);
+	vfree(device->snapshot);
 
 	device->snapshot = NULL;
 	device->snapshot_maxsize = 0;
