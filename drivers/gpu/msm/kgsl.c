@@ -102,10 +102,6 @@ unsigned int kgsl_get_alloc_size(int detailed)
 	int i = 0;
 
 	ret = kgsl_driver.stats.page_alloc;
-	printk("kgsl: kgsl_driver.stats.page_alloc = %u\n", kgsl_driver.stats.page_alloc);
-	printk("kgsl: kgsl_driver.stats.page_alloc_kernel = %u\n", kgsl_driver.stats.page_alloc_kernel);
-	printk("kgsl: kgsl_driver.stats.pre_alloc = %u\n", kgsl_driver.stats.pre_alloc);
-	printk("kgsl: kgsl_driver.stats.pre_alloc_kernel = %u\n", kgsl_driver.stats.pre_alloc_kernel);
 
 	if (!detailed)
 		return ret;
