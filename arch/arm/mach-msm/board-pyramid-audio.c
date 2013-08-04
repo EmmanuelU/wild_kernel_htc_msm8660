@@ -175,7 +175,6 @@ void pyramid_snddev_bmic_pamp_on(int en)
 		ret = pm8058_micbias_enable(OTHC_MICBIAS_1, OTHC_SIGNAL_ALWAYS_ON);
 		if (ret)
 			pr_aud_err("%s: Enabling back mic power failed\n", __func__);
-		gpio_request(PM8058_GPIO_PM_TO_SYS(PYRAMID_AUD_MIC_SEL), "AUD_MIC_SEL");
 		gpio_direction_output(PM8058_GPIO_PM_TO_SYS(PYRAMID_AUD_MIC_SEL), 0);
 	} else {
 		ret = pm8058_micbias_enable(OTHC_MICBIAS_1, OTHC_SIGNAL_OFF);
@@ -216,7 +215,6 @@ void pyramid_snddev_emic_pamp_on(int en)
 	pr_aud_info("%s %d\n", __func__, en);
 
 	if (en) {
-		gpio_request(PM8058_GPIO_PM_TO_SYS(PYRAMID_AUD_MIC_SEL), "AUD_MIC_SEL");
 		gpio_direction_output(PM8058_GPIO_PM_TO_SYS(PYRAMID_AUD_MIC_SEL), 1);
 	}
 }
@@ -286,10 +284,7 @@ int pyramid_get_speaker_channels(void)
 
 int pyramid_support_beats(void)
 {
-	if (((system_rev & 0x1) == 0x1) && ((system_rev >> 4 & 0xF) == 0x8))
-		return 1;
-	else
-		return 0;
+	return 1;
 }
 
 int pyramid_support_adie(void)
@@ -310,7 +305,6 @@ int pyramid_support_back_mic(void)
 void pyramid_enable_beats(int en)
 {
 	pr_aud_info("%s: %d\n", __func__, en);
-	set_beats_on(en);
 }
 
 void pyramid_reset_3254(void)
@@ -382,6 +376,7 @@ void pyramid_audio_gpios_init(void)
 {
 	pr_aud_info("%s\n", __func__);
 	gpio_request(PM8058_GPIO_PM_TO_SYS(PYRAMID_AUD_HP_EN), "AUD_HP_EN");
+	gpio_request(PM8058_GPIO_PM_TO_SYS(PYRAMID_AUD_MIC_SEL), "AUD_MIC_SEL");
 }
 
 void __init pyramid_audio_init(void)
