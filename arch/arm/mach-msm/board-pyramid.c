@@ -132,20 +132,15 @@
 #define PHY_BASE_ADDR1       0x48000000
 #define SIZE_ADDR1           0x28000000
 
-#define MSM_ION_SF_SIZE      0x3000000
+#define MSM_ION_SF_SIZE      0x2C00000
 #define MSM_ION_CAMERA_SIZE  0x2000000
-#define MSM_ION_ROTATOR_SIZE 0x654000
 #define MSM_ION_MM_FW_SIZE   0x200000
 #define MSM_ION_MM_SIZE      0x3D00000
 #define MSM_ION_MFC_SIZE     0x100000
 #define MSM_ION_WB_SIZE      0x2FD000
 #define MSM_ION_AUDIO_SIZE   0x4CF000
 
-#ifdef CONFIG_MSM_ROTATOR
-#define MSM_ION_HEAP_NUM     9
-#else
 #define MSM_ION_HEAP_NUM     8
-#endif
 
 #define MSM_ION_CAMERA_BASE  0x40E00000
 #define MSM_ION_WB_BASE      0x46400000
@@ -2716,16 +2711,6 @@ static struct ion_platform_data ion_pdata = {
 			.memory_type = ION_EBI_TYPE,
 			.extra_data = (void *)&co_ion_pdata,
 		},
-#ifdef CONFIG_MSM_ROTATOR
-		{
-			.id	= ION_CP_ROTATOR_HEAP_ID,
-			.type	= ION_HEAP_TYPE_CARVEOUT,
-			.name	= ION_ROTATOR_HEAP_NAME,
-			.size	= MSM_ION_ROTATOR_SIZE,
-			.memory_type = ION_EBI_TYPE,
-			.extra_data = &co_ion_pdata,
-		},
-#endif
 		{
 			.id	= ION_CAMERA_HEAP_ID,
 			.type	= ION_HEAP_TYPE_CARVEOUT,
@@ -2787,9 +2772,6 @@ static void __init reserve_ion_memory(void)
 	msm8x60_reserve_table[MEMTYPE_SMI].size += MSM_ION_MM_SIZE;
 	msm8x60_reserve_table[MEMTYPE_SMI].size += MSM_ION_MFC_SIZE;
 	msm8x60_reserve_table[MEMTYPE_EBI1].size += MSM_ION_SF_SIZE;
-#ifdef CONFIG_MSM_ROTATOR
-	msm8x60_reserve_table[MEMTYPE_EBI1].size += MSM_ION_ROTATOR_SIZE;
-#endif
 	msm8x60_reserve_table[MEMTYPE_EBI1].size += MSM_ION_AUDIO_SIZE;
 #endif
 }
