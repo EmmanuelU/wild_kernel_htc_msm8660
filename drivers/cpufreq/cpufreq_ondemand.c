@@ -1059,6 +1059,12 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 		}
 	}
 
+	if (input_event_boosted())
+	{
+		trace_cpufreq_interactive_already (policy->cpu, cur_load, policy->cur,policy->cur);
+		return;
+	}
+
 	
 	
 	if (policy->cur == policy->min){
@@ -1066,11 +1072,7 @@ static void dbs_check_cpu(struct cpu_dbs_info_s *this_dbs_info)
 		return;
 	}
 
-	if (input_event_boosted())
-	{
-		trace_cpufreq_interactive_already (policy->cpu, cur_load, policy->cur,policy->cur);
-		return;
-	}
+
 	if (max_load_freq <
 	    (dbs_tuners_ins.up_threshold - dbs_tuners_ins.down_differential) *
 	     policy->cur) {
