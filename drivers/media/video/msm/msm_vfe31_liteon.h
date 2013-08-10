@@ -1,4 +1,4 @@
-/* Copyright (c) 2010, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -57,6 +57,9 @@
 /* clear the halt bit. */
 #define AXI_HALT_CLEAR  0x00000000
 
+/* clear axi_halt_irq */
+#define MASK_AXI_HALT_IRQ	0xFF7FFFFF
+
 /* reset the pipeline when stop command is issued.
  * (without reset the register.) bit 26-31 = 0,
  * domain reset, bit 0-9 = 1 for module reset, except
@@ -99,6 +102,7 @@
 #define VFE_CLEAR_ALL_IRQS   0xffffffff
 
 #define VFE_IRQ_STATUS0_CAMIF_SOF_MASK            0x00000001
+#define VFE_IRQ_STATUS0_CAMIF_EOF_MASK            0x00000004
 #define VFE_IRQ_STATUS0_REG_UPDATE_MASK           0x00000020
 #define VFE_IRQ_STATUS0_IMAGE_COMPOSIT_DONE0_MASK 0x00200000
 #define VFE_IRQ_STATUS0_IMAGE_COMPOSIT_DONE1_MASK 0x00400000
@@ -127,7 +131,10 @@
  * irq_status_1, bit 22 for reset irq, bit 23 for axi_halt_ack
    irq */
 #define VFE_IMASK_WHILE_STOPPING_0  0xF0000000
-#define VFE_IMASK_WHILE_STOPPING_1  0x00400000
+#define VFE_IMASK_WHILE_STOPPING_1  0x00C00000
+#define VFE_IMASK_RESET             0x00400000
+#define VFE_IMASK_AXI_HALT          0x00800000
+
 
 /* no error irq in mask 0 */
 #define VFE_IMASK_ERROR_ONLY_0  0x0
@@ -164,6 +171,7 @@
 #define VFE_AF_PINGPONG_STATUS_BIT       0x100
 #define VFE_AWB_PINGPONG_STATUS_BIT      0x200
 
+#define HFR_MODE_OFF 1
 
 enum VFE31_DMI_RAM_SEL {
 	 NO_MEM_SELECTED          = 0,
@@ -293,14 +301,11 @@ enum  VFE_STATE {
 #define V31_SYNC_TIMER_SETTING    104
 #define V31_ASYNC_TIMER_SETTING   105
 #define V31_LIVESHOT              106
-#define V31_STEREOCAM             107
-#define V31_ZSL                   108
+#define V31_ZSL                   107
+#define V31_STEREOCAM             108
 
 #define V31_CAMIF_OFF             0x000001E4
 #define V31_CAMIF_LEN             32
-
-#define V31_CAMIF_WIN_H_CFG_OFF   0x000001F4
-#define V31_CAMIF_SNAP_R_WIN_CFG_MASK  0x00010001
 
 #define V31_DEMUX_OFF             0x00000284
 #define V31_DEMUX_LEN             20
@@ -314,10 +319,14 @@ enum  VFE_STATE {
 #define V31_DEMOSAIC_2_OFF        0x0000029C
 #define V31_DEMOSAIC_2_LEN        8
 
+/* gamma VFE_LUT_BANK_SEL*/
+#define V31_GAMMA_CFG_OFF         0x000003BC
+#define V31_LUMA_CFG_OFF          0x000003C0
+
 #define V31_OUT_CLAMP_OFF         0x00000524
 #define V31_OUT_CLAMP_LEN         8
 
-#define V31_OPERATION_CFG_LEN     28
+#define V31_OPERATION_CFG_LEN     32
 
 #define V31_AXI_OUT_OFF           0x00000038
 #define V31_AXI_OUT_LEN           188
@@ -375,7 +384,7 @@ enum  VFE_STATE {
 #define V31_CHROMA_SUP_OFF 0x000003E8
 #define V31_CHROMA_SUP_LEN 12
 
-#define V31_MCE_OFF 0x000003E8
+#define V31_MCE_OFF 0x000003F4
 #define V31_MCE_LEN 36
 #define V31_STATS_AF_OFF 0x0000053c
 #define V31_STATS_AF_LEN 16
@@ -786,8 +795,6 @@ enum VFE31_MESSAGE_ID {
 	MSG_ID_CAMIF_ERROR,
 	MSG_ID_BUS_OVERFLOW,
 	//MSG_ID_SOF_ACK,
-	MSG_ID_SP3D_SEND_L,
-	MSG_ID_SP3D_SEND_R,
 };
 
 struct vfe_msg_stats{
@@ -819,6 +826,7 @@ struct vfe31_irq_status {
 	uint32_t camifStatus;
 	uint32_t demosaicStatus;
 	uint32_t asfMaxEdge;
+	uint32_t vfePingPongStatus;
 };
 
 struct vfe_msg_output {
@@ -853,24 +861,23 @@ struct vfe31_cmd_type {
 	uint16_t id;
 	uint32_t length;
 	uint32_t offset;
-  uint32_t flag;
+	uint32_t flag;
 };
 
 struct vfe31_free_buf {
-	spinlock_t f_lock;
-	uint8_t available;
+	struct list_head node;
 	uint32_t paddr;
 	uint32_t y_off;
 	uint32_t cbcr_off;
 };
 
 struct vfe31_output_ch {
-	struct vfe31_free_buf free_buf;
+	struct list_head free_buf_head;
+	spinlock_t free_buf_lock;
 	uint16_t output_fmt;
 	int8_t ch0;
 	int8_t ch1;
 	int8_t ch2;
-	uint32_t  capture_cnt;
 	uint32_t  frame_drop_cnt;
 };
 
@@ -1003,9 +1010,7 @@ struct vfe31_ctrl_type {
 
 	uint32_t vfeImaskCompositePacked;
 
-	spinlock_t  stop_flag_lock;
 	spinlock_t  update_ack_lock;
-	spinlock_t  state_lock;
 	spinlock_t  io_lock;
 
 	spinlock_t  aec_ack_lock;
@@ -1017,13 +1022,15 @@ struct vfe31_ctrl_type {
 	void *extdata;
 
 	int8_t start_ack_pending;
-	int8_t stop_ack_pending;
+	atomic_t stop_ack_pending;
 	int8_t reset_ack_pending;
 	int8_t update_ack_pending;
 	int8_t req_start_video_rec;
 	int8_t req_stop_video_rec;
 	int8_t output0_available;
 	int8_t output1_available;
+	int8_t update_gamma;
+	int8_t update_luma;
 	spinlock_t  tasklet_lock;
 	struct list_head tasklet_q;
 	int vfeirq;
@@ -1034,7 +1041,8 @@ struct vfe31_ctrl_type {
 	struct resource *vfeio;
 
 	uint32_t stats_comp;
-	uint8_t vstate;
+	uint32_t hfr_mode;
+	atomic_t vstate;
 	uint32_t vfe_capture_count;
 	uint32_t sync_timer_repeat_count;
 	uint32_t sync_timer_state;
@@ -1057,6 +1065,7 @@ struct vfe31_ctrl_type {
 	struct msm_camera_sensor_info *s_info;
 	struct vfe_message vMsgHold_Snap;
 	struct vfe_message vMsgHold_Thumb;
+	uint32_t while_stopping_mask;
 };
 
 #define statsAeNum      0
