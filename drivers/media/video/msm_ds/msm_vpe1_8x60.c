@@ -33,6 +33,7 @@ static struct vpe_device_type  vpe_device_data;
 static struct vpe_device_type  *vpe_device;
 struct vpe_ctrl_type    *vpe_ctrl;
 extern char *vpe_general_cmd[];
+#if 0
 char *vpe_general_cmd[] = {
 	"VPE_DUMMY_0",  /* 0 */
 	"VPE_SET_CLK",
