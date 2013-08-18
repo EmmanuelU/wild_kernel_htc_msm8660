@@ -1335,8 +1335,8 @@ void mdp4_mixer_stage_down(struct mdp4_overlay_pipe *pipe)
 void mdp4_mixer_blend_setup(struct mdp4_overlay_pipe *pipe)
 {
 	struct mdp4_overlay_pipe *bg_pipe;
-	unsigned char *overlay_base;
-	uint32 c0, c1, c2, rgb_src_format, blend_op;
+	unsigned char *overlay_base, *rgb_base;
+	uint32 c0, c1, c2, blend_op, constant_color = 0, rgb_src_format;
 	int off;
 
 	if (pipe->mixer_num) 	/* mixer number, /dev/fb0, /dev/fb1 */
@@ -1395,21 +1395,6 @@ void mdp4_mixer_blend_setup(struct mdp4_overlay_pipe *pipe)
 				MDP4_BLEND_FG_INV_ALPHA);
 		}
 	}
-	rgb_src_format |= MDP4_FORMAT_SOLID_FILL;
-			/*
-			* If solid fill is enabled, flip and scale
-			* have to be disabled. otherwise, h/w
-			* underruns.
-			*/
-			blend_op = inpdw(overlay_base + 0x0058);
-			blend_op &= ~(MDP4_OP_FLIP_LR + MDP4_OP_SCALEX_EN);
-			blend_op &= ~(MDP4_OP_FLIP_UD + MDP4_OP_SCALEY_EN);
-			outpdw(overlay_base + 0x0058, blend_op);
-			outpdw(overlay_base + 0x1008, 0);	/* black */
-			/*
-			* Set src size and dst size same to avoid underruns
-			*/
-			outpdw(overlay_base + 0x0000, inpdw(overlay_base + 0x0008));
 
 
 	if (pipe->transp != MDP_TRANSP_NOP) {
