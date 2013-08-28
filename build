@@ -1,6 +1,15 @@
 #!/bin/bash
 
+buildargs=$1
+
+if [[ -z "$1" ]] 
+	then
+	buildargs=-j4
+fi
+clear
 rm build_log.txt >>build_log.txt
+echo Build Jobs: $buildargs
+sleep 2
 echo Cleaning workspace ...
 rm -rf *.zip
 rm -rf flashable/zip/system
@@ -8,12 +17,12 @@ mkdir flashable/zip/system/ && mkdir flashable/zip/system/lib/ && mkdir flashabl
 cd flashable/zip/kernel/
 rm -rf zImage
 cd ../../..
-make clean | tee build_log.txt
+make clean $buildargs | tee build_log.txt
 echo >> build_log.txt
 echo Writing configs ...
 make doubleshot_defconfig | tee -a build_log.txt
 echo >> build_log.txt
-make -j4 | tee -a build_log.txt
+make $buildargs | tee -a build_log.txt
 if [ ! -f arch/arm/boot/zImage ];
 then
     echo An error occured in the build process, aborting...
@@ -23,8 +32,8 @@ echo Copying files and making flashable
 cp -f arch/arm/boot/zImage flashable/zip/kernel/zImage
 find -iname "*.ko" -exec cp {} flashable/zip/system/lib/modules/ \; >/dev/null
 cd flashable/zip/
-zip -r9 ../../ds-kernel.zip *
+zip -r9 ../../WildKernel.zip *
 cd ../..
-java -jar flashable/tools/signapk.jar flashable/tools/testkey.x509.pem flashable/tools/testkey.pk8 ds-kernel.zip ds-kernel_signed.zip
-rm -rf ds-kernel.zip
+java -jar flashable/tools/signapk.jar flashable/tools/testkey.x509.pem flashable/tools/testkey.pk8 WildKernel.zip WildKernel_signed.zip
+rm -rf WildKernel.zip
 echo done
