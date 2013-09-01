@@ -379,6 +379,8 @@
 
 #define TW_SHIFT				1
 
+#define REPORT_BOTH_DATA			1
+
 #define SYN_AND_REPORT_TYPE_A           0
 #define SYN_AND_REPORT_TYPE_B           1
 
@@ -443,6 +445,7 @@ struct atmel_i2c_platform_data {
 	int (*power)(int on);
 	uint8_t unlock_attr;
 	uint8_t report_type;
+	uint8_t report_both;
 	int8_t config_T6[6];
 	int8_t config_T7[3];
 	int8_t config_T8[10];
@@ -466,6 +469,7 @@ struct atmel_i2c_platform_data {
 	int8_t config_T55[4];
 	int8_t config_T58[11];
 	uint8_t object_crc[3];
+	int8_t cable_cfg[6];
 	int8_t cable_config_T7[3];
 	int8_t cable_config_T8[10];
 	int8_t cable_config_T9[35];

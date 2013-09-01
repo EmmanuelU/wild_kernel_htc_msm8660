@@ -109,6 +109,12 @@ config TOUCHSCREEN_CYPRESS_TMA
         depends on I2C
         default n
 
+config TOUCHSCREEN_COMPATIBLE_REPORT
+		bool "Touchscreen compatible repodepends on I2C"
+		default n
+		help
+		This enables support for old report style in touchscreen driver
+
 config TOUCHSCREEN_AD7879
 	tristate "Analog Devices AD7879-1/AD7889-1 touchscreen interface"
 	help
