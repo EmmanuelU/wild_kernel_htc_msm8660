@@ -25,27 +25,35 @@
 #include <linux/irq.h>
 #include <linux/fs.h>
 #include <asm/uaccess.h>
+#ifdef CONFIG_OPTICALJOYSTICK_CRUCIAL
+#include <linux/curcial_oj.h>
+#endif
+#ifdef CONFIG_MACH_DOUBLESHOT
+#include <linux/jiffies.h>
+#endif
 
 #ifdef CONFIG_POWER_KEY_LED
-#include <linux/leds-pm8921.h>
+	#include <linux/leds-pm8921.h>
 
-#define PWRKEYLEDON_DELAY 3*HZ
-#define PWRKEYLEDOFF_DELAY 0
-#define HW_RESET_REASON 0x44332211
+	#define PWRKEYLEDON_DELAY 3*HZ
+	#define PWRKEYLEDOFF_DELAY 0
+	#define HW_RESET_REASON 0x44332211
 
-static int power_key_led_requested;
-static int pre_power_key_status;
-static int pre_power_key_led_status;
-#endif
+	static int power_key_led_requested;
+	static int pre_power_key_status;
+	static int pre_power_key_led_status;
+#endif //CONFIG_POWER_KEY_LED
+
 #ifdef CONFIG_POWER_KEY_CLR_RESET
-#include <linux/pl_sensor.h>
-#define PWRKEYCHKRST_DELAY (3*HZ + HZ/2)
-#define PWRKEYCLRCHK_DELAY 0
-#define PWRKEYCHKRST_WAKELOCK_TIMEOUT (PWRKEYCHKRST_DELAY + 1 * HZ)
-struct wake_lock key_reset_clr_wake_lock;
+	#include <linux/pl_sensor.h>
+	#define PWRKEYCHKRST_DELAY (3*HZ + HZ/2)
+	#define PWRKEYCLRCHK_DELAY 0
+	#define PWRKEYCHKRST_WAKELOCK_TIMEOUT (PWRKEYCHKRST_DELAY + 1 * HZ)
+	struct wake_lock key_reset_clr_wake_lock;
 #endif
-#ifdef CONFIG_MFD_MAX8957
-static struct workqueue_struct *ki_queue;
+
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
+	static struct workqueue_struct *ki_queue;
 #endif
 
 static int power_key_intr_flag;
@@ -131,6 +139,7 @@ static void power_key_state_disable_work_func(struct work_struct *dummy)
 }
 static DECLARE_DELAYED_WORK(power_key_state_disable_work, power_key_state_disable_work_func);
 
+#ifndef CONFIG_MACH_DOUBLESHOT
 static void handle_power_key_state(unsigned int code, int value)
 {
 	int ret = 0;
@@ -163,17 +172,18 @@ static void handle_power_key_state(unsigned int code, int value)
 		}
 	}
 }
+#endif //#ifndef CONFIG_MACH_DOUBLESHOT
 
-#ifdef CONFIG_MFD_MAX8957
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
 static struct workqueue_struct *ki_queue;
 #endif
 
 enum {
-	DEBOUNCE_UNSTABLE     = BIT(0),	
+	DEBOUNCE_UNSTABLE     = BIT(0),	/* Got irq, while debouncing */
 	DEBOUNCE_PRESSED      = BIT(1),
 	DEBOUNCE_NOTPRESSED   = BIT(2),
-	DEBOUNCE_WAIT_IRQ     = BIT(3),	
-	DEBOUNCE_POLL         = BIT(4),	
+	DEBOUNCE_WAIT_IRQ     = BIT(3),	/* Stable irq state */
+	DEBOUNCE_POLL         = BIT(4),	/* Stable polling state */
 
 	DEBOUNCE_UNKNOWN =
 		DEBOUNCE_PRESSED | DEBOUNCE_NOTPRESSED,
@@ -182,7 +192,7 @@ enum {
 struct gpio_key_state {
 	struct gpio_input_state *ds;
 	uint8_t debounce;
-#ifdef CONFIG_MFD_MAX8957
+#ifdef CONFIG_ARCH_MSM8X60
 	struct work_struct work;
 #endif
 };
@@ -191,14 +201,15 @@ struct gpio_input_state {
 	int debug_log;
 	struct gpio_event_input_devs *input_devs;
 	const struct gpio_event_input_info *info;
-#ifndef CONFIG_MFD_MAX8957
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
 	struct hrtimer timer;
 #endif
 	int use_irq;
+	int irq_status;
 	int debounce_count;
 	spinlock_t irq_lock;
 	struct wake_lock wake_lock;
-#ifdef CONFIG_MFD_MAX8957
+#ifdef CONFIG_ARCH_MSM8X60
 	struct wake_lock key_pressed_wake_lock;
 #endif
 	struct gpio_key_state key_state[0];
@@ -351,7 +362,7 @@ static void handle_power_key_reset(unsigned int code, int value)
 }
 #endif
 
-#ifndef CONFIG_MFD_MAX8957
+#ifndef CONFIG_MACH_DOUBLESHOT
 static enum hrtimer_restart gpio_event_input_timer_func(struct hrtimer *timer)
 {
 	int i;
@@ -425,7 +436,7 @@ static enum hrtimer_restart gpio_event_input_timer_func(struct hrtimer *timer)
 			key_state->debounce = DEBOUNCE_NOTPRESSED;
 			continue;
 		}
-		
+		/* key is stable */
 		ds->debounce_count--;
 		if (ds->use_irq)
 			key_state->debounce |= DEBOUNCE_WAIT_IRQ;
@@ -435,11 +446,23 @@ static enum hrtimer_restart gpio_event_input_timer_func(struct hrtimer *timer)
 			KEY_LOGI("gpio_keys_scan_keys: key %x-%x, %d (%d) "
 				"changed to %d\n", ds->info->type,
 				key_entry->code, i, key_entry->gpio, pressed);
-#ifdef CONFIG_POWER_KEY_LED
-		handle_power_key_led(key_entry->code, pressed);
+#ifdef CONFIG_OPTICALJOYSTICK_CRUCIAL
+		if (key_entry->code == BTN_MOUSE) {
+			KEY_LOGI("gpio_keys_scan_keys: OJ action key %d-%d, %d (%d) "
+				"changed to %d\n", ds->info->type,
+				key_entry->code, i, key_entry->gpio, pressed);
+			curcial_oj_send_key(BTN_MOUSE, pressed);
+		} else {
 #endif
-#ifdef CONFIG_POWER_KEY_CLR_RESET
-		handle_power_key_reset(key_entry->code, pressed);
+			input_event(ds->input_devs->dev[key_entry->dev],
+				ds->info->type, key_entry->code, pressed);
+			if (key_entry->code == SW_LID) {
+				if (ds->info->set_qty_irq)
+					ds->info->set_qty_irq(pressed);
+			}
+			sync_needed = true;
+#ifdef CONFIG_OPTICALJOYSTICK_CRUCIAL
+		}
 #endif
 		handle_power_key_state(key_entry->code, pressed);
 
@@ -474,13 +497,21 @@ static enum hrtimer_restart gpio_event_input_timer_func(struct hrtimer *timer)
 }
 #endif
 
-#ifdef CONFIG_MFD_MAX8957
+
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
+
+static unsigned short last_pressed = 0;
+static int press_time_init = 0;
+static unsigned long last_pressed_time;
+static unsigned long BETWEEN_PRESS_MIN_DIFF = 30;
+
 void keypad_report_keycode(struct gpio_key_state *ks)
 {
 	struct gpio_input_state *ds = ks->ds;
 	int keymap_index;
 	const struct gpio_event_direct_entry *key_entry;
 	int pressed;
+	int report;
 
 	if (ds == NULL) {
 		KEY_LOGE("%s, (ds == NULL) failed\n", __func__);
@@ -496,38 +527,81 @@ void keypad_report_keycode(struct gpio_key_state *ks)
 
 	pressed = gpio_get_value(key_entry->gpio) ^
 			!(ds->info->flags & GPIOEDF_ACTIVE_HIGH);
+		if (ds->info->flags & GPIOEDF_PRINT_KEYS)
+			pr_info("keypad_report_keycode: key %d-%d, %d "
+				"(%d) changed to %d\n",
+				ds->info->type, key_entry->code, keymap_index,
+				key_entry->gpio, pressed);
 
+#ifdef CONFIG_MACH_DOUBLESHOT
+	report = 1;
+	// fix for the all too often happening accidental key press repetitions
+	if (pressed)
+	{
+		if (key_entry->code == last_pressed)
+		{
+			if (press_time_init == 0)
+			{
+				press_time_init = 1;
+				last_pressed_time = jiffies;
+			} else
+			{
+				if ( time_before( jiffies, last_pressed_time + BETWEEN_PRESS_MIN_DIFF ) )
+				{
+					report = 0; // too close
+				} else
+				{
+				    last_pressed_time = jiffies;
+				}
+			}
+		} else
+		{
+			last_pressed_time = jiffies;
+		}
+		last_pressed = key_entry->code;
+	} else
+	{
+		// if power key is released still start counting last_pressed_time
+		// for the long power menu not going screen off
+		if (key_entry->code == KEY_POWER)
+		{
+			last_pressed_time = jiffies;
+			last_pressed = key_entry->code;
+		}
+	}
+#else
 	if (key_entry->code == KEY_POWER) {
 		if (pressed)
 			wake_lock(&ds->key_pressed_wake_lock);
 		else
 			wake_unlock(&ds->key_pressed_wake_lock);
 	}
-
-	if (ds->info->flags & GPIOEDF_PRINT_KEYS)
-		KEY_LOGD("%s: key %d-%d, %d "
-			"(%d) changed to %d\n", __func__,
-			ds->info->type, key_entry->code, keymap_index,
-			key_entry->gpio, pressed);
-
-#ifdef CONFIG_POWER_KEY_LED
-	handle_power_key_led(key_entry->code, pressed);
-#endif
-#ifdef CONFIG_POWER_KEY_CLR_RESET
-	handle_power_key_reset(key_entry->code, pressed);
 #endif
 
-	input_event(ds->input_devs->dev[key_entry->dev],
-			ds->info->type, key_entry->code, pressed);
-	input_sync(ds->input_devs->dev[key_entry->dev]);
+	if (report) 
+	{
+#ifdef CONFIG_OPTICALJOYSTICK_CRUCIAL
+		if (ds->info->info.oj_btn && key_entry->code == BTN_MOUSE) {
+			curcial_oj_send_key(BTN_MOUSE, pressed);
+			KEY_LOGD("%s:OJ key %d-%d, %d (%d) changed to %d\n", __func__,
+					ds->info->type, key_entry->code, keymap_index,
+					key_entry->gpio, pressed);
+		} else
+#endif
+		input_event(ds->input_devs->dev[key_entry->dev],
+				ds->info->type, key_entry->code, pressed);
+		input_sync(ds->input_devs->dev[key_entry->dev]);
+	}
 }
 
+#ifdef CONFIG_ARCH_MSM8X60
 static void keypad_do_work(struct work_struct *w)
 {
 	struct gpio_key_state *ks = container_of(w, struct gpio_key_state, work);
 	keypad_report_keycode(ks);
 }
 #endif
+#endif /* CONFIG_MFD_MAX8957 || CONFIG_MACH_DOUBLESHOT */
 
 static irqreturn_t gpio_event_input_irq_handler(int irq, void *dev_id)
 {
@@ -536,7 +610,7 @@ static irqreturn_t gpio_event_input_irq_handler(int irq, void *dev_id)
 	int keymap_index = ks - ds->key_state;
 	const struct gpio_event_direct_entry *key_entry;
 	unsigned long irqflags;
-#ifndef CONFIG_MFD_MAX8957
+#ifndef CONFIG_ARCH_MSM8X60
 	int pressed;
 #endif
 	KEY_LOGD("%s, irq=%d, use_irq=%d\n", __func__, irq, ds->use_irq);
@@ -557,7 +631,7 @@ static irqreturn_t gpio_event_input_irq_handler(int irq, void *dev_id)
 			ks->debounce = DEBOUNCE_UNKNOWN;
 			if (ds->debounce_count++ == 0) {
 				wake_lock(&ds->wake_lock);
-#ifndef CONFIG_MFD_MAX8957
+#ifndef CONFIG_ARCH_MSM8X60
 				hrtimer_start(
 					&ds->timer, ds->info->debounce_time,
 					HRTIMER_MODE_REL);
@@ -569,15 +643,15 @@ static irqreturn_t gpio_event_input_irq_handler(int irq, void *dev_id)
 					ds->info->type, key_entry->code,
 					keymap_index, key_entry->gpio);
 		} else {
-#if 0
+#if CONFIG_MACH_DOUBLESHOT
 			disable_irq_nosync(irq);
 #endif
 			ks->debounce = DEBOUNCE_UNSTABLE;
 		}
 		spin_unlock_irqrestore(&ds->irq_lock, irqflags);
 	} else {
-#ifdef CONFIG_MFD_MAX8957
-		queue_work(ki_queue, &ks->work);
+#ifdef CONFIG_ARCH_MSM8X60
+			queue_work(ki_queue, &ks->work);
 #else
 		pressed = gpio_get_value(key_entry->gpio) ^
 			!(ds->info->flags & GPIOEDF_ACTIVE_HIGH);
@@ -599,6 +673,7 @@ static int gpio_event_input_request_irqs(struct gpio_input_state *ds)
 	int i;
 	int err;
 	int value;
+
 	unsigned int irq;
 	unsigned long req_flags = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING;
 
@@ -614,7 +689,7 @@ static int gpio_event_input_request_irqs(struct gpio_input_state *ds)
 		}
 		else
 			req_flags = IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING;
-#ifdef CONFIG_MFD_MAX8957
+#if defined(CONFIG_MFD_MAX8957) || defined(CONFIG_MACH_DOUBLESHOT)
 		INIT_WORK(&ds->key_state[i].work, keypad_do_work);
 		queue_work(ki_queue, &ds->key_state[i].work);
 #endif
@@ -656,6 +731,7 @@ int gpio_event_input_func(struct gpio_event_input_devs *input_devs,
 {
 	int ret;
 	int i;
+	int irq;
 	unsigned long irqflags;
 	struct gpio_event_input_info *di;
 	struct gpio_input_state *ds = *data;
@@ -668,23 +744,76 @@ int gpio_event_input_func(struct gpio_event_input_devs *input_devs,
 #endif
 
 	if (func == GPIO_EVENT_FUNC_SUSPEND) {
-		if (ds->use_irq)
-			for (i = 0; i < di->keymap_size; i++)
-				disable_irq(gpio_to_irq(di->keymap[i].gpio));
-#ifndef CONFIG_MFD_MAX8957
-		hrtimer_cancel(&ds->timer);
+		ds->irq_status = !(gpio_event_get_quickboot_status() & 0x01);
+		KEY_LOGI("%s: set irq_status = %d\n", __func__, ds->irq_status);
+
+		if (ds->use_irq) {
+			if (ds->irq_status)
+				return 0;
+			for (i = 0; i < di->keymap_size; i++) {
+				if (di->keymap[i].code == KEY_POWER)
+					continue;
+				irq = gpio_to_irq(di->keymap[i].gpio);
+				disable_irq_nosync(irq);
+				KEY_LOGD("%s: disable irq=%d,gpio=%d\n",
+					__func__, irq, di->keymap[i].gpio);
+			}
+#ifndef CONFIG_ARCH_MSM8X60
+			if (hrtimer_cancel(&ds->timer))
+				wake_unlock(&ds->wake_lock);
 #endif
+			for (i = 0; i < di->keymap_size; i++) {
+				if (ds->key_state[i].debounce == DEBOUNCE_UNSTABLE)
+					enable_irq(gpio_to_irq(di->keymap[i].gpio));
+				ds->key_state[i].debounce = DEBOUNCE_WAIT_IRQ;
+
+				if (di->keymap[i].code == KEY_POWER)
+					continue;
+				input_event(ds->input_devs->dev[di->keymap[i].dev],
+				ds->info->type, di->keymap[i].code, 0);
+				input_sync(ds->input_devs->dev[di->keymap[i].dev]);
+
+			}
+		} else {
+#ifndef CONFIG_ARCH_MSM8X60
+			hrtimer_cancel(&ds->timer);
+#endif
+		}
+
 		return 0;
 	}
 	if (func == GPIO_EVENT_FUNC_RESUME) {
+		KEY_LOGI("%s: previous irq_status = %d\n", __func__, ds->irq_status);
+
+#ifndef CONFIG_MACH_DOUBLESHOT
 		spin_lock_irqsave(&ds->irq_lock, irqflags);
-		if (ds->use_irq)
+#endif
+		if (ds->use_irq) {
+			if (ds->irq_status)
+				return 0;
+			for (i = 0; i < di->keymap_size; i++) {
+				if (di->keymap[i].code == KEY_POWER)
+					continue;
+
+				irq = gpio_to_irq(di->keymap[i].gpio);
+				enable_irq(irq);
+				KEY_LOGD("%s: enable irq=%d,gpio=%d\n",
+					__func__, irq, di->keymap[i].gpio);
+			}
+			ds->irq_status = 1;
+		} else {
+#ifdef CONFIG_ARCH_DOUBLESHOT
 			for (i = 0; i < di->keymap_size; i++)
-				enable_irq(gpio_to_irq(di->keymap[i].gpio));
-#ifndef CONFIG_MFD_MAX8957
+				queue_work(ki_queue, &ds->key_state[i].work);
+#endif
+
+#ifndef CONFIG_ARCH_MSM8X60
 		hrtimer_start(&ds->timer, ktime_set(0, 0), HRTIMER_MODE_REL);
 #endif
+		}
+#ifndef CONFIG_MACH_DOUBLESHOT
 		spin_unlock_irqrestore(&ds->irq_lock, irqflags);
+#endif
 		return 0;
 	}
 
@@ -750,7 +879,7 @@ int gpio_event_input_func(struct gpio_event_input_devs *input_devs,
 
 		if (di->setup_input_gpio)
 			di->setup_input_gpio();
-#ifdef CONFIG_MFD_MAX8957
+#ifdef CONFIG_ARCH_MSM8X60
 		ki_queue = create_singlethread_workqueue("ki_queue");
 #endif
 
@@ -769,24 +898,27 @@ int gpio_event_input_func(struct gpio_event_input_devs *input_devs,
 		set_wakeup = 0;
 		spin_lock_irqsave(&ds->irq_lock, irqflags);
 		ds->use_irq = ret == 0;
+		ds->irq_status = ds->use_irq;
 
 		KEY_LOGI("GPIO Input Driver: Start gpio inputs for %s%s in %s "
 			"mode\n", input_devs->dev[0]->name,
 			(input_devs->count > 1) ? "..." : "",
 			ret == 0 ? "interrupt" : "polling");
 
+#ifndef CONFIG_MACH_DOUBLESHOT
 #ifndef CONFIG_MFD_MAX8957
 		hrtimer_init(&ds->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 		ds->timer.function = gpio_event_input_timer_func;
 		hrtimer_start(&ds->timer, ktime_set(0, 0), HRTIMER_MODE_REL);
 #endif
+#endif // CONFIG_MACH_DOUBLESHOT
 		spin_unlock_irqrestore(&ds->irq_lock, irqflags);
 		return 0;
 	}
 
 	ret = 0;
 	spin_lock_irqsave(&ds->irq_lock, irqflags);
-#ifndef CONFIG_MFD_MAX8957
+#ifndef CONFIG_ARCH_MSM8X60
 	hrtimer_cancel(&ds->timer);
 #endif
 	if (ds->use_irq) {
