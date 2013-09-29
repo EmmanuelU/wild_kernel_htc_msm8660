@@ -1,0 +1,10 @@
+AnyKernel - CWM ZIP Template for kernel releases
+================================================
+
+// Instructions
+
+1- Place zImage on kernel/
+2- Place any files your kernel needs in system/
+   on their corresponding directories, if any.
+   For example: system/lib/modules/something.ko
+3- zip -r9 your.zip *
