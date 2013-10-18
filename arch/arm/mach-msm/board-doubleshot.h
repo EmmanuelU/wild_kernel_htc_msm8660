@@ -113,15 +113,13 @@
 
 /* Note: must be multiple of 4096 */
 
-#define MSM_FB_SIZE roundup((960 * ALIGN(540, 32) * 4 * 3) + 0x3F4800, 4096)
-
 #define MSM_ION_HEAP_NUM      5
 
 #define MSM_FB_SIZE roundup((960 * ALIGN(540, 32) * 4 * 3) + 0x3F4800, 4096)
 
 // PMEM SMI
 #define MSM_SMI_SIZE          0x4000000
-#define KERNEL_SMI_SIZE       0x600000
+#define KERNEL_SMI_SIZE       0xE00000
 #define USER_SMI_SIZE         (MSM_SMI_SIZE - KERNEL_SMI_SIZE)
 #define MSM_PMEM_SMIPOOL_SIZE USER_SMI_SIZE
 
@@ -151,7 +149,7 @@
 
 // Userspace allocation
 #define PHY_BASE_ADDR1  0x48000000
-#define SIZE_ADDR1      0x22900000
+#define SIZE_ADDR1      0x22100000
 
 
 /* GPIO definition */
