@@ -1362,10 +1362,12 @@ static long vid_enc_ioctl(struct file *file,
 			return -EFAULT;
 
 		DBG("VEN_IOCTL_GET_SEQUENCE_HDR\n");
-		if (copy_from_user(&seq_header_user, venc_msg.in,
-			sizeof(seq_header_user)))
+		if (!access_ok(VERIFY_WRITE, seq_header.hdrbufptr,
+			seq_header.bufsize)) {
+			ERR("VEN_IOCTL_GET_SEQUENCE_HDR:"\
+				" Userspace address verification failed.\n");
 			return -EFAULT;
-		seq_header.hdrbufptr = NULL;
+		}
 		result = vid_enc_get_sequence_header(client_ctx,
 				&seq_header);
 		if (result && ((copy_to_user(seq_header_user.hdrbufptr,
