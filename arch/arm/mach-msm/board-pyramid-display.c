@@ -38,7 +38,7 @@
 #else 
 #define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE, 4096)
 #endif 
-#define MSM_FB_BASE           0x40400000
+#define MSM_FB_BASE           0x3B600000
 
 #ifdef CONFIG_FB_MSM_OVERLAY0_WRITEBACK
 #define MSM_FB_OVERLAY0_WRITEBACK_SIZE roundup((960 * ALIGN(540, 32) * 3 * 2), 4096)
