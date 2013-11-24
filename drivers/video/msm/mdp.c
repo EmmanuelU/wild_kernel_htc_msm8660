@@ -25,6 +25,7 @@
 #include <linux/hrtimer.h>
 #include <linux/clk.h>
 #include <mach/hardware.h>
+#include <mach/debug_display.h>
 #include <linux/io.h>
 #include <linux/debugfs.h>
 #include <linux/delay.h>
@@ -51,6 +52,7 @@ static struct clk *mdp_lut_clk;
 int mdp_rev;
 int mdp_iommu_split_domain;
 u32 mdp_max_clk = 200000000;
+u32 mdp_min_clk = 0;
 u32 mdp_ov0_blt_ctl = MDP4_BLT_SWITCH_TG_OFF;
 
 static struct platform_device *mdp_init_pdev;
@@ -604,7 +606,7 @@ static void mdp_hist_read_work(struct work_struct *data);
 
 static int mdp_hist_init_mgmt(struct mdp_hist_mgmt *mgmt, uint32_t block)
 {
-	uint32_t bins, extra, index, intr =0, term = 0;
+	uint32_t bins, extra, index, intr = 0, term = 0;
 	init_completion(&mgmt->mdp_hist_comp);
 	mutex_init(&mgmt->mdp_hist_mutex);
 	mutex_init(&mgmt->mdp_do_hist_mutex);
@@ -909,7 +911,7 @@ int _mdp_histogram_ctrl(boolean en, struct mdp_hist_mgmt *mgmt)
 		else
 			ret = mdp_histogram_disable(mgmt);
 	} else {
-		pr_warn("%s start = false\n", __func__);
+		pr_debug("%s start = false\n", __func__);
 	}
 	mutex_unlock(&mgmt->mdp_hist_mutex);
 
@@ -1205,7 +1207,7 @@ error:
 static int _mdp_copy_hist_data(struct mdp_histogram_data *hist,
 						struct mdp_hist_mgmt *mgmt)
 {
-	int ret;
+	int ret = 0;
 
 	if (hist->c0) {
 		ret = copy_to_user(hist->c0, mgmt->c0,
@@ -1336,6 +1338,65 @@ int mdp_ppp_pipe_wait(void)
 
 	return ret;
 }
+
+#define DEFAULT_FRAME_RATE        60
+
+u32 mdp_get_panel_framerate(struct msm_fb_data_type *mfd)
+{
+        u32 frame_rate = 0, pixel_rate = 0, total_pixel;
+        struct msm_panel_info *panel_info = &mfd->panel_info;
+
+        if ((panel_info->type == MIPI_VIDEO_PANEL ||
+             panel_info->type == MIPI_CMD_PANEL) &&
+            panel_info->mipi.frame_rate)
+                frame_rate = panel_info->mipi.frame_rate;
+
+        if (mfd->dest == DISPLAY_LCD) {
+                if (panel_info->type == MDDI_PANEL && panel_info->mddi.is_type1)
+                        frame_rate = panel_info->lcd.refx100 / (100 * 2);
+                else if (panel_info->type != MIPI_CMD_PANEL)
+                        frame_rate = panel_info->lcd.refx100 / 100;
+        }
+        pr_debug("%s type=%d frame_rate=%d\n", __func__,
+                 panel_info->type, frame_rate);
+
+        if (frame_rate)
+                return frame_rate;
+
+        pixel_rate =
+                (panel_info->type == MIPI_CMD_PANEL ||
+                 panel_info->type == MIPI_VIDEO_PANEL) ?
+                panel_info->mipi.dsi_pclk_rate :
+                panel_info->clk_rate;
+
+        if (!pixel_rate)
+                pr_warn("%s pixel rate is zero\n", __func__);
+
+        total_pixel =
+                (panel_info->lcdc.h_back_porch +
+                 panel_info->lcdc.h_front_porch +
+                 panel_info->lcdc.h_pulse_width +
+                 panel_info->xres) *
+                (panel_info->lcdc.v_back_porch +
+                 panel_info->lcdc.v_front_porch +
+                 panel_info->lcdc.v_pulse_width +
+                 panel_info->yres);
+
+        if (total_pixel)
+                frame_rate = pixel_rate / total_pixel;
+        else
+                pr_warn("%s total pixels are zero\n", __func__);
+
+        if (frame_rate == 0) {
+                frame_rate = DEFAULT_FRAME_RATE;
+                pr_warn("%s frame rate=%d is default\n", __func__, frame_rate);
+        }
+        pr_debug("%s frame rate=%d total_pixel=%d, pixel_rate=%d\n", __func__,
+                frame_rate, total_pixel, pixel_rate);
+
+        return frame_rate;
+}
+
 
 static DEFINE_SPINLOCK(mdp_lock);
 static int mdp_irq_mask;
@@ -2047,6 +2108,7 @@ static int mdp_on(struct platform_device *pdev)
 	if (mfd->panel.type == MIPI_CMD_PANEL)
 		mdp4_dsi_cmd_vsync_ctrl(NULL,1);
 #endif
+
 	return ret;
 }
 
@@ -2227,6 +2289,10 @@ static int mdp_irq_clk_setup(struct platform_device *pdev,
 		clk_set_rate(mdp_lut_clk, mdp_clk_rate);
 	mutex_unlock(&mdp_clk_lock);
 
+	if (mdp_pdata && mdp_pdata->mdp_min_clk) {
+		mdp_min_clk = mdp_pdata->mdp_min_clk;
+		PR_DISP_INFO("%s: get mdp min clk = %d\n", __func__, mdp_min_clk);
+	}
 
 	MSM_FB_DEBUG("mdp_clk: mdp_clk=%d\n", (int)clk_get_rate(mdp_clk));
 #endif
@@ -2359,6 +2425,7 @@ static int mdp_probe(struct platform_device *pdev)
 	
 	mfd->pdev = msm_fb_dev;
 	mfd->mdp_rev = mdp_rev;
+	mfd->vsync_init = NULL;
 
 	if (mdp_pdata) {
 		if (mdp_pdata->cont_splash_enabled && mfd->panel.type != MIPI_CMD_PANEL) {
@@ -2709,6 +2776,30 @@ static int mdp_probe(struct platform_device *pdev)
 
 	pdev_list[pdev_list_cnt++] = pdev;
 	mdp4_extn_disp = 0;
+
+	if (mfd->vsync_init != NULL) {
+		mfd->vsync_init(0);
+
+		if (!mfd->vsync_sysfs_created) {
+			mfd->dev_attr.attr.name = "vsync_event";
+			mfd->dev_attr.attr.mode = S_IRUGO;
+			mfd->dev_attr.show = mfd->vsync_show;
+			sysfs_attr_init(&mfd->dev_attr.attr);
+
+			rc = sysfs_create_file(&mfd->fbi->dev->kobj,
+							&mfd->dev_attr.attr);
+			if (rc) {
+				pr_err("%s: sysfs creation failed, ret=%d\n",
+					__func__, rc);
+				return rc;
+			}
+
+			kobject_uevent(&mfd->fbi->dev->kobj, KOBJ_ADD);
+			pr_debug("%s: kobject_uevent(KOBJ_ADD)\n", __func__);
+			mfd->vsync_sysfs_created = 1;
+		}
+	}
+
 	return 0;
 
       mdp_probe_err:

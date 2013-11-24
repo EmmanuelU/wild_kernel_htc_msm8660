@@ -29,11 +29,14 @@
 #include <mach/hardware.h>
 #include <mach/gpio.h>
 #include <mach/clk.h>
+#include <mach/debug_display.h>
 
 #include "msm_fb.h"
 #include "mipi_dsi.h"
 #include "mdp.h"
 #include "mdp4.h"
+
+#include <mach/panel_id.h>
 
 u32 dsi_irq;
 u32 esc_byte_ratio;
@@ -96,7 +99,8 @@ static int mipi_dsi_off(struct platform_device *pdev)
 				if (MDP_REV_303 != mdp_rev)
 					gpio_free(vsync_gpio);
 			}
-			mipi_dsi_set_tear_off(mfd);
+			if (!mfd->panel_info.lcdc.no_set_tear)
+				mipi_dsi_set_tear_off(mfd);
 		}
 	}
 
@@ -121,6 +125,34 @@ static int mipi_dsi_off(struct platform_device *pdev)
 	return ret;
 }
 
+void mipi_exit_ulps(void)
+{
+	uint32 status;
+#if 0
+	status=MIPI_INP(MIPI_DSI_BASE + 0x00a4);
+	if ((status&0x1700)!=0) {
+	PR_DISP_DEBUG("%s: no need to exit ulps\n", __func__);
+	} else
+#endif
+	
+	{
+		status=MIPI_INP(MIPI_DSI_BASE + 0x00a8);
+		status&=0x10000000; 
+		status |= (BIT(8) | BIT(9) | BIT(10) | BIT(12));
+		MIPI_OUTP(MIPI_DSI_BASE + 0x00a8, status);
+		mb();
+		msleep(5);
+		status=MIPI_INP(MIPI_DSI_BASE + 0x00a4);
+		if ((status&0x1700)!=0) {
+			status=MIPI_INP(MIPI_DSI_BASE + 0x00a8);
+			status&=0x10000000; 
+			MIPI_OUTP(MIPI_DSI_BASE + 0x00a8, status);
+		} else {
+			PR_DISP_DEBUG("%s: cannot exit ulps\n", __func__);
+		}
+	}
+}
+
 static int mipi_dsi_on(struct platform_device *pdev)
 {
 	int ret = 0;
@@ -133,8 +165,9 @@ static int mipi_dsi_on(struct platform_device *pdev)
 	u32 ystride, bpp, data;
 	u32 dummy_xres, dummy_yres;
 	int target_type = 0;
+	static bool bfirsttime = true;
 
-	pr_debug("%s+:\n", __func__);
+	PR_DISP_INFO("%s+:\n", __func__);
 
 	mfd = platform_get_drvdata(pdev);
 	fbi = mfd->fbi;
@@ -241,6 +274,11 @@ static int mipi_dsi_on(struct platform_device *pdev)
 
 	ret = panel_next_on(pdev);
 
+	if (mipi->force_leave_ulps && bfirsttime) {
+		mipi_exit_ulps();
+		bfirsttime = false;
+	}
+
 	mipi_dsi_op_mode_config(mipi->mode);
 
 	if (mfd->panel_info.type == MIPI_CMD_PANEL) {
@@ -286,7 +324,8 @@ static int mipi_dsi_on(struct platform_device *pdev)
 					}
 				}
 			}
-			mipi_dsi_set_tear_on(mfd);
+			if (!mfd->panel_info.lcdc.no_set_tear)
+				mipi_dsi_set_tear_on(mfd);
 		}
 		mipi_dsi_clk_cfg(0);
 	}
@@ -303,7 +342,7 @@ static int mipi_dsi_on(struct platform_device *pdev)
 	else
 		up(&mfd->dma->mutex);
 
-	pr_debug("%s-:\n", __func__);
+	PR_DISP_INFO("%s-:\n", __func__);
 
 	return ret;
 }
@@ -395,7 +434,7 @@ static int mipi_dsi_probe(struct platform_device *pdev)
 		if (mipi_dsi_clk_init(pdev))
 			return -EPERM;
 
-		if (mipi_dsi_pdata->splash_is_enabled &&
+		if (mipi_dsi_pdata && mipi_dsi_pdata->splash_is_enabled &&
 			!mipi_dsi_pdata->splash_is_enabled()) {
 			mipi_dsi_ahb_ctrl(1);
 			MIPI_OUTP(MIPI_DSI_BASE + 0x118, 0);
@@ -451,7 +490,7 @@ static int mipi_dsi_probe(struct platform_device *pdev)
 	else
 		mfd->dest = DISPLAY_LCD;
 
-	if (mdp_rev == MDP_REV_303 &&
+	if (mdp_rev == MDP_REV_303 && mipi_dsi_pdata &&
 		mipi_dsi_pdata->get_lane_config) {
 		if (mipi_dsi_pdata->get_lane_config() != 2) {
 			pr_info("Changing to DSI Single Mode Configuration\n");
@@ -583,3 +622,4 @@ static int __init mipi_dsi_driver_init(void)
 }
 
 module_init(mipi_dsi_driver_init);
+
