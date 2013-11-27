@@ -131,7 +131,7 @@
 
 #include <linux/memblock.h>
 #include <linux/clk.h>
-
+#include <linux/msm_ion.h>
 #define PHY_BASE_ADDR1       0x48000000
 #define SIZE_ADDR1           0x28000000
 
@@ -2679,9 +2679,9 @@ static struct ion_co_heap_pdata co_ion_pdata = {
 	.align = PAGE_SIZE,
 };
 
-static struct ion_platform_data ion_pdata = {
-	.nr = MSM_ION_HEAP_NUM,
-	.heaps = {
+struct ion_platform_heap msm8660_heaps[] = {
+
+
 		{
 			.id	= ION_SYSTEM_HEAP_ID,
 			.type	= ION_HEAP_TYPE_SYSTEM,
@@ -2749,7 +2749,12 @@ static struct ion_platform_data ion_pdata = {
 			.memory_type = ION_EBI_TYPE,
 			.extra_data = &co_ion_pdata,
 		},
-	}
+	
+};
+
+static struct ion_platform_data ion_pdata = {
+        .nr = MSM_ION_HEAP_NUM,
+        .heaps = msm8660_heaps,
 };
 
 static struct platform_device ion_dev = {

@@ -1406,7 +1406,7 @@ static long venc_set_vui_timing_info(struct video_client_ctx *client_ctx,
 	if (!client_ctx)
 		return -EINVAL;
 	if (inst->framerate_mode == VENC_MODE_VFR) {
-		WFD_MSG_ERR("VUI timing info not suported in VFR mode ");
+		WFD_MSG_INFO("VUI timing info not suported in VFR mode ");
 		return -EINVAL;
 	}
 	vcd_property_hdr.prop_id = VCD_I_ENABLE_VUI_TIMING_INFO;
@@ -2035,11 +2035,11 @@ static long venc_alloc_recon_buffers(struct v4l2_subdev *sd, void *arg)
 			ctrl->user_virtual_addr = (void *)i;
 			client_ctx->recon_buffer_ion_handle[i]
 				= ion_alloc(client_ctx->user_ion_client,
-			control.size, SZ_8K, flags);
+                                            control.size, SZ_8K, flags, 0);
 
 			ctrl->kernel_virtual_addr = ion_map_kernel(
 				client_ctx->user_ion_client,
-				client_ctx->recon_buffer_ion_handle[i],	0);
+				client_ctx->recon_buffer_ion_handle[i]);
 
 			rc = ion_map_iommu(client_ctx->user_ion_client,
 				client_ctx->recon_buffer_ion_handle[i],
