@@ -23,7 +23,6 @@
 #include "kgsl_pwrscale.h"
 #include "kgsl_device.h"
 #include "kgsl_trace.h"
-#include "kgsl_sharedmem.h"
 
 #define KGSL_PWRFLAGS_POWER_ON 0
 #define KGSL_PWRFLAGS_CLK_ON   1
@@ -38,6 +37,16 @@ struct clk_pair {
 	const char *name;
 	uint map;
 };
+
+struct gpufreq_stats {
+	unsigned long long last_time;
+	unsigned int last_index;
+	unsigned int cur_index;
+};
+
+static spinlock_t gpufreq_stats_lock;
+static unsigned long long gputime_in_state[KGSL_MAX_PWRLEVELS] = {0};
+struct gpufreq_stats gpufreq_stat;
 
 struct clk_pair clks[KGSL_MAX_CLKS] = {
 	{
@@ -62,10 +71,27 @@ struct clk_pair clks[KGSL_MAX_CLKS] = {
 	},
 };
 
-/* Update the elapsed time at a particular clock level
- * if the device is active(on_time = true).Otherwise
- * store it as sleep time.
- */
+static int gpufreq_stats_update(unsigned int update_time_only, unsigned int last_index, unsigned int cur_index)
+{
+	unsigned long long cur_time;
+	spin_lock(&gpufreq_stats_lock);
+	cur_time = get_jiffies_64();
+	if (update_time_only)
+		goto done;
+
+	if (last_index < KGSL_MAX_PWRLEVELS)
+		gputime_in_state[last_index] = gputime_in_state[last_index] + cur_time - gpufreq_stat.last_time;
+
+done:
+
+	gpufreq_stat.cur_index = cur_index;
+	gpufreq_stat.last_index = last_index;
+	gpufreq_stat.last_time = cur_time;
+
+	spin_unlock(&gpufreq_stats_lock);
+return 0;
+}
+
 static void update_clk_statistics(struct kgsl_device *device,
 				bool on_time)
 {
@@ -86,10 +112,6 @@ static void update_clk_statistics(struct kgsl_device *device,
 	clkstats->start = ktime_get();
 }
 
-/*
- * Given a requested power level do bounds checking on the constraints and
- * return the nearest possible level
- */
 
 static inline int _adjust_pwrlevel(struct kgsl_pwrctrl *pwr, int level)
 {
@@ -112,7 +134,7 @@ void kgsl_pwrctrl_pwrlevel_change(struct kgsl_device *device,
 	int delta;
 	int level;
 
-	/* Adjust the power level to the current constraints */
+	
 	new_level = _adjust_pwrlevel(pwr, new_level);
 
 	if (new_level == pwr->active_pwrlevel)
@@ -124,30 +146,16 @@ void kgsl_pwrctrl_pwrlevel_change(struct kgsl_device *device,
 
 	level = pwr->active_pwrlevel;
 
-	/*
-	 * Set the active powerlevel first in case the clocks are off - if we
-	 * don't do this then the pwrlevel change won't take effect when the
-	 * clocks come back
-	 */
 
 	pwr->active_pwrlevel = new_level;
 
 	if (test_bit(KGSL_PWRFLAGS_CLK_ON, &pwr->power_flags) ||
 		(device->state == KGSL_STATE_NAP)) {
 
-		/*
-		 * On some platforms, instability is caused on
-		 * changing clock freq when the core is busy.
-		 * Idle the gpu core before changing the clock freq.
-		 */
 
 		if (pwr->idle_needed == true)
 			device->ftbl->idle(device);
 
-		/*
-		 * Don't shift by more than one level at a time to
-		 * avoid glitches.
-		 */
 
 		while (level != new_level) {
 			level += delta;
@@ -200,13 +208,6 @@ static int kgsl_pwrctrl_thermal_pwrlevel_store(struct device *dev,
 
 	pwr->thermal_pwrlevel = level;
 
-	/*
-	 * If there is no power policy set the clock to the requested thermal
-	 * level - if thermal now happens to be higher than max, then that will
-	 * be limited by the pwrlevel change function.  Otherwise if there is
-	 * a policy only change the active clock if it is higher then the new
-	 * thermal level
-	 */
 
 	if (device->pwrscale.policy == NULL ||
 		pwr->thermal_pwrlevel > pwr->active_pwrlevel)
@@ -247,13 +248,13 @@ static int kgsl_pwrctrl_max_pwrlevel_store(struct device *dev,
 	if (ret != 1)
 		return count;
 
-	/* If the use specifies a negative number, then don't change anything */
+	
 	if (level < 0)
 		return count;
 
 	mutex_lock(&device->mutex);
 
-	/* You can't set a maximum power level lower than the minimum */
+	
 	if (level > pwr->min_pwrlevel)
 		level = pwr->min_pwrlevel;
 
@@ -262,10 +263,6 @@ static int kgsl_pwrctrl_max_pwrlevel_store(struct device *dev,
 
 	max_level = max_t(int, pwr->thermal_pwrlevel, pwr->max_pwrlevel);
 
-	/*
-	 * If there is no policy then move to max by default.  Otherwise only
-	 * move max if the current level happens to be higher then the new max
-	 */
 
 	if (device->pwrscale.policy == NULL ||
 		(max_level > pwr->active_pwrlevel))
@@ -305,7 +302,7 @@ static int kgsl_pwrctrl_min_pwrlevel_store(struct device *dev,
 	if (ret != 1)
 		return count;
 
-	/* Don't do anything on obviously incorrect values */
+	
 	if (level < 0)
 		return count;
 
@@ -313,7 +310,7 @@ static int kgsl_pwrctrl_min_pwrlevel_store(struct device *dev,
 	if (level > pwr->num_pwrlevels - 2)
 		level = pwr->num_pwrlevels - 2;
 
-	/* You can't set a minimum power level lower than the maximum */
+	
 	if (level < pwr->max_pwrlevel)
 		level = pwr->max_pwrlevel;
 
@@ -321,9 +318,6 @@ static int kgsl_pwrctrl_min_pwrlevel_store(struct device *dev,
 
 	min_level = max_t(int, pwr->thermal_pwrlevel, pwr->min_pwrlevel);
 
-	/* Only move the power level higher if minimum is higher then the
-	 * current level
-	 */
 
 	if (min_level < pwr->active_pwrlevel)
 		kgsl_pwrctrl_pwrlevel_change(device, min_level);
@@ -358,7 +352,6 @@ static int kgsl_pwrctrl_num_pwrlevels_show(struct device *dev,
 	return snprintf(buf, PAGE_SIZE, "%d\n", pwr->num_pwrlevels - 1);
 }
 
-/* Given a GPU clock value, return the nearest powerlevel */
 
 static int _get_nearest_pwrlevel(struct kgsl_pwrctrl *pwr, unsigned int clock)
 {
@@ -397,10 +390,6 @@ static int kgsl_pwrctrl_max_gpuclk_store(struct device *dev,
 
 	pwr->thermal_pwrlevel = level;
 
-	/*
-	 * if the thermal limit is lower than the current setting,
-	 * move the speed down immediately
-	 */
 
 	if (pwr->thermal_pwrlevel > pwr->active_pwrlevel)
 		kgsl_pwrctrl_pwrlevel_change(device, pwr->thermal_pwrlevel);
@@ -534,7 +523,7 @@ static int kgsl_pwrctrl_idle_timer_store(struct device *dev,
 
 	mutex_lock(&device->mutex);
 
-	/* Let the timeout be requested in ms, but convert to jiffies. */
+	
 	val /= div;
 	if (val >= org_interval_timeout)
 		pwr->interval_timeout = val;
@@ -563,9 +552,10 @@ static int kgsl_pwrctrl_gpubusy_show(struct device *dev,
 	struct kgsl_device *device = kgsl_device_from_dev(dev);
 	struct kgsl_clk_stats *clkstats;
 
-	if (device == NULL)
+	if(device == NULL)
 		return 0;
 	clkstats = &device->pwrctrl.clk_stats;
+
 	ret = snprintf(buf, PAGE_SIZE, "%7d %7d\n",
 			clkstats->on_time_old, clkstats->elapsed_old);
 	if (!test_bit(KGSL_PWRFLAGS_AXI_ON, &device->pwrctrl.power_flags)) {
@@ -573,6 +563,52 @@ static int kgsl_pwrctrl_gpubusy_show(struct device *dev,
 		clkstats->elapsed_old = 0;
 	}
 	return ret;
+}
+
+static int kgsl_pwrctrl_gpubusy_time_show(struct device *dev,
+					struct device_attribute *attr,
+					char *buf)
+{
+	int ret;
+	struct kgsl_device *device = kgsl_device_from_dev(dev);
+	s64 system_time, busy_time;
+
+	if(device == NULL)
+		return 0;
+
+	system_time = device->gputime.total;
+	do_div(system_time, 1000);
+	busy_time = device->gputime.busy;
+	do_div(busy_time, 1000);
+	ret = snprintf(buf, 63, "%lld %lld\n", system_time, busy_time);
+
+	return ret;
+}
+
+static int kgsl_pwrctrl_gpubusy_time_in_state_show(struct device *dev,
+					struct device_attribute *attr,
+					char *buf)
+{
+	int i;
+	char* tmp = buf;
+	struct kgsl_device *device = kgsl_device_from_dev(dev);
+	struct platform_device *pdev;
+	struct kgsl_device_platform_data *pdata;
+	s64 system_time, busy_time;
+
+	if(device == NULL)
+		return 0;
+	pdev = container_of(device->parentdev, struct platform_device, dev);
+	pdata = pdev->dev.platform_data;
+
+	for(i=0;i<pdata->num_levels;i++) {
+		system_time = device->gputime_in_state[i].total;
+		do_div(system_time, 1000);
+		busy_time = device->gputime_in_state[i].busy;
+		do_div(busy_time, 1000);
+		tmp = (char*)( (int)tmp + snprintf(tmp, PAGE_SIZE - (int)(tmp-buf), "%d %lld %lld\n", pdata->pwrlevel[i].gpu_freq, system_time, busy_time));
+	}
+	return (ssize_t)(tmp - buf);
 }
 
 static int kgsl_pwrctrl_gputop_show(struct device *dev,
@@ -585,9 +621,10 @@ static int kgsl_pwrctrl_gputop_show(struct device *dev,
 	int i = 0;
 	char *ptr = buf;
 
-	if (device == NULL)
+	if(device == NULL)
 		return 0;
 	clkstats = &device->pwrctrl.clk_stats;
+
 	ret = snprintf(buf, PAGE_SIZE, "%7d %7d ", clkstats->on_time_old,
 					clkstats->elapsed_old);
 	for (i = 0, ptr += ret; i < device->pwrctrl.num_pwrlevels;
@@ -623,14 +660,26 @@ static int kgsl_pwrctrl_gpu_available_frequencies_show(
 	return num_chars;
 }
 
-static int kgsl_pwrctrl_reset_count_show(struct device *dev,
+static int kgsl_pwrctrl_gputime_in_state_show(struct device *dev,
 					struct device_attribute *attr,
 					char *buf)
 {
+	ssize_t len = 0;
+	int i;
 	struct kgsl_device *device = kgsl_device_from_dev(dev);
+
 	if (device == NULL)
 		return 0;
-	return snprintf(buf, PAGE_SIZE, "%d\n", device->reset_counter);
+
+	if (test_bit(KGSL_PWRFLAGS_CLK_ON, &device->pwrctrl.power_flags) || (device->state == KGSL_STATE_NAP))
+		gpufreq_stats_update(0, device->pwrctrl.active_pwrlevel, device->pwrctrl.active_pwrlevel);
+
+	for (i = 0; i < device->pwrctrl.num_pwrlevels; i++) {
+		len += sprintf(buf + len, "%u %llu\n", device->pwrctrl.pwrlevels[i].gpu_freq,
+			(unsigned long long)jiffies_to_clock_t(gputime_in_state[i]));
+	}
+
+	return len;
 }
 
 DEVICE_ATTR(gpuclk, 0644, kgsl_pwrctrl_gpuclk_show, kgsl_pwrctrl_gpuclk_store);
@@ -658,9 +707,9 @@ DEVICE_ATTR(thermal_pwrlevel, 0644,
 DEVICE_ATTR(num_pwrlevels, 0444,
 	kgsl_pwrctrl_num_pwrlevels_show,
 	NULL);
-DEVICE_ATTR(reset_count, 0444,
-	kgsl_pwrctrl_reset_count_show,
-	NULL);
+DEVICE_ATTR(gpubusy_time, 0644, kgsl_pwrctrl_gpubusy_time_show, NULL);
+DEVICE_ATTR(gpubusy_time_in_state, 0644, kgsl_pwrctrl_gpubusy_time_in_state_show, NULL);
+DEVICE_ATTR(gputime_in_state, 0444, kgsl_pwrctrl_gputime_in_state_show, NULL);
 
 static const struct device_attribute *pwrctrl_attr_list[] = {
 	&dev_attr_gpuclk,
@@ -674,7 +723,11 @@ static const struct device_attribute *pwrctrl_attr_list[] = {
 	&dev_attr_min_pwrlevel,
 	&dev_attr_thermal_pwrlevel,
 	&dev_attr_num_pwrlevels,
-	&dev_attr_reset_count,
+
+	
+	&dev_attr_gpubusy_time,
+	&dev_attr_gpubusy_time_in_state,
+	&dev_attr_gputime_in_state,
 	NULL
 };
 
@@ -694,7 +747,13 @@ static void update_statistics(struct kgsl_device *device)
 	unsigned int on_time = 0;
 	int i;
 	int num_pwrlevels = device->pwrctrl.num_pwrlevels - 1;
-	/*PER CLK TIME*/
+
+	if(num_pwrlevels < 0){
+		KGSL_PWR_ERR(device,"device->pwrctrl.num_pwrlevels: %d < 0 index error",num_pwrlevels);
+		return;
+	}
+
+	
 	for (i = 0; i < num_pwrlevels; i++) {
 		clkstats->old_clock_time[i] = clkstats->clock_time[i];
 		on_time += clkstats->clock_time[i];
@@ -708,13 +767,11 @@ static void update_statistics(struct kgsl_device *device)
 	clkstats->elapsed = 0;
 }
 
-/* Track the amount of time the gpu is on vs the total system time. *
- * Regularly update the percentage of busy time displayed by sysfs. */
 static void kgsl_pwrctrl_busy_time(struct kgsl_device *device, bool on_time)
 {
 	struct kgsl_clk_stats *clkstats = &device->pwrctrl.clk_stats;
 	update_clk_statistics(device, on_time);
-	/* Update the output regularly and reset the counters. */
+	
 	if ((clkstats->elapsed > UPDATE_BUSY_VAL) ||
 		!test_bit(KGSL_PWRFLAGS_AXI_ON, &device->pwrctrl.power_flags)) {
 		update_statistics(device);
@@ -731,9 +788,12 @@ void kgsl_pwrctrl_clk(struct kgsl_device *device, int state,
 			&pwr->power_flags)) {
 			trace_kgsl_clk(device, state);
 			for (i = KGSL_MAX_CLKS - 1; i > 0; i--)
-				if (pwr->grp_clks[i])
+				if (pwr->grp_clks[i]) {
 					clk_disable(pwr->grp_clks[i]);
-			/* High latency clock maintenance. */
+					if (i == 0)
+						gpufreq_stats_update(0, pwr->active_pwrlevel, (pwr->num_pwrlevels - 1));
+				}
+			
 			if ((pwr->pwrlevels[0].gpu_freq > 0) &&
 				(requested_state != KGSL_STATE_NAP)) {
 				clk_set_rate(pwr->grp_clks[0],
@@ -745,20 +805,23 @@ void kgsl_pwrctrl_clk(struct kgsl_device *device, int state,
 			}
 			kgsl_pwrctrl_busy_time(device, true);
 		} else if (requested_state == KGSL_STATE_SLEEP) {
-			/* High latency clock maintenance. */
+			
 			if ((pwr->pwrlevels[0].gpu_freq > 0))
 				clk_set_rate(pwr->grp_clks[0],
 					pwr->pwrlevels[pwr->num_pwrlevels - 1].
 					gpu_freq);
 			for (i = KGSL_MAX_CLKS - 1; i > 0; i--)
-				if (pwr->grp_clks[i])
+				if (pwr->grp_clks[i]) {
 					clk_unprepare(pwr->grp_clks[i]);
+					if (i == 0)
+						gpufreq_stats_update(1, KGSL_MAX_PWRLEVELS, pwr->active_pwrlevel);
+				}
 		}
 	} else if (state == KGSL_PWRFLAGS_ON) {
 		if (!test_and_set_bit(KGSL_PWRFLAGS_CLK_ON,
 			&pwr->power_flags)) {
 			trace_kgsl_clk(device, state);
-			/* High latency clock maintenance. */
+			
 			if (device->state != KGSL_STATE_NAP) {
 				for (i = KGSL_MAX_CLKS - 1; i > 0; i--)
 					if (pwr->grp_clks[i])
@@ -770,8 +833,6 @@ void kgsl_pwrctrl_clk(struct kgsl_device *device, int state,
 						[pwr->active_pwrlevel].
 						gpu_freq);
 			}
-			/* as last step, enable grp_clk
-			   this is to let GPU interrupt to come */
 			for (i = KGSL_MAX_CLKS - 1; i > 0; i--)
 				if (pwr->grp_clks[i])
 					clk_enable(pwr->grp_clks[i]);
@@ -883,7 +944,10 @@ int kgsl_pwrctrl_init(struct kgsl_device *device)
 	struct kgsl_pwrctrl *pwr = &device->pwrctrl;
 	struct kgsl_device_platform_data *pdata = pdev->dev.platform_data;
 
-	/*acquire clocks */
+	spin_lock_init(&gpufreq_stats_lock);
+	gpufreq_stats_update(1, pwr->active_pwrlevel, KGSL_MAX_PWRLEVELS);
+
+	
 	for (i = 0; i < KGSL_MAX_CLKS; i++) {
 		if (pdata->clk_map & clks[i].map) {
 			clk = clk_get(&pdev->dev, clks[i].name);
@@ -892,16 +956,15 @@ int kgsl_pwrctrl_init(struct kgsl_device *device)
 			pwr->grp_clks[i] = clk;
 		}
 	}
-	/* Make sure we have a source clk for freq setting */
+	
 	if (pwr->grp_clks[0] == NULL)
 		pwr->grp_clks[0] = pwr->grp_clks[1];
 
-	/* put the AXI bus into asynchronous mode with the graphics cores */
+	
 	if (pdata->set_grp_async != NULL)
 		pdata->set_grp_async();
 
-	if (pdata->num_levels > KGSL_MAX_PWRLEVELS ||
-	    pdata->num_levels < 1) {
+	if (pdata->num_levels > KGSL_MAX_PWRLEVELS) {
 		KGSL_PWR_ERR(device, "invalid power level count: %d\n",
 					 pdata->num_levels);
 		result = -EINVAL;
@@ -909,7 +972,7 @@ int kgsl_pwrctrl_init(struct kgsl_device *device)
 	}
 	pwr->num_pwrlevels = pdata->num_levels;
 
-	/* Initialize the user and thermal clock constraints */
+	
 
 	pwr->max_pwrlevel = 0;
 	pwr->min_pwrlevel = pdata->num_levels - 2;
@@ -929,7 +992,7 @@ int kgsl_pwrctrl_init(struct kgsl_device *device)
 		pwr->pwrlevels[i].io_fraction =
 			pdata->pwrlevel[i].io_fraction;
 	}
-	/* Do not set_rate for targets in sync with AXI */
+	
 	if (pwr->pwrlevels[0].gpu_freq > 0)
 		clk_set_rate(pwr->grp_clks[0], pwr->
 				pwrlevels[pwr->num_pwrlevels - 1].gpu_freq);
@@ -1022,14 +1085,6 @@ void kgsl_pwrctrl_close(struct kgsl_device *device)
 	pwr->power_flags = 0;
 }
 
-/**
- * kgsl_idle_check() - Work function for GPU interrupts and idle timeouts.
- * @device: The device
- *
- * This function is called for work that is queued by the interrupt
- * handler or the idle timer. It attempts to transition to a clocks
- * off state if the active_cnt is 0 and the hardware is idle.
- */
 void kgsl_idle_check(struct work_struct *work)
 {
 	struct kgsl_device *device = container_of(work, struct kgsl_device,
@@ -1039,22 +1094,13 @@ void kgsl_idle_check(struct work_struct *work)
 		return;
 
 	mutex_lock(&device->mutex);
+	if (device->state & (KGSL_STATE_ACTIVE | KGSL_STATE_NAP)) {
+		kgsl_pwrscale_idle(device);
 
-	kgsl_pwrscale_idle(device);
-
-	if (device->state == KGSL_STATE_ACTIVE
-		   || device->state ==  KGSL_STATE_NAP) {
-		if (device->active_cnt > 0 || kgsl_pwrctrl_sleep(device) != 0) {
-
-			kgsl_pwrctrl_request_state(device, KGSL_STATE_NONE);
-
+		if (kgsl_pwrctrl_sleep(device) != 0) {
 			mod_timer(&device->idle_timer,
 					jiffies +
 					device->pwrctrl.interval_timeout);
-			/*
-			 * If the GPU has been too busy to sleep, make sure
-			 * that is acurately reflected in the % busy numbers.
-			 */
 			device->pwrctrl.clk_stats.no_nap_cnt++;
 			if (device->pwrctrl.clk_stats.no_nap_cnt >
 							 UPDATE_BUSY) {
@@ -1069,7 +1115,6 @@ void kgsl_idle_check(struct work_struct *work)
 
 	mutex_unlock(&device->mutex);
 }
-EXPORT_SYMBOL(kgsl_idle_check);
 
 void kgsl_timer(unsigned long data)
 {
@@ -1082,35 +1127,58 @@ void kgsl_timer(unsigned long data)
 			kgsl_pwrctrl_request_state(device, KGSL_STATE_SLUMBER);
 		else
 			kgsl_pwrctrl_request_state(device, KGSL_STATE_SLEEP);
-		/* Have work run in a non-interrupt context. */
+		
 		queue_work(device->work_queue, &device->idle_check_ws);
 	}
 }
 
-bool kgsl_pwrctrl_isenabled(struct kgsl_device *device)
-{
-	struct kgsl_pwrctrl *pwr = &device->pwrctrl;
-	return (test_bit(KGSL_PWRFLAGS_CLK_ON, &pwr->power_flags) != 0);
-}
-
-/**
- * kgsl_pre_hwaccess - Enforce preconditions for touching registers
- * @device: The device
- *
- * This function ensures that the correct lock is held and that the GPU
- * clock is on immediately before a register is read or written. Note
- * that this function does not check active_cnt because the registers
- * must be accessed during device start and stop, when the active_cnt
- * may legitimately be 0.
- */
 void kgsl_pre_hwaccess(struct kgsl_device *device)
 {
-	/* In order to touch a register you must hold the device mutex...*/
 	BUG_ON(!mutex_is_locked(&device->mutex));
-	/* and have the clock on! */
-	BUG_ON(!kgsl_pwrctrl_isenabled(device));
+	switch (device->state) {
+	case KGSL_STATE_ACTIVE:
+		return;
+	case KGSL_STATE_NAP:
+	case KGSL_STATE_SLEEP:
+	case KGSL_STATE_SLUMBER:
+		kgsl_pwrctrl_wake(device);
+		break;
+	case KGSL_STATE_SUSPEND:
+		kgsl_check_suspended(device);
+		break;
+	case KGSL_STATE_INIT:
+	case KGSL_STATE_HUNG:
+	case KGSL_STATE_DUMP_AND_FT:
+		if (test_bit(KGSL_PWRFLAGS_CLK_ON,
+					 &device->pwrctrl.power_flags))
+			break;
+		else
+			KGSL_PWR_ERR(device,
+					"hw access while clocks off from state %d\n",
+					device->state);
+		break;
+	default:
+		KGSL_PWR_ERR(device, "hw access while in unknown state %d\n",
+					 device->state);
+		break;
+	}
 }
 EXPORT_SYMBOL(kgsl_pre_hwaccess);
+
+void kgsl_check_suspended(struct kgsl_device *device)
+{
+	if (device->requested_state == KGSL_STATE_SUSPEND ||
+				device->state == KGSL_STATE_SUSPEND) {
+		mutex_unlock(&device->mutex);
+		wait_for_completion(&device->hwaccess_gate);
+		mutex_lock(&device->mutex);
+	} else if (device->state == KGSL_STATE_DUMP_AND_FT) {
+		mutex_unlock(&device->mutex);
+		wait_for_completion(&device->ft_gate);
+		mutex_lock(&device->mutex);
+	} else if (device->state == KGSL_STATE_SLUMBER)
+		kgsl_pwrctrl_wake(device);
+}
 
 static int
 _nap(struct kgsl_device *device)
@@ -1121,7 +1189,6 @@ _nap(struct kgsl_device *device)
 			kgsl_pwrctrl_request_state(device, KGSL_STATE_NONE);
 			return -EBUSY;
 		}
-		del_timer_sync(&device->hang_timer);
 		kgsl_pwrctrl_irq(device, KGSL_PWRFLAGS_OFF);
 		kgsl_pwrctrl_clk(device, KGSL_PWRFLAGS_OFF, KGSL_STATE_NAP);
 		kgsl_pwrctrl_set_state(device, KGSL_STATE_NAP);
@@ -1154,7 +1221,7 @@ _sleep(struct kgsl_device *device)
 			kgsl_pwrctrl_request_state(device, KGSL_STATE_NONE);
 			return -EBUSY;
 		}
-		/* fall through */
+		
 	case KGSL_STATE_NAP:
 		kgsl_pwrctrl_irq(device, KGSL_PWRFLAGS_OFF);
 		kgsl_pwrctrl_axi(device, KGSL_PWRFLAGS_OFF);
@@ -1187,14 +1254,10 @@ _slumber(struct kgsl_device *device)
 			kgsl_pwrctrl_request_state(device, KGSL_STATE_NONE);
 			return -EBUSY;
 		}
-		/* fall through */
+		
 	case KGSL_STATE_NAP:
 	case KGSL_STATE_SLEEP:
 		del_timer_sync(&device->idle_timer);
-		del_timer_sync(&device->hang_timer);
-		/* make sure power is on to stop the device*/
-		kgsl_pwrctrl_enable(device);
-		kgsl_pwrctrl_irq(device, KGSL_PWRFLAGS_ON);
 		device->ftbl->suspend_context(device);
 		device->ftbl->stop(device);
 		_sleep_accounting(device);
@@ -1212,21 +1275,18 @@ _slumber(struct kgsl_device *device)
 	return 0;
 }
 
-/******************************************************************/
-/* Caller must hold the device mutex. */
 int kgsl_pwrctrl_sleep(struct kgsl_device *device)
 {
 	int status = 0;
 	KGSL_PWR_INFO(device, "sleep device %d\n", device->id);
 
-	/* Work through the legal state transitions */
+	
 	switch (device->requested_state) {
 	case KGSL_STATE_NAP:
 		status = _nap(device);
 		break;
 	case KGSL_STATE_SLEEP:
 		status = _sleep(device);
-		kgsl_mmu_disable_clk_on_ts(&device->mmu, 0, false);
 		break;
 	case KGSL_STATE_SLUMBER:
 		status = _slumber(device);
@@ -1242,74 +1302,49 @@ int kgsl_pwrctrl_sleep(struct kgsl_device *device)
 }
 EXPORT_SYMBOL(kgsl_pwrctrl_sleep);
 
-/******************************************************************/
-/* Caller must hold the device mutex. */
-int kgsl_pwrctrl_wake(struct kgsl_device *device)
+void kgsl_pwrctrl_wake(struct kgsl_device *device)
 {
-	int status = 0;
-	unsigned int context_id;
-	unsigned int state = device->state;
-	unsigned int ts_processed = 0xdeaddead;
-	struct kgsl_context *context;
-
+	int status;
 	kgsl_pwrctrl_request_state(device, KGSL_STATE_ACTIVE);
 	switch (device->state) {
 	case KGSL_STATE_SLUMBER:
-		status = device->ftbl->start(device);
+		status = device->ftbl->start(device, 0);
 		if (status) {
 			kgsl_pwrctrl_request_state(device, KGSL_STATE_NONE);
 			KGSL_DRV_ERR(device, "start failed %d\n", status);
 			break;
 		}
-		/* fall through */
+		
 	case KGSL_STATE_SLEEP:
 		kgsl_pwrctrl_axi(device, KGSL_PWRFLAGS_ON);
 		kgsl_pwrscale_wake(device);
-		kgsl_sharedmem_readl(&device->memstore,
-			(unsigned int *) &context_id,
-			KGSL_MEMSTORE_OFFSET(KGSL_MEMSTORE_GLOBAL,
-				current_context));
-		context = kgsl_context_get(device, context_id);
-		if (context)
-			ts_processed = kgsl_readtimestamp(device, context,
-				KGSL_TIMESTAMP_RETIRED);
-		KGSL_PWR_INFO(device, "Wake from %s state. CTXT: %d RTRD TS: %08X\n",
-			kgsl_pwrstate_to_str(state),
-			context ? context->id : -1, ts_processed);
-		kgsl_context_put(context);
-		/* fall through */
+		
 	case KGSL_STATE_NAP:
-		/* Turn on the core clocks */
+		
 		kgsl_pwrctrl_clk(device, KGSL_PWRFLAGS_ON, KGSL_STATE_ACTIVE);
-		/* Enable state before turning on irq */
+		
 		kgsl_pwrctrl_set_state(device, KGSL_STATE_ACTIVE);
 		kgsl_pwrctrl_irq(device, KGSL_PWRFLAGS_ON);
-		/* Re-enable HW access */
+		
 		mod_timer(&device->idle_timer,
 				jiffies + device->pwrctrl.interval_timeout);
-		mod_timer(&device->hang_timer,
-			(jiffies + msecs_to_jiffies(KGSL_TIMEOUT_PART)));
 		pm_qos_update_request(&device->pm_qos_req_dma,
 					GPU_SWFI_LATENCY);
 	case KGSL_STATE_ACTIVE:
 		kgsl_pwrctrl_request_state(device, KGSL_STATE_NONE);
 		break;
-	case KGSL_STATE_INIT:
-		break;
 	default:
 		KGSL_PWR_WARN(device, "unhandled state %s\n",
 				kgsl_pwrstate_to_str(device->state));
 		kgsl_pwrctrl_request_state(device, KGSL_STATE_NONE);
-		status = -EINVAL;
 		break;
 	}
-	return status;
 }
 EXPORT_SYMBOL(kgsl_pwrctrl_wake);
 
 void kgsl_pwrctrl_enable(struct kgsl_device *device)
 {
-	/* Order pwrrail/clk sequence based upon platform */
+	
 	kgsl_pwrctrl_pwrrail(device, KGSL_PWRFLAGS_ON);
 	kgsl_pwrctrl_clk(device, KGSL_PWRFLAGS_ON, KGSL_STATE_ACTIVE);
 	kgsl_pwrctrl_axi(device, KGSL_PWRFLAGS_ON);
@@ -1318,7 +1353,7 @@ EXPORT_SYMBOL(kgsl_pwrctrl_enable);
 
 void kgsl_pwrctrl_disable(struct kgsl_device *device)
 {
-	/* Order pwrrail/clk sequence based upon platform */
+	
 	kgsl_pwrctrl_axi(device, KGSL_PWRFLAGS_OFF);
 	kgsl_pwrctrl_clk(device, KGSL_PWRFLAGS_OFF, KGSL_STATE_SLEEP);
 	kgsl_pwrctrl_pwrrail(device, KGSL_PWRFLAGS_OFF);
@@ -1369,122 +1404,3 @@ const char *kgsl_pwrstate_to_str(unsigned int state)
 }
 EXPORT_SYMBOL(kgsl_pwrstate_to_str);
 
-
-/**
- * kgsl_active_count_get() - Increase the device active count
- * @device: Pointer to a KGSL device
- *
- * Increase the active count for the KGSL device and turn on
- * clocks if this is the first reference. Code paths that need
- * to touch the hardware or wait for the hardware to complete
- * an operation must hold an active count reference until they
- * are finished. An error code will be returned if waking the
- * device fails. The device mutex must be held while *calling
- * this function.
- */
-int kgsl_active_count_get(struct kgsl_device *device)
-{
-	int ret = 0;
-	BUG_ON(!mutex_is_locked(&device->mutex));
-
-	if (device->active_cnt == 0) {
-
-		if (device->state != KGSL_STATE_DUMP_AND_FT) {
-			mutex_unlock(&device->mutex);
-			wait_for_completion(&device->hwaccess_gate);
-			wait_for_completion(&device->ft_gate);
-			mutex_lock(&device->mutex);
-		}
-
-		ret = kgsl_pwrctrl_wake(device);
-	}
-	if (ret == 0)
-		device->active_cnt++;
-	return ret;
-}
-EXPORT_SYMBOL(kgsl_active_count_get);
-
-/**
- * kgsl_active_count_get_light() - Increase the device active count
- * @device: Pointer to a KGSL device
- *
- * Increase the active count for the KGSL device WITHOUT
- * turning on the clocks. Currently this is only used for creating
- * kgsl_events. The device mutex must be held while calling this function.
- */
-int kgsl_active_count_get_light(struct kgsl_device *device)
-{
-	BUG_ON(!mutex_is_locked(&device->mutex));
-
-	if (device->state != KGSL_STATE_ACTIVE) {
-		dev_WARN_ONCE(device->dev, 1, "device in unexpected state %s\n",
-				kgsl_pwrstate_to_str(device->state));
-		return -EINVAL;
-	}
-
-	if (device->active_cnt == 0) {
-		dev_WARN_ONCE(device->dev, 1, "active count is 0!\n");
-		return -EINVAL;
-	}
-
-	device->active_cnt++;
-	return 0;
-}
-EXPORT_SYMBOL(kgsl_active_count_get_light);
-
-/**
- * kgsl_active_count_put() - Decrease the device active count
- * @device: Pointer to a KGSL device
- *
- * Decrease the active count for the KGSL device and turn off
- * clocks if there are no remaining references. This function will
- * transition the device to NAP if there are no other pending state
- * changes. It also completes the suspend gate.  The device mutex must
- * be held while calling this function.
- */
-void kgsl_active_count_put(struct kgsl_device *device)
-{
-	BUG_ON(!mutex_is_locked(&device->mutex));
-	BUG_ON(device->active_cnt == 0);
-
-	kgsl_pwrscale_idle(device);
-	if (device->active_cnt > 1) {
-		device->active_cnt--;
-		return;
-	}
-
-	INIT_COMPLETION(device->suspend_gate);
-
-	if (device->pwrctrl.nap_allowed == true &&
-			(device->state == KGSL_STATE_ACTIVE &&
-			device->requested_state == KGSL_STATE_NONE)) {
-		kgsl_pwrctrl_request_state(device, KGSL_STATE_NAP);
-		if (kgsl_pwrctrl_sleep(device) != 0)
-			mod_timer(&device->idle_timer,
-					jiffies
-					+ device->pwrctrl.interval_timeout);
-	}
-	device->active_cnt--;
-
-	if (device->active_cnt == 0)
-		complete(&device->suspend_gate);
-}
-EXPORT_SYMBOL(kgsl_active_count_put);
-
-/**
- * kgsl_active_count_wait() - Wait for activity to finish.
- * @device: Pointer to a KGSL device
- *
- * Block until all active_cnt users put() their reference.
- */
-void kgsl_active_count_wait(struct kgsl_device *device)
-{
-	BUG_ON(!mutex_is_locked(&device->mutex));
-
-	if (device->active_cnt != 0) {
-		mutex_unlock(&device->mutex);
-		wait_for_completion(&device->suspend_gate);
-		mutex_lock(&device->mutex);
-	}
-}
-EXPORT_SYMBOL(kgsl_active_count_wait);
