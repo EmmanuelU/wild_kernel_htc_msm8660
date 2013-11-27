@@ -4373,8 +4373,10 @@ static int msm_fb_ioctl(struct fb_info *info, unsigned int cmd,
 		if (!ret)
 			ret = copy_to_user(argp, &buf_sync, sizeof(buf_sync));
 		break;
+
 	case MSMFB_DISPLAY_COMMIT:
 		ret = msmfb_display_commit(info, argp);
+		break;
 
 	case MSMFB_METADATA_GET:
 		ret = copy_from_user(&mdp_metadata, argp, sizeof(mdp_metadata));
