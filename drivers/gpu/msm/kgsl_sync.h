@@ -72,4 +72,4 @@ static inline void kgsl_sync_timeline_destroy(struct kgsl_context *context)
 }
 #endif
 
-#endif 
+#endif /* __KGSL_SYNC_H */
