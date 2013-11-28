@@ -78,9 +78,6 @@ struct lcdc_panel_info {
 	
 	uint32 yres_pad;
 	boolean is_sync_active_high;
-	
-	__u32 no_set_tear;
-
 };
 
 struct mddi_panel_info {
@@ -134,11 +131,6 @@ struct mipi_panel_info {
 	char no_max_pkt_size;
 	
 	char force_clk_lane_hs;
-	
-	struct mipi_dsi_reg_set *dsi_reg_db;
-	uint32 dsi_reg_db_size;
-	
-	char force_leave_ulps;
 };
 
 enum lvds_mode {
@@ -174,7 +166,6 @@ struct msm_panel_info {
 	__u32 width;
 	__u32 height;
 	__u32 camera_backlight;
-	__u32 read_pointer;
 
 	struct mddi_panel_info mddi;
 	struct lcd_panel_info lcd;
@@ -204,30 +195,17 @@ struct msm_fb_panel_data {
 	int (*power_ctrl) (boolean enable);
 	struct platform_device *next;
 	int (*clk_func) (int enable);
-int (*fps_level_change) (struct platform_device *pdev,
-					u32 fps_level);
 #ifdef CONFIG_FB_MSM_CABC
 	int (*autobl_enable) (int on, struct msm_fb_data_type *);
 	void (*enable_cabc) (int, bool, struct msm_fb_data_type *);
 #endif
 	void (*color_enhance) (struct msm_fb_data_type *, int on);
-	void (*dimming_on) (struct msm_fb_data_type *);
-	void (*acl_enable) (int on, struct msm_fb_data_type *);
-	void (*set_cabc) (struct msm_fb_data_type *, int mode);
-	void (*sre_ctrl) (struct msm_fb_data_type *, unsigned long);
-#ifdef CONFIG_FB_MSM_ESD_WORKAROUND
-	int esd_workaround;
-#endif
 };
 
 struct platform_device *msm_fb_device_alloc(struct msm_fb_panel_data *pdata,
 						u32 type, u32 id);
 int panel_next_on(struct platform_device *pdev);
 int panel_next_off(struct platform_device *pdev);
-int panel_next_fps_level_change(struct platform_device *pdev,
-					u32 fps_level);
-int panel_next_late_init(struct platform_device *pdev);
-int panel_next_early_off(struct platform_device *pdev);
 
 int lcdc_device_register(struct msm_panel_info *pinfo);
 
@@ -235,4 +213,3 @@ int mddi_toshiba_device_register(struct msm_panel_info *pinfo,
 					u32 channel, u32 panel);
 
 #endif 
-

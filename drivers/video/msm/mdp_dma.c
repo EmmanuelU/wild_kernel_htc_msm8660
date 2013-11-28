@@ -418,9 +418,6 @@ void mdp_dma2_update(struct msm_fb_data_type *mfd)
 	MDPIBUF *iBuf;
 	uint32 upper_height;
 
-	if (!mfd)
-		return;
-
 	if (mfd->panel.type == EXT_MDDI_PANEL) {
 		mdp_dma2_update_sub(mfd);
 		return;
