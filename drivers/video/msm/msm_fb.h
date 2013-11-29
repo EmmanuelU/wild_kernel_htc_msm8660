@@ -1,4 +1,4 @@
-/* Copyright (c) 2008-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2008-2013, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -54,6 +54,7 @@ struct disp_info_type_suspend {
 	boolean op_enable;
 	boolean sw_refreshing_enable;
 	boolean panel_power_on;
+	boolean op_suspend;
 };
 
 struct msmfb_writeback_data_list {
@@ -127,6 +128,7 @@ struct msm_fb_data_type {
 	__u32 channel_irq;
 
 	struct mdp_dma_data *dma;
+	struct device_attribute dev_attr;
 	void (*dma_fnc) (struct msm_fb_data_type *mfd);
 	int (*cursor_update) (struct fb_info *info,
 			      struct fb_cursor *cursor);
@@ -136,6 +138,8 @@ struct msm_fb_data_type {
 			      struct mdp_histogram_data *hist);
 	int (*start_histogram) (struct mdp_histogram_start_req *req);
 	int (*stop_histogram) (struct fb_info *info, uint32_t block);
+	void (*vsync_init) (int cndx);
+	void *vsync_show;
 	void *cursor_buf;
 	void *cursor_buf_phys;
 
@@ -156,6 +160,12 @@ struct msm_fb_data_type {
 	int perfhint;
 #endif 
 	__u32 var_frame_rate;
+
+	
+	int ovr_src_height;
+	int ovr_src_width;
+	int ovr_dst_height;
+	int ovr_dst_width;
 
 #ifdef MSM_FB_ENABLE_DBGFS
 	struct dentry *sub_dir;
@@ -195,7 +205,38 @@ struct msm_fb_data_type {
 	u32 writeback_state;
 	bool writeback_active_cnt;
 	int cont_splash_done;
+
+	u32 acq_fen_cnt;
+	struct sync_fence *acq_fen[MDP_MAX_FENCE_FD];
+	int cur_rel_fen_fd;
+	struct sync_pt *cur_rel_sync_pt;
+	struct sync_fence *cur_rel_fence;
+	struct sync_fence *last_rel_fence;
+	struct sw_sync_timeline *timeline;
+	int timeline_value;
+	int vsync_sysfs_created;
+	u32 last_acq_fen_cnt;
+	struct sync_fence *last_acq_fen[MDP_MAX_FENCE_FD];
+	struct mutex sync_mutex;
+	struct completion commit_comp;
+	u32 is_committing;
+	struct work_struct commit_work;
+	void *msm_fb_backup;
+	
+	struct workqueue_struct *dimming_wq;
+	struct work_struct dimming_work;
+	struct timer_list dimming_update_timer;
+	struct workqueue_struct *sre_wq;
+	struct work_struct sre_work;
+	struct timer_list sre_update_timer;
 };
+
+struct msm_fb_backup_type {
+	struct fb_info info;
+	struct fb_var_screeninfo var;
+	struct msm_fb_data_type mfd;
+};
+
 
 struct dentry *msm_fb_get_debugfs_root(void);
 void msm_fb_debugfs_file_create(struct dentry *root, const char *name,
@@ -214,8 +255,11 @@ int msm_fb_writeback_stop(struct fb_info *info);
 int msm_fb_writeback_terminate(struct fb_info *info);
 int msm_fb_detect_client(const char *name);
 int calc_fb_offset(struct msm_fb_data_type *mfd, struct fb_info *fbi, int bpp);
-void mdp_color_enhancement(const struct mdp_reg *reg_seq, int size);
+void msm_fb_wait_for_fence(struct msm_fb_data_type *mfd);
+int msm_fb_signal_timeline(struct msm_fb_data_type *mfd);
+void msm_fb_release_timeline(struct msm_fb_data_type *mfd);
 
+void mdp_color_enhancement(const struct mdp_reg *reg_seq, int size);
 #ifdef CONFIG_FB_BACKLIGHT
 void msm_fb_config_backlight(struct msm_fb_data_type *mfd);
 #endif
