@@ -226,6 +226,11 @@ enum rawchip_enable_type {
 	RAWCHIP_MIPI_BYPASS,
 };
 
+enum hdr_mode_type {
+	NON_HDR_MODE,
+	HDR_MODE,
+};
+
 enum msm_camera_type {
 	BACK_CAMERA_2D,
 	FRONT_CAMERA_2D,
@@ -302,6 +307,17 @@ struct msm_camera_i2c_conf {
 	enum msm_camera_i2c_mux_mode i2c_mux_mode;
 };
 
+enum msm_camera_pixel_order_default {
+	MSM_CAMERA_PIXEL_ORDER_GR,
+	MSM_CAMERA_PIXEL_ORDER_RG,
+	MSM_CAMERA_PIXEL_ORDER_BG,
+	MSM_CAMERA_PIXEL_ORDER_GB,
+};
+enum sensor_mount_angle {
+	ANGLE_90,
+	ANGLE_180,
+	ANGLE_270,
+};
 struct msm_camera_sensor_platform_info {
 	int mount_angle;
 	int sensor_reset;
@@ -317,8 +333,11 @@ struct msm_camera_sensor_platform_info {
 	int vcm_pwd;
 	int vcm_enable;
 	int privacy_light;
+	enum msm_camera_pixel_order_default pixel_order_default;	
 	enum sensor_flip_mirror_info mirror_flip;
 	void *privacy_light_info;
+	enum sensor_mount_angle sensor_mount_angle; 
+	bool ews_enable;
 	
 };
 
@@ -348,6 +367,17 @@ struct msm_actuator_info {
 struct msm_eeprom_info {
 	struct i2c_board_info const *board_info;
 	int bus_id;
+};
+
+enum htc_camera_image_type_board {
+	HTC_CAMERA_IMAGE_NONE_BOARD,
+	HTC_CAMERA_IMAGE_YUSHANII_BOARD,
+	HTC_CAMERA_IMAGE_MAX_BOARD,
+};
+
+enum cam_vcm_onoff_type {
+	CAM_VCM_OFF,
+	CAM_VCM_ON,
 };
 
 struct msm_camera_sensor_info {
@@ -381,7 +411,11 @@ struct msm_camera_sensor_info {
 	struct msm_camera_gpio_conf *gpio_conf;
 	int (*camera_power_on)(void);
 	int (*camera_power_off)(void);
+	void (*camera_yushanii_probed)(enum htc_camera_image_type_board);
+	enum htc_camera_image_type_board htc_image;	
 	int use_rawchip;
+	int hdr_mode;
+	int video_hdr_capability;
 #if 1 
 	
 	void(*camera_clk_switch)(void);
@@ -495,6 +529,7 @@ struct msm_panel_common_pdata {
 	unsigned num_mdp_clk;
 	int *mdp_core_clk_table;
 	u32 mdp_max_clk;
+	u32 mdp_min_clk;
 #ifdef CONFIG_MSM_BUS_SCALING
 	struct msm_bus_scale_pdata *mdp_bus_scale_table;
 #endif
@@ -503,6 +538,8 @@ struct msm_panel_common_pdata {
 	u32 ov1_wb_size;  
 	u32 mem_hid;
 	char cont_splash_enabled;
+	u32 splash_screen_addr;
+	u32 splash_screen_size;
 	char mdp_iommu_split_domain;
 	int (*mdp_color_enhance)(void);
 	int (*mdp_gamma)(void);
@@ -554,6 +591,11 @@ struct mipi_dsi_phy_ctrl {
 	uint32_t ctrl[4];
 	uint32_t strength[4];
 	uint32_t pll[21];
+};
+
+struct mipi_dsi_reg_set {
+	uint32_t reg;
+	uint32_t value;
 };
 
 struct mipi_dsi_panel_platform_data {
@@ -802,3 +844,4 @@ extern int dying_processors_read_proc(char *page, char **start, off_t off,
 
 extern int get_partition_num_by_name(char *name);
 #endif
+
