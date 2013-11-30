@@ -103,8 +103,3 @@ config MSM_KGSL_SIMPLE_GOV
 	depends on MSM_KGSL
 	---help---
 	  A simple KGSL GPU govenor for Qualcom Adreno XXX devices
-
-config KGSL_COMPAT
-	bool "Compatibility with older kernel versions"
-	default n
-	depends on MSM_KGSL
