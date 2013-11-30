@@ -443,6 +443,17 @@ void mdp4_dsi_video_base_swap(int cndx, struct mdp4_overlay_pipe *pipe)
 	vctrl->base_pipe = pipe;
 }
 
+static DEVICE_ATTR(vsync_event, S_IRUGO, mdp4_dsi_video_show_event, NULL);
+
+static struct attribute *vsync_fs_attrs[] = {
+	&dev_attr_vsync_event.attr,
+	NULL,
+};
+
+static struct attribute_group vsync_fs_attr_group = {
+	.attrs = vsync_fs_attrs,
+};
+
 int mdp4_dsi_video_on(struct platform_device *pdev)
 {
 	int dsi_width;
@@ -677,6 +688,20 @@ int mdp4_dsi_video_on(struct platform_device *pdev)
 	mdp_pipe_ctrl(MDP_CMD_BLOCK, MDP_BLOCK_POWER_OFF, FALSE);
 
 	mdp_histogram_ctrl_all(TRUE);
+
+	if (!vctrl->sysfs_created) {
+		ret = sysfs_create_group(&vctrl->dev->kobj,
+			&vsync_fs_attr_group);
+		if (ret) {
+			pr_err("%s: sysfs group creation failed, ret=%d\n",
+				__func__, ret);
+			return ret;
+		}
+
+		kobject_uevent(&vctrl->dev->kobj, KOBJ_ADD);
+		pr_debug("%s: kobject_uevent(KOBJ_ADD)\n", __func__);
+		vctrl->sysfs_created = 1;
+	}
 
 	return ret;
 }
