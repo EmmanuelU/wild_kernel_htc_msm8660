@@ -72,10 +72,18 @@
 #define MSMFB_VSYNC_CTRL  _IOW(MSMFB_IOCTL_MAGIC, 161, unsigned int)
 #define MSMFB_BUFFER_SYNC  _IOW(MSMFB_IOCTL_MAGIC, 162, struct mdp_buf_sync)
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+#define MSMFB_METADATA_SET  _IOW(MSMFB_IOCTL_MAGIC, 161, struct msmfb_metadata)
+
+=======
 #define MSMFB_DISPLAY_COMMIT      _IOW(MSMFB_IOCTL_MAGIC, 164, \
 						struct mdp_display_commit)
 #define MSMFB_METADATA_GET  _IOW(MSMFB_IOCTL_MAGIC, 166, struct msmfb_metadata)
 #define MSMFB_METADATA_SET  _IOW(MSMFB_IOCTL_MAGIC, 167, struct msmfb_metadata)
+>>>>>>> parent of f18752b... Revert "msmfb: M7 4.2.2 kernel"
+=======
+>>>>>>> parent of cb07cb1... Fix compile errors resulting from msm_fb revert
 
 #define MSMFB_GET_USB_PROJECTOR_INFO _IOR(MSMFB_IOCTL_MAGIC, 301, struct msmfb_usb_projector_info)
 #define MSMFB_SET_USB_PROJECTOR_INFO _IOW(MSMFB_IOCTL_MAGIC, 302, struct msmfb_usb_projector_info)
