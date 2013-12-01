@@ -832,7 +832,8 @@ static struct msm_panel_common_pdata mdp_pdata = {
 	.mdp_rev = MDP_REV_41,
 	.mem_hid = BIT(ION_CP_WB_HEAP_ID),
 	.mdp_iommu_split_domain = 0,
-	.mdp_max_clk = 200000000,
+	.mdp_max_clk = 266667000,
+	.mdp_max_bw = 2000000000,
 	.mdp_gamma = pyramid_mdp_gamma,
 };
 
