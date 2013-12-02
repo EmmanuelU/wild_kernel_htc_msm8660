@@ -19,6 +19,7 @@
 #include <mach/gpio.h>
 #include <mach/panel_id.h>
 #include <mach/msm_bus_board.h>
+#include <linux/bootmem.h>
 #include <linux/mfd/pmic8058.h>
 #include <linux/pwm.h>
 #include <linux/pmic8058-pwm.h>
@@ -38,7 +39,6 @@
 #else 
 #define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE, 4096)
 #endif 
-#define MSM_FB_BASE           0x3B600000
 
 #ifdef CONFIG_FB_MSM_OVERLAY0_WRITEBACK
 #define MSM_FB_OVERLAY0_WRITEBACK_SIZE roundup((960 * ALIGN(540, 32) * 3 * 2), 4096)
@@ -82,13 +82,15 @@ static struct platform_device msm_fb_device = {
 
 void __init pyramid_allocate_fb_region(void)
 {
+	void *addr;
 	unsigned long size;
 
 	size = MSM_FB_SIZE;
-	msm_fb_resources[0].start = MSM_FB_BASE;
+	addr = alloc_bootmem_align(size, 0x1000);
+	msm_fb_resources[0].start = __pa(addr);
 	msm_fb_resources[0].end = msm_fb_resources[0].start + size - 1;
-	pr_info("allocating %lu bytes at 0x%p (0x%lx physical) for fb\n",
-		size, __va(MSM_FB_BASE), (unsigned long) MSM_FB_BASE);
+	pr_info("allocating %lu bytes at %p (%lx physical) for fb\n",
+			size, addr, __pa(addr));
 }
 
 #ifdef CONFIG_MSM_BUS_SCALING
