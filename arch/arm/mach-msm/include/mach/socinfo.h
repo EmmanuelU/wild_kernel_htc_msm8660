@@ -219,6 +219,11 @@ static inline int cpu_is_msm8930(void)
 #endif
 }
 
+static inline int cpu_is_msm8930aa(void)
+{
+	return 0;
+}
+
 static inline int cpu_is_msm8627(void)
 {
 /* 8930 and 8627 will share the same CONFIG_ARCH type unless otherwise needed */
@@ -252,4 +257,10 @@ static inline int cpu_is_msm9615(void)
 	return 0;
 #endif
 }
+
+static inline int cpu_is_msm8625(void)
+{
+	return 0;
+}
+
 #endif

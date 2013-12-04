@@ -36,6 +36,8 @@ struct vm_area_struct;
 #endif
 #define ___GFP_NO_KSWAPD	0x400000u
 #define ___GFP_OTHER_NODE	0x800000u
+#define ___GFP_WRITE		0x1000000u
+#define ___GFP_NO_COMPACT	0x2000000u
 
 /*
  * GFP bitmasks..
@@ -84,7 +86,9 @@ struct vm_area_struct;
 #define __GFP_NOTRACK	((__force gfp_t)___GFP_NOTRACK)  /* Don't track with kmemcheck */
 
 #define __GFP_NO_KSWAPD	((__force gfp_t)___GFP_NO_KSWAPD)
-#define __GFP_OTHER_NODE ((__force gfp_t)___GFP_OTHER_NODE) /* On behalf of other node */
+#define __GFP_OTHER_NODE ((__force gfp_t)___GFP_OTHER_NODE) 
+#define __GFP_WRITE	((__force gfp_t)___GFP_WRITE)	
+#define __GFP_NO_COMPACT	((__force gfp_t)___GFP_NO_COMPACT)	
 
 /*
  * This may seem redundant, but it's a way of annotating false positives vs.
@@ -92,7 +96,7 @@ struct vm_area_struct;
  */
 #define __GFP_NOTRACK_FALSE_POSITIVE (__GFP_NOTRACK)
 
-#define __GFP_BITS_SHIFT 23	/* Room for 23 __GFP_FOO bits */
+#define __GFP_BITS_SHIFT 26	
 #define __GFP_BITS_MASK ((__force gfp_t)((1 << __GFP_BITS_SHIFT) - 1))
 
 /* This equals 0, but use constants in case they ever change */
