@@ -102,6 +102,7 @@ static struct msm_panel_common_pdata *mipi_novatek_pdata;
 static struct dsi_buf novatek_tx_buf;
 static struct dsi_buf novatek_rx_buf;
 
+static int mipi_novatek_lcd_init(void);
 
 /* novatek blue panel */
 static char led_pwm1[] =
@@ -2258,6 +2259,12 @@ int mipi_novatek_device_register(struct msm_panel_info *pinfo,
 
 	ch_used[channel] = TRUE;
 
+	ret = mipi_novatek_lcd_init();
+	if (ret) {
+		pr_err("mipi_novatek_lcd_init() failed with ret %u\n", ret);
+		return ret;
+	}
+
 	pdev = platform_device_alloc("mipi_novatek", (panel << 8)|channel);
 	if (!pdev)
 		return -ENOMEM;
@@ -2286,12 +2293,10 @@ err_device_put:
 	return ret;
 }
 
-static int __init mipi_novatek_lcd_init(void)
+static int mipi_novatek_lcd_init(void)
 {
 	mipi_dsi_buf_alloc(&novatek_tx_buf, DSI_BUF_SIZE);
 	mipi_dsi_buf_alloc(&novatek_rx_buf, DSI_BUF_SIZE);
 
 	return platform_driver_register(&this_driver);
 }
-
-module_init(mipi_novatek_lcd_init);
