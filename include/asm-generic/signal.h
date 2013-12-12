@@ -1,6 +1,10 @@
 #ifndef __ASM_GENERIC_SIGNAL_H
 #define __ASM_GENERIC_SIGNAL_H
 
+#ifndef __BITS_PER_LONG
+#define __BITS_PER_LONG 32
+#endif
+
 #include <linux/types.h>
 
 #define _NSIG		64
