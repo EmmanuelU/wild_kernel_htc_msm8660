@@ -2,6 +2,7 @@
 
 clean=
 buildargs=
+outfile=ds-kernel_signed.zip
 
 input="$1 $2"
 if [[ -z "$input" ]] 
@@ -56,9 +57,9 @@ echo Creating Flash-able Zip ...
 cp -f arch/arm/boot/zImage flashable/zip/kernel/zImage
 find -iname "*.ko" -exec cp {} flashable/zip/system/lib/modules/ \; >/dev/null
 cd flashable/zip/
-zip -r9 ../../WildKernel.zip *
+zip -r9 ../../tmp-kernel.zip *
 cd ../..
-java -jar flashable/tools/signapk.jar flashable/tools/testkey.x509.pem flashable/tools/testkey.pk8 WildKernel.zip WildKernel_signed.zip
-rm -rf WildKernel.zip
+java -jar flashable/tools/signapk.jar flashable/tools/testkey.x509.pem flashable/tools/testkey.pk8 tmp-kernel.zip $outfile
+rm -rf tmp-kernel.zip
 echo
-echo Done
+echo Done - Your File is $outfile
