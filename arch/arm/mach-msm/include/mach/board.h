@@ -521,6 +521,7 @@ struct msm_vidc_platform_data {
 	int disable_dmx;
 	int disable_fullhd;
 	u32 cp_enabled;
+	int disable_turbo;
 #ifdef CONFIG_MSM_BUS_SCALING
 	struct msm_bus_scale_pdata *vidc_bus_client_pdata;
 #endif
