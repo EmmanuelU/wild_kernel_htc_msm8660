@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -100,6 +100,7 @@ struct ddl_buf_addr{
 	struct ion_handle *alloc_handle;
 	u32 buffer_size;
 	enum ddl_mem_area mem_type;
+	void *pil_cookie;
 };
 enum ddl_cmd_state{
 	DDL_CMD_INVALID         = 0x0,
@@ -275,6 +276,7 @@ struct ddl_encoder_data{
 	u32  closed_gop;
 	struct vcd_property_slice_delivery_info slice_delivery_info;
 	struct ddl_batch_frame_data batch_frame;
+	u32 bitstream_restrict_enable;
 };
 struct ddl_decoder_data {
 	struct ddl_codec_data_hdr  hdr;
@@ -479,5 +481,5 @@ extern u32 vidc_video_codec_fw_size;
 u32 ddl_fw_init(struct ddl_buf_addr *dram_base);
 void ddl_get_fw_info(const unsigned char **fw_array_addr,
 	unsigned int *fw_size);
-void ddl_fw_release(void);
+void ddl_fw_release(struct ddl_buf_addr *);
 #endif

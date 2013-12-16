@@ -1,5 +1,3 @@
-ccflags-y := -O2 -fsingle-precision-constant -mtune=cortex-a8 -marm -march=armv7-a -mfpu=neon -ftree-vectorize -mvectorize-with-neon-double
-
 ifdef CONFIG_MSM_VIDC_720P
 EXTRA_CFLAGS += -Idrivers/video/msm/vidc/720p/ddl
 EXTRA_CFLAGS += -Idrivers/video/msm/vidc/720p/resource_tracker
