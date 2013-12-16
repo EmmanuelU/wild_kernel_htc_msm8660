@@ -232,5 +232,4 @@ extern struct platform_device msm_funnel_device;
 extern struct platform_device msm_debug_device;
 extern struct platform_device msm_ptm_device;
 
-extern struct platform_device ion_dev;
 #endif
