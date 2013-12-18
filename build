@@ -36,7 +36,7 @@ rm -rf *.zip
 rm -rf flashable/zip/system
 mkdir flashable/zip/system/ && mkdir flashable/zip/system/lib/ && mkdir flashable/zip/system/lib/modules/
 cd flashable/zip/kernel/
-rm -rf zImage
+rm -rf zImage arch/arm/boot/zImage
 cd ../../..
 if [[ "$clean" == "true" ]]; then
 make clean $buildargs | tee build_log.txt
