@@ -2525,7 +2525,6 @@ struct msm_vidc_platform_data vidc_platform_data = {
 #ifdef CONFIG_MSM_BUS_SCALING
 	.vidc_bus_client_pdata = &vidc_bus_client_data,
 #endif
-	.memtype = MEMTYPE_SMI_KERNEL,
 	.enable_ion = 1,
 	.cp_enabled = 0,
 	.disable_dmx = 0,
