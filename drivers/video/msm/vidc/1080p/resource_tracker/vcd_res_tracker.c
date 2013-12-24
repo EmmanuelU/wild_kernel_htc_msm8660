@@ -28,6 +28,8 @@
 #define PIL_FW_BASE_ADDR 0xafe00000
 #define PIL_FW_SIZE 0x200000
 
+static bool is_encoding = false;
+
 static unsigned int vidc_clk_table[4] = {
 	48000000, 133330000, 200000000, 228570000,
 };
@@ -833,7 +835,7 @@ u32 res_trk_is_cp_enabled(void)
 
 u32 res_trk_get_enable_ion(void)
 {
-	if (resource_context.vidc_platform_data->enable_ion)
+	if (resource_context.vidc_platform_data->enable_ion && !is_encoding)
 		return 1;
 	else
 		return 0;
@@ -992,4 +994,9 @@ u32 get_res_trk_perf_level(enum vcd_perf_level perf_level)
 		res_trk_perf_level = -EINVAL;
 	}
 	return res_trk_perf_level;
+}
+
+void res_trk_set_is_encoding(bool encoding)
+{
+  is_encoding = encoding;
 }
