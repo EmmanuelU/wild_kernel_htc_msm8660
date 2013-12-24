@@ -293,11 +293,6 @@ u32 ddl_encode_start(u32 *ddl_handle, void *client_data)
 		DDL_MSG_ERROR("ddl_enc_start:Seq_hdr_alloc_failed");
 		return VCD_ERR_ALLOC_FAIL;
 	}
-	msm_ion_do_cache_op(ddl_context->video_ion_client,
-				encoder->seq_header.alloc_handle,
-				encoder->seq_header.virtual_base_addr,
-				encoder->seq_header.buffer_size,
-				ION_IOC_CLEAN_INV_CACHES);
 	if (encoder->slice_delivery_info.enable) {
 		DDL_MSG_LOW("%s: slice mode allocate memory for struct\n",
 					__func__);

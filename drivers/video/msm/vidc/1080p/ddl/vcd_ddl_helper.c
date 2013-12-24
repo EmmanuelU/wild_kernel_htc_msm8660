@@ -850,7 +850,6 @@ u32 ddl_allocate_enc_hw_buffers(struct ddl_client_context *ddl)
 	struct ddl_enc_buffer_size buf_size;
 	void *ptr;
 	u32 status = VCD_S_SUCCESS;
-	struct ddl_context *ddl_context = ddl->ddl_context;
 
 	enc_bufs = &ddl->codec_data.encoder.hw_bufs;
 	enc_bufs->dpb_count = DDL_ENC_MIN_DPB_BUFFERS;
@@ -929,11 +928,6 @@ u32 ddl_allocate_enc_hw_buffers(struct ddl_client_context *ddl)
 				buf_size.sz_context, DDL_KILO_BYTE(2));
 			if (!ptr)
 				status = VCD_ERR_ALLOC_FAIL;
-			msm_ion_do_cache_op(ddl_context->video_ion_client,
-					enc_bufs->context.alloc_handle,
-					enc_bufs->context.virtual_base_addr,
-					enc_bufs->context.buffer_size,
-					ION_IOC_CLEAN_INV_CACHES);
 		}
 		if (status)
 			ddl_free_enc_hw_buffers(ddl);
