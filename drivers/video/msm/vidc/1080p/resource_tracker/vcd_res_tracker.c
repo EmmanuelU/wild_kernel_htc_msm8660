@@ -796,31 +796,25 @@ int res_trk_get_mem_type(void)
 	int mem_type = -1;
 	switch (resource_context.res_mem_type) {
 	case DDL_FW_MEM:
-		mem_type = ION_HEAP(resource_context.fw_mem_type);
+		if (res_trk_get_enable_ion())
+			mem_type = ION_HEAP(ION_CP_MM_HEAP_ID);
+		else
+			mem_type = MEMTYPE_SMI_KERNEL;
 		return mem_type;
 	case DDL_MM_MEM:
-		mem_type = resource_context.memtype;
+		if (res_trk_get_enable_ion())
+			mem_type = ION_HEAP(ION_CP_MM_HEAP_ID);
+		else
+			mem_type = MEMTYPE_SMI_KERNEL;
 		break;
 	case DDL_CMD_MEM:
-		if (res_trk_check_for_sec_session())
-			mem_type = resource_context.cmd_mem_type;
+		if (res_trk_check_for_sec_session() && res_trk_get_enable_ion())
+			mem_type = ION_HEAP(ION_CP_MM_HEAP_ID);
 		else
-			mem_type = resource_context.memtype;
+			mem_type = MEMTYPE_SMI_KERNEL;
 		break;
 	default:
 		return mem_type;
-	}
-	if (resource_context.vidc_platform_data->enable_ion) {
-		if (res_trk_check_for_sec_session()) {
-         mem_type = ION_HEAP(mem_type);
-         if(resource_context.res_mem_type != DDL_FW_MEM)
-            mem_type |= ION_SECURE;
-         else if (res_trk_is_cp_enabled())
-            mem_type |= ION_SECURE;
-      }
-		else
-			mem_type = (ION_HEAP(mem_type) |
-					ION_HEAP(ION_IOMMU_HEAP_ID));
 	}
 	return mem_type;
 }
