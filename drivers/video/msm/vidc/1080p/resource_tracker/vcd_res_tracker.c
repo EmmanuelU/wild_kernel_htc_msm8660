@@ -704,13 +704,7 @@ void res_trk_init(struct device *device, u32 irq)
 		resource_context.vidc_platform_data =
 			(struct msm_vidc_platform_data *) device->platform_data;
 		if (resource_context.vidc_platform_data) {
-			resource_context.memtype =
-			resource_context.vidc_platform_data->memtype;
-			resource_context.fw_mem_type =
-			resource_context.vidc_platform_data->memtype;
-			resource_context.cmd_mem_type =
-			resource_context.vidc_platform_data->memtype;
-			if (resource_context.vidc_platform_data->enable_ion) {
+			if (res_trk_get_enable_ion()) {
 				resource_context.res_ion_client =
 					res_trk_create_ion_client();
 				if (!(resource_context.res_ion_client)) {
@@ -718,10 +712,6 @@ void res_trk_init(struct device *device, u32 irq)
 							__func__);
 					return;
 				}
-				resource_context.fw_mem_type =
-				ION_MM_FIRMWARE_HEAP_ID;
-				resource_context.cmd_mem_type =
-				ION_CP_MFC_HEAP_ID;
 			}
 			resource_context.disable_dmx =
 			resource_context.vidc_platform_data->disable_dmx;
