@@ -13,6 +13,7 @@
 #ifndef MSM_SENSOR_H
 #define MSM_SENSOR_H
 
+#include <linux/module.h>
 #include <linux/debugfs.h>
 #include <linux/delay.h>
 #include <linux/i2c.h>

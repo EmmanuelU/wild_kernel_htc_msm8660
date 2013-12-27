@@ -11,6 +11,8 @@
  *
  */
 
+#include <linux/module.h>
+#include <linux/wakelock.h>
 #include <linux/workqueue.h>
 #include <linux/delay.h>
 #include <linux/types.h>
@@ -20,6 +22,7 @@
 #include <linux/videodev2.h>
 #include <linux/proc_fs.h>
 #include <linux/vmalloc.h>
+#include <mach/board.h>
 
 #include <media/v4l2-dev.h>
 #include <media/v4l2-ioctl.h>
@@ -424,10 +427,9 @@ static int msm_mctl_register_subdevs(struct msm_cam_media_controller *p_mctl,
 		dev = driver_find_device(driver, NULL, (void *)core_index,
 				msm_mctl_subdev_match_core);
 		if (!dev)
-			goto out_put_driver;
+			goto out;
 
 		p_mctl->csiphy_sdev = dev_get_drvdata(dev);
-		put_driver(driver);
 	}
 
 	if (pdata->is_csic) {
@@ -439,10 +441,9 @@ static int msm_mctl_register_subdevs(struct msm_cam_media_controller *p_mctl,
 		dev = driver_find_device(driver, NULL, (void *)core_index,
 				msm_mctl_subdev_match_core);
 		if (!dev)
-			goto out_put_driver;
+			goto out;
 
 		p_mctl->csic_sdev = dev_get_drvdata(dev);
-		put_driver(driver);
 	}
 
 	if (pdata->is_csid) {
@@ -454,10 +455,9 @@ static int msm_mctl_register_subdevs(struct msm_cam_media_controller *p_mctl,
 		dev = driver_find_device(driver, NULL, (void *)core_index,
 				msm_mctl_subdev_match_core);
 		if (!dev)
-			goto out_put_driver;
+			goto out;
 
 		p_mctl->csid_sdev = dev_get_drvdata(dev);
-		put_driver(driver);
 	}
 
 	if (pdata->is_ispif) {
@@ -469,10 +469,9 @@ static int msm_mctl_register_subdevs(struct msm_cam_media_controller *p_mctl,
 		dev = driver_find_device(driver, NULL, 0,
 				msm_mctl_subdev_match_core);
 		if (!dev)
-			goto out_put_driver;
+			goto out;
 
 		p_mctl->ispif_sdev = dev_get_drvdata(dev);
-		put_driver(driver);
 	}
 
 	/* register vfe subdev */
@@ -483,10 +482,9 @@ static int msm_mctl_register_subdevs(struct msm_cam_media_controller *p_mctl,
 	dev = driver_find_device(driver, NULL, 0,
 				msm_mctl_subdev_match_core);
 	if (!dev)
-		goto out_put_driver;
+		goto out;
 
 	p_mctl->isp_sdev->sd = dev_get_drvdata(dev);
-	put_driver(driver);
 
 	if (pdata->is_vpe) {
 		/* register vfe subdev */
@@ -496,17 +494,15 @@ static int msm_mctl_register_subdevs(struct msm_cam_media_controller *p_mctl,
 
 		dev = driver_find_device(driver, NULL, 0,
 				msm_mctl_subdev_match_core);
-		if (!dev)
-			goto out_put_driver;
+	//	if (!dev)
+		//	goto out_put_driver;
 
 		p_mctl->isp_sdev->sd_vpe = dev_get_drvdata(dev);
-		put_driver(driver);
+	//	put_driver(driver);
 	}
-
 	rc = 0;
 	return rc;
-out_put_driver:
-	put_driver(driver);
+
 out:
 	return rc;
 }

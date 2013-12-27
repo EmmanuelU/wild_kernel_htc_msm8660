@@ -11,7 +11,7 @@
  */
 
 #include "rawchip_spi.h"
-
+#include <linux/module.h>
 #ifdef RAWCHIP_SPI_DEBUG
 #define CDBG(fmt, args...) pr_debug(fmt, ##args)
 #else

@@ -1,0 +1,129 @@
+From 238dd4116136d6cc4e253646cd1beac7d5cf7e45 Mon Sep 17 00:00:00 2001
+From: bilalliberty <dominosliberty@gmail.com>
+Date: Fri, 27 Dec 2013 02:53:19 +0300
+Subject: [PATCH] Add missing header
+
+---
+ arch/arm/mach-msm/board-pyramid.c    |  2 +-
+ drivers/media/common/tuners/xc4000.c |  3 ++-
+ fs/cifs/transport.c                  |  2 +-
+ include/linux/pm_qos_params.h        | 38 ++++++++++++++++++++++++++++++++++++
+ net/netfilter/xt_socket.c            | 10 +++++-----
+ 5 files changed, 47 insertions(+), 8 deletions(-)
+ create mode 100644 include/linux/pm_qos_params.h
+
+diff --git a/arch/arm/mach-msm/board-pyramid.c b/arch/arm/mach-msm/board-pyramid.c
+index 3fcae6e..1b31849 100644
+--- a/arch/arm/mach-msm/board-pyramid.c
++++ b/arch/arm/mach-msm/board-pyramid.c
+@@ -135,7 +135,7 @@
+ #define PHY_BASE_ADDR1       0x48000000
+ #define SIZE_ADDR1           0x28000000
+ 
+-#define MSM_ION_SF_SIZE      0x500000
++#define MSM_ION_SF_SIZE      0xF00000
+ #define MSM_ION_MM_FW_SIZE   0x200000
+ #define MSM_ION_MM_SIZE      0x2700000
+ #define MSM_ION_MFC_SIZE     0x100000
+diff --git a/drivers/media/common/tuners/xc4000.c b/drivers/media/common/tuners/xc4000.c
+index 18e02c8..d50e8b7 100644
+--- a/drivers/media/common/tuners/xc4000.c
++++ b/drivers/media/common/tuners/xc4000.c
+@@ -884,7 +884,8 @@ static int check_firmware(struct dvb_frontend *fe, unsigned int type,
+ 	int			   rc = 0, is_retry = 0;
+ 	u16			   hwmodel;
+ 	v4l2_std_id		   std0;
+-	u8			   hw_major, hw_minor, fw_major, fw_minor;
++	u8			   hw_major = 0, hw_minor = 0, fw_major = 0,
++				   fw_minor = 0;
+ 
+ 	dprintk(1, "%s called\n", __func__);
+ 
+diff --git a/fs/cifs/transport.c b/fs/cifs/transport.c
+index af52212..be9d6a8 100644
+--- a/fs/cifs/transport.c
++++ b/fs/cifs/transport.c
+@@ -512,7 +512,7 @@ static int allocate_mid(struct cifs_ses *ses, struct smb_hdr *in_buf,
+ {
+ 	int rc = 0;
+ 	int long_op;
+-	struct mid_q_entry *midQ;
++	struct mid_q_entry *midQ = 0;
+ 	char *buf = iov[0].iov_base;
+ 
+ 	long_op = flags & CIFS_TIMEOUT_MASK;
+diff --git a/include/linux/pm_qos_params.h b/include/linux/pm_qos_params.h
+new file mode 100644
+index 0000000..a7d87f9
+--- /dev/null
++++ b/include/linux/pm_qos_params.h
+@@ -0,0 +1,38 @@
++#ifndef _LINUX_PM_QOS_PARAMS_H
++#define _LINUX_PM_QOS_PARAMS_H
++/* interface for the pm_qos_power infrastructure of the linux kernel.
++ *
++ * Mark Gross <mgross@linux.intel.com>
++ */
++#include <linux/plist.h>
++#include <linux/notifier.h>
++#include <linux/miscdevice.h>
++
++#define PM_QOS_RESERVED 0
++#define PM_QOS_CPU_DMA_LATENCY 1
++#define PM_QOS_NETWORK_LATENCY 2
++#define PM_QOS_NETWORK_THROUGHPUT 3
++
++#define PM_QOS_NUM_CLASSES 4
++#define PM_QOS_DEFAULT_VALUE -1
++
++#define PM_QOS_CPU_DMA_LAT_DEFAULT_VALUE	(2000 * USEC_PER_SEC)
++#define PM_QOS_NETWORK_LAT_DEFAULT_VALUE	(2000 * USEC_PER_SEC)
++#define PM_QOS_NETWORK_THROUGHPUT_DEFAULT_VALUE	0
++
++struct pm_qos_request_list {
++	struct plist_node list;
++	int pm_qos_class;
++};
++
++void pm_qos_add_request(struct pm_qos_request_list *l, int pm_qos_class, s32 value);
++void pm_qos_update_request(struct pm_qos_request_list *pm_qos_req,
++		s32 new_value);
++void pm_qos_remove_request(struct pm_qos_request_list *pm_qos_req);
++
++int pm_qos_request(int pm_qos_class);
++int pm_qos_add_notifier(int pm_qos_class, struct notifier_block *notifier);
++int pm_qos_remove_notifier(int pm_qos_class, struct notifier_block *notifier);
++int pm_qos_request_active(struct pm_qos_request_list *req);
++
++#endif
+diff --git a/net/netfilter/xt_socket.c b/net/netfilter/xt_socket.c
+index 5315db0..6ba1bb5 100644
+--- a/net/netfilter/xt_socket.c
++++ b/net/netfilter/xt_socket.c
+@@ -106,9 +106,9 @@ struct sock*
+ 	const struct iphdr *iph = ip_hdr(skb);
+ 	struct udphdr _hdr, *hp = NULL;
+ 	struct sock *sk;
+-	__be32 daddr, saddr;
+-	__be16 dport, sport;
+-	u8 protocol;
++	__be32 daddr = 0, saddr = 0;
++	__be16 dport = 0, sport = 0;
++	u8 protocol = 0;
+ #ifdef XT_SOCKET_HAVE_CONNTRACK
+ 	struct nf_conn const *ct;
+ 	enum ip_conntrack_info ctinfo;
+@@ -265,8 +265,8 @@ struct sock*
+ 	struct ipv6hdr *iph = ipv6_hdr(skb);
+ 	struct udphdr _hdr, *hp = NULL;
+ 	struct sock *sk;
+-	struct in6_addr *daddr, *saddr;
+-	__be16 dport, sport;
++	struct in6_addr *daddr = NULL, *saddr = NULL;
++	__be16 dport = 0, sport = 0;
+ 	int thoff, tproto;
+ 
+ 	tproto = ipv6_find_hdr(skb, &thoff, -1, NULL);
+-- 
+1.8.5.1
+

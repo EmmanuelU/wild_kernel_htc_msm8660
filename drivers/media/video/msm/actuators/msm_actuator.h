@@ -12,6 +12,7 @@
 #ifndef MSM_ACTUATOR_H
 #define MSM_ACTUATOR_H
 
+#include <linux/module.h>
 #include <linux/i2c.h>
 #include <mach/camera.h>
 #include <media/v4l2-subdev.h>

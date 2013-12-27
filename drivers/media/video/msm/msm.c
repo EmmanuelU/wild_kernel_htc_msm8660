@@ -11,6 +11,7 @@
  *
  */
 
+#include <linux/module.h>
 #include <linux/workqueue.h>
 #include <linux/delay.h>
 #include <linux/types.h>
@@ -19,6 +20,7 @@
 #include <linux/spinlock.h>
 #include <linux/proc_fs.h>
 #include "msm.h"
+#include <linux/wakelock.h>
 
 //HTC_START howard 20111209
 #include <linux/switch.h>
