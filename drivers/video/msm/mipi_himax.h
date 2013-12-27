@@ -11,10 +11,8 @@
  *
  */
 
-#ifndef MIPI_TRULY_H
-#define MIPI_TRULY_H
 
-int mipi_truly_tft540960_1_e_device_register(struct msm_panel_info *pinfo,
+
+int mipi_himax_device_register(struct msm_panel_info *pinfo,
 					u32 channel, u32 panel);
 
-#endif  

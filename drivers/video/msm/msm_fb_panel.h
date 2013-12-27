@@ -90,6 +90,9 @@ struct lcdc_panel_info {
 	/* Pad height */
 	uint32 yres_pad;
 	boolean is_sync_active_high;
+	
+	__u32 no_set_tear;
+
 };
 
 struct mddi_panel_info {
@@ -143,6 +146,11 @@ struct mipi_panel_info {
 	char no_max_pkt_size;
 	/* Clock required during LP commands */
 	char force_clk_lane_hs;
+	
+	struct mipi_dsi_reg_set *dsi_reg_db;
+	uint32 dsi_reg_db_size;
+	
+	char force_leave_ulps;
 };
 
 enum lvds_mode {

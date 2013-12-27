@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -107,7 +107,6 @@ static struct dsi_cmd_desc truly_display_on_cmds[] = {
 static int mipi_truly_lcd_on(struct platform_device *pdev)
 {
 	struct msm_fb_data_type *mfd;
-	struct dcs_cmd_req cmdreq;
 
 	mfd = platform_get_drvdata(pdev);
 
@@ -117,14 +116,8 @@ static int mipi_truly_lcd_on(struct platform_device *pdev)
 		return -EINVAL;
 
 	msleep(20);
-
-	memset(&cmdreq, 0, sizeof(cmdreq));
-	cmdreq.cmds = truly_display_on_cmds;
-	cmdreq.cmds_cnt = ARRAY_SIZE(truly_display_on_cmds);
-	cmdreq.flags = CMD_REQ_COMMIT;
-	cmdreq.rlen = 0;
-	cmdreq.cb = NULL;
-	mipi_dsi_cmdlist_put(&cmdreq);
+	mipi_dsi_cmds_tx(&truly_tx_buf, truly_display_on_cmds,
+			ARRAY_SIZE(truly_display_on_cmds));
 
 	return 0;
 }
@@ -132,7 +125,6 @@ static int mipi_truly_lcd_on(struct platform_device *pdev)
 static int mipi_truly_lcd_off(struct platform_device *pdev)
 {
 	struct msm_fb_data_type *mfd;
-	struct dcs_cmd_req cmdreq;
 
 	mfd = platform_get_drvdata(pdev);
 
@@ -141,13 +133,8 @@ static int mipi_truly_lcd_off(struct platform_device *pdev)
 	if (mfd->key != MFD_KEY)
 		return -EINVAL;
 
-	memset(&cmdreq, 0, sizeof(cmdreq));
-	cmdreq.cmds = truly_display_off_cmds;
-	cmdreq.cmds_cnt = ARRAY_SIZE(truly_display_off_cmds);
-	cmdreq.flags = CMD_REQ_COMMIT;
-	cmdreq.rlen = 0;
-	cmdreq.cb = NULL;
-	mipi_dsi_cmdlist_put(&cmdreq);
+	mipi_dsi_cmds_tx(&truly_tx_buf, truly_display_off_cmds,
+			ARRAY_SIZE(truly_display_off_cmds));
 
 	return 0;
 }
@@ -158,7 +145,7 @@ static void mipi_truly_set_backlight(struct msm_fb_data_type *mfd)
 	int step = 0, i = 0;
 	int bl_level = mfd->bl_level;
 
-	/* real backlight level, 1 - max, 16 - min, 17 - off */
+	
 	bl_level = BL_LEVEL - bl_level;
 
 	if (bl_level > prev_bl) {
@@ -173,15 +160,15 @@ static void mipi_truly_set_backlight(struct msm_fb_data_type *mfd)
 	}
 
 	if (bl_level == BL_LEVEL) {
-		/* turn off backlight */
+		
 		mipi_truly_pdata->pmic_backlight(0);
 	} else {
 		if (prev_bl == BL_LEVEL) {
-			/* turn on backlight */
+			
 			mipi_truly_pdata->pmic_backlight(1);
 			udelay(30);
 		}
-		/* adjust backlight level */
+		
 		for (i = 0; i < step; i++) {
 			mipi_truly_pdata->pmic_backlight(0);
 			udelay(1);

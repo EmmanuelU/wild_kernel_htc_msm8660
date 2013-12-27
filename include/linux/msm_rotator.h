@@ -17,8 +17,6 @@
 
 #define ROTATOR_VERSION_01	0xA5B4C301
 
-#define ROTATOR_FLAGS_BIT_PERFORMANCE  (1 << 0)
-
 enum rotator_clk_type {
 	ROTATOR_CORE_CLK,
 	ROTATOR_PCLK,
@@ -43,7 +41,6 @@ struct msm_rotator_img_info {
 	int enable;
 	unsigned int	downscale_ratio;
 	unsigned int secure;
-	unsigned int flags;
 };
 
 struct msm_rotator_data_info {
@@ -53,6 +50,7 @@ struct msm_rotator_data_info {
 	unsigned int version_key;
 	struct msmfb_data src_chroma;
 	struct msmfb_data dst_chroma;
+	uint32_t wait_for_finish;
 };
 
 struct msm_rot_clocks {

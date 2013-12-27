@@ -277,8 +277,6 @@ static struct msm_panel_common_pdata mdp_pdata = {
 	.mdp_rev = MDP_REV_41,
 	.mem_hid = BIT(ION_CP_WB_HEAP_ID),
 	.mdp_iommu_split_domain = 0,
-	.mdp_max_clk = 266667000,
-	.mdp_max_bw = 2000000000,
 };
 
 void __init pyramid_mdp_writeback(void)
@@ -1112,7 +1110,7 @@ static int __init mipi_cmd_novatek_blue_qhd_pt_init(void)
 	pinfo.bl_max = 255;
 	pinfo.bl_min = 1;
 	pinfo.fb_num = 2;
-	pinfo.clk_rate = 482000000;
+	pinfo.clk_rate = 528000000;
 	pinfo.lcd.vsync_enable = TRUE;
 	pinfo.lcd.hw_vsync_mode = TRUE;
 	pinfo.lcd.refx100 = 6096;
@@ -1128,7 +1126,7 @@ static int __init mipi_cmd_novatek_blue_qhd_pt_init(void)
 	pinfo.mipi.t_clk_post = 0x0a;
 	pinfo.mipi.t_clk_pre = 0x1e;
 	pinfo.mipi.stream = 0;
-	pinfo.mipi.mdp_trigger = DSI_CMD_TRIGGER_SW;
+	pinfo.mipi.mdp_trigger = DSI_CMD_TRIGGER_NONE;
 	pinfo.mipi.dma_trigger = DSI_CMD_TRIGGER_SW;
 	pinfo.mipi.te_sel = 1;
 	pinfo.mipi.interleave_max = 1;
