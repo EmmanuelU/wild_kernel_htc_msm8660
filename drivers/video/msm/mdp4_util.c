@@ -25,6 +25,7 @@
 #include <linux/semaphore.h>
 #include <linux/uaccess.h>
 #include <linux/msm_mdp.h>
+#include <linux/msm_ion.h>
 #include <asm/system.h>
 #include <asm/mach-types.h>
 #include <mach/hardware.h>

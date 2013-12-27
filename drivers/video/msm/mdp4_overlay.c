@@ -36,6 +36,7 @@
 #include <linux/uaccess.h>
 #include <linux/mutex.h>
 #include <linux/msm_kgsl.h>
+#include <linux/msm_ion.h>
 #include "mdp.h"
 #include "msm_fb.h"
 #include "mdp4.h"
