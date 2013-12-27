@@ -833,6 +833,8 @@ static struct dsi_cmd_desc pyd_auo_cmd_on_cmds[] = {
 		sizeof(set_height), set_height},
 	{DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(bkl_enable_cmds), bkl_enable_cmds},
+		{DTYPE_DCS_WRITE, 1, 0, 0, 0,
+		sizeof(display_on), display_on},
 };
 
 static struct dsi_cmd_desc novatek_display_off_cmds[] = {
