@@ -397,6 +397,7 @@ static int msm_isp_notify_vfe(struct v4l2_subdev *sd,
 				msgid = msm_isp_vfe_msg_to_img_mode(pmctl, msgid);
 				/* return dropped frame buffer to free_vq directly */
 				msm_mctl_return_free_buf(pmctl, msgid, &(isp_output->buf));
+                kfree(isp_event);
 				return rc;
 			} else {
 				isp_event->isp_data.isp_msg.frame_id =

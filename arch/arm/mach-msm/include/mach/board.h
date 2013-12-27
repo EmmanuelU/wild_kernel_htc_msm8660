@@ -218,11 +218,6 @@ struct msm_cam_clk_info {
 };
 #endif
 
-enum hdr_mode_type {
-	NON_HDR_MODE,
-	HDR_MODE,
-};
-
 enum msm_camera_type {
 	BACK_CAMERA_2D,
 	FRONT_CAMERA_2D,
@@ -261,13 +256,6 @@ enum sensor_flip_mirror_info {
 	CAMERA_SENSOR_MIRROR,
 	CAMERA_SENSOR_FLIP,
 	CAMERA_SENSOR_MIRROR_FLIP,
- };
-
-enum msm_camera_pixel_order_default {
-	MSM_CAMERA_PIXEL_ORDER_GR,
-	MSM_CAMERA_PIXEL_ORDER_RG,
-	MSM_CAMERA_PIXEL_ORDER_BG,
-	MSM_CAMERA_PIXEL_ORDER_GB,
 };
 enum sensor_mount_angle {
 	ANGLE_90,
@@ -277,17 +265,13 @@ enum sensor_mount_angle {
 struct msm_camera_sensor_platform_info {
 	int mount_angle;
 	int sensor_reset_enable;
-	int sensor_reset
+	int sensor_reset;
 	int sensor_pwd;
 	int vcm_pwd;
 	int vcm_enable;
 	int privacy_light;
-	enum msm_camera_pixel_order_default pixel_order_default;	
 	enum sensor_flip_mirror_info mirror_flip;
 	void *privacy_light_info;
-	enum sensor_mount_angle sensor_mount_angle; 
-	bool ews_enable;
-
 #ifdef CONFIG_MSM_CAMERA_V4L2
 	struct camera_vreg_t *cam_vreg;
 	int num_vreg;
@@ -320,27 +304,17 @@ struct msm_camera_platform_info {
 #endif
 
 struct msm_actuator_info {
- 	struct i2c_board_info const *board_info;
- 	int bus_id;
- 	int vcm_pwd;
- 	int vcm_enable;
- 	int use_rawchip_af;	
- };
+	struct i2c_board_info const *board_info;
+	int bus_id;
+	int vcm_pwd;
+	int vcm_enable;
+	int use_rawchip_af;
+};
+
 enum msm_camera_platform{
 	MSM_CAMERA_PLTFORM_8X60	= 0,
 	MSM_CAMERA_PLTFORM_7X30	= 1,
 	MSM_CAMERA_PLTFORM_MAX	= 2,
- };
-
-enum htc_camera_image_type_board {
-	HTC_CAMERA_IMAGE_NONE_BOARD,
-	HTC_CAMERA_IMAGE_YUSHANII_BOARD,
-	HTC_CAMERA_IMAGE_MAX_BOARD,
-};
-
-enum cam_vcm_onoff_type {
-	CAM_VCM_OFF,
-	CAM_VCM_ON,
 };
 
 struct msm_camera_sensor_info {
@@ -367,13 +341,10 @@ struct msm_camera_sensor_info {
 	char *eeprom_data;
 	struct msm_camera_gpio_conf *gpio_conf;
 	enum msm_camera_type camera_type;
+	struct msm_actuator_info *actuator_info;
 	int (*camera_power_on)(void);
 	int (*camera_power_off)(void);
-	void (*camera_yushanii_probed)(enum htc_camera_image_type_board);
-	enum htc_camera_image_type_board htc_image;	
 	int use_rawchip;
-	int hdr_mode;
-	int video_hdr_capability;
 	int (*sensor_version)(void);
 	//HTC_CAM_START chuck
 	int (*camera_main_get_probe)(void);
@@ -382,6 +353,11 @@ struct msm_camera_sensor_info {
 #if 1 /* HTC to be removed */
 	
 	void(*camera_clk_switch)(void);
+	int power_down_disable; /* if close power */
+	int full_size_preview; /* if use full-size preview */
+	int cam_select_pin; /* for two sensors */
+	int mirror_mode; /* for sensor upside down */
+	int(*camera_pm8058_power)(int); /* for express */
 	struct camera_flash_cfg* flash_cfg;
 	int gpio_set_value_force; 
 	int dev_node;
