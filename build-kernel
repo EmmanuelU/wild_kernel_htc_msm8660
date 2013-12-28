@@ -4,6 +4,6 @@ MAKE="64"
 ## Set compiler location
 echo Setting compiler location...
 export ARCH=arm
-export CROSS_COMPILE=/home/sultan/Downloads/arm-cortex_a8-linux-gnueabi-linaro_4.7.4-2013.10/bin/arm-cortex_a8-linux-gnueabi-
+export CROSS_COMPILE=arm-cortex_a8-linux-gnueabi-
 
 make -j$MAKE ARCH=arm
