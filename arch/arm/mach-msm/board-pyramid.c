@@ -2808,7 +2808,7 @@ static void __init reserve_ion_memory(void)
 
 static void __init reserve_mdp_memory(void)
 {
-	pyramid_mdp_writeback();
+	pyramid_mdp_writeback(msm8x60_reserve_table);
 }
 
 static void __init msm8x60_calculate_reserve_sizes(void)

@@ -15,6 +15,7 @@
 #define __ARCH_ARM_MACH_MSM_BOARD_PYRAMID_H
 
 #include <mach/board.h>
+#include <mach/msm_memtypes.h>
 
 #define MSM_RAM_CONSOLE_BASE	MSM_HTC_RAM_CONSOLE_PHYS
 #define MSM_RAM_CONSOLE_SIZE	MSM_HTC_RAM_CONSOLE_SIZE
@@ -108,6 +109,6 @@ int __init pyramid_wifi_init(void);
 
 void pyramid_init_fb(void);
 void pyramid_allocate_fb_region(void);
-void pyramid_mdp_writeback(void);
+void __init pyramid_mdp_writeback(struct memtype_reserve* reserve_table);
 
 #endif 

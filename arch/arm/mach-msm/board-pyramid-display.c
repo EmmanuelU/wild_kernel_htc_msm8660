@@ -45,6 +45,12 @@
 #define MSM_FB_OVERLAY0_WRITEBACK_SIZE (0)
 #endif
 
+#ifdef CONFIG_FB_MSM_OVERLAY1_WRITEBACK
+#define MSM_FB_OVERLAY1_WRITEBACK_SIZE roundup((960 * ALIGN(540, 32) * 3 * 2), 4096)
+#else
+#define MSM_FB_OVERLAY1_WRITEBACK_SIZE (0)
+#endif
+
 #define PANEL_ID_PYD_SHARP	(0x21 | BL_MIPI | IF_MIPI | DEPTH_RGB888)
 #define PANEL_ID_PYD_AUO_NT	(0x22 | BL_MIPI | IF_MIPI | DEPTH_RGB888)
 
@@ -279,10 +285,34 @@ static struct msm_panel_common_pdata mdp_pdata = {
 	.mdp_iommu_split_domain = 0,
 };
 
-void __init pyramid_mdp_writeback(void)
+void __init pyramid_mdp_writeback(struct memtype_reserve* reserve_table)
 {
 	mdp_pdata.ov0_wb_size = MSM_FB_OVERLAY0_WRITEBACK_SIZE;
+	mdp_pdata.ov1_wb_size = MSM_FB_OVERLAY1_WRITEBACK_SIZE;
 }
+
+static char wfd_check_mdp_iommu_split_domain(void)
+{
+	return mdp_pdata.mdp_iommu_split_domain;
+}
+
+#ifdef CONFIG_FB_MSM_WRITEBACK_MSM_PANEL
+static struct msm_wfd_platform_data wfd_pdata = {
+	.wfd_check_mdp_iommu_split = wfd_check_mdp_iommu_split_domain,
+};
+
+static struct platform_device wfd_panel_device = {
+	.name = "wfd_panel",
+	.id = 0,
+	.dev.platform_data = NULL,
+};
+
+static struct platform_device wfd_device = {
+	.name          = "msm_wfd",
+	.id            = -1,
+	.dev.platform_data = &wfd_pdata,
+};
+#endif
 
 static int first_init = 1;
 
@@ -1148,6 +1178,11 @@ static int __init mipi_cmd_novatek_blue_qhd_pt_init(void)
 void __init pyramid_init_fb(void)
 {
 	platform_device_register(&msm_fb_device);
+
+#ifdef CONFIG_FB_MSM_WRITEBACK_MSM_PANEL
+	platform_device_register(&wfd_panel_device);
+	platform_device_register(&wfd_device);
+#endif
 	
 	if (panel_type != PANEL_ID_NONE) {
 		msm_fb_register_device("mdp", &mdp_pdata);
