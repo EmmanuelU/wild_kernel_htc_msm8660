@@ -371,7 +371,7 @@ struct msm_camera_sensor_info {
 	int zero_shutter_mode; /* S5K4E1GX: for doing zero shutter lag on MIPI */
 };
 
-int  msm_get_cam_resources(struct msm_camera_sensor_info *);
+int msm_get_cam_resources(struct msm_camera_sensor_info *);
 
 struct clk_lookup;
 
@@ -502,7 +502,6 @@ struct mipi_dsi_platform_data {
 	int (*get_lane_config)(void);
 	char (*splash_is_enabled)(void);
 	int target_type;
-	int (*deferred_reset_driver_ic)(void);
 };
 
 enum mipi_dsi_3d_ctrl {
@@ -510,6 +509,7 @@ enum mipi_dsi_3d_ctrl {
 	FPGA_SPI_INTF,
 };
 
+/* DSI PHY configuration */
 struct mipi_dsi_phy_ctrl {
 	uint32_t regulator[5];
 	uint32_t timing[12];
@@ -547,20 +547,6 @@ struct msm_fb_platform_data {
 	char ext_panel_name[PANEL_NAME_MAX_LEN];
 };
 
-#define HDMI_VFRMT_640x480p60_4_3 0
-#define HDMI_VFRMT_720x480p60_16_9 2
-#define HDMI_VFRMT_1280x720p60_16_9 3
-#define HDMI_VFRMT_720x576p50_16_9 17
-#define HDMI_VFRMT_1920x1080p24_16_9 31
-#define HDMI_VFRMT_1920x1080p30_16_9 33
-
-typedef struct
-{
-	uint8_t format;
-	uint8_t reg_a3;
-	uint8_t reg_a6;
-} mhl_driving_params;
-
 struct msm_hdmi_platform_data {
 	int irq;
 	int (*cable_detect)(int insert);
@@ -573,22 +559,34 @@ struct msm_hdmi_platform_data {
 	int (*init_irq)(void);
 	bool (*check_hdcp_hw_support)(void);
 	bool is_mhl_enabled;
-	mhl_driving_params *driving_params;
-	int dirving_params_count;
 };
 
 struct msm_mhl_platform_data {
 	int irq;
-	
+	/* GPIO no. for mhl intr */
 	uint32_t gpio_mhl_int;
-	
+	/* GPIO no. for mhl block reset */
 	uint32_t gpio_mhl_reset;
-	
+	/*
+	 * below gpios are specific to targets
+	 * that have the integrated MHL soln.
+	 */
+	/* GPIO no. for mhl block power */
 	uint32_t gpio_mhl_power;
-	
+	/* GPIO no. for hdmi-mhl mux */
 	uint32_t gpio_hdmi_mhl_mux;
+	bool mhl_enabled;
 };
 
+/**
+ * msm_i2c_platform_data: i2c-qup driver configuration data
+ *
+ * @active_only when set, votes when system active and removes the vote when
+ *       system goes idle (optimises for performance). When unset, voting using
+ *       runtime pm (optimizes for power).
+ * @master_id master id number of the i2c core or its wrapper (BLSP/GSBI).
+ *       When zero, clock path voting is disabled.
+ */
 struct msm_i2c_platform_data {
 	int clk_freq;
 	uint32_t rmutex;
