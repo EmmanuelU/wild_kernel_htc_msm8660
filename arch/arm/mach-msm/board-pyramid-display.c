@@ -291,12 +291,12 @@ void __init pyramid_mdp_writeback(struct memtype_reserve* reserve_table)
 	mdp_pdata.ov1_wb_size = MSM_FB_OVERLAY1_WRITEBACK_SIZE;
 }
 
+#ifdef CONFIG_FB_MSM_WRITEBACK_MSM_PANEL
 static char wfd_check_mdp_iommu_split_domain(void)
 {
 	return mdp_pdata.mdp_iommu_split_domain;
 }
 
-#ifdef CONFIG_FB_MSM_WRITEBACK_MSM_PANEL
 static struct msm_wfd_platform_data wfd_pdata = {
 	.wfd_check_mdp_iommu_split = wfd_check_mdp_iommu_split_domain,
 };
