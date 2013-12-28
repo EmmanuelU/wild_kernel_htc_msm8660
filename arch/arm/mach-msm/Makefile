@@ -365,6 +365,15 @@ obj-$(CONFIG_MACH_PYRAMID) += htc_util.o
 obj-$(CONFIG_MACH_PYRAMID) += board-pyramid-audio.o
 obj-$(CONFIG_MACH_PYRAMID) += board-pyramid-display.o
 
+obj-$(CONFIG_MACH_DOUBLESHOT) += board-doubleshot.o devices_htc.o
+obj-$(CONFIG_MACH_DOUBLESHOT) += board-doubleshot-keypad.o 
+obj-$(CONFIG_MACH_DOUBLESHOT) += board-doubleshot-camera.o htc_awb_cal.o
+obj-$(CONFIG_MACH_DOUBLESHOT) += htc_bdaddress.o board-doubleshot-rfkill.o
+obj-$(CONFIG_MACH_DOUBLESHOT) += board-doubleshot-mmc.o board-doubleshot-wifi.o htc_wifi_nvs.o
+obj-$(CONFIG_MACH_DOUBLESHOT) += htc_util.o
+obj-$(CONFIG_MACH_DOUBLESHOT) += board-doubleshot-audio.o
+obj-$(CONFIG_MACH_DOUBLESHOT) += board-doubleshot-display.o
+
 CFLAGS_msm_vibrator.o += -Idrivers/staging/android
 CFLAGS_board-9615.o += -Idrivers/usb/gadget
 
