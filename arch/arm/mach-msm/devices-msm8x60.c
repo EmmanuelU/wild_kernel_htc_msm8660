@@ -1739,7 +1739,7 @@ struct platform_device msm8x60_device_vpe = {
 #define TVENC_HW_BASE		0x04F00000
 #define MDP_HW_BASE		0x05100000
 
-static struct resource msm_mipi_dsi1_resources[] = {
+static struct resource msm_mipi_dsi_resources[] = {
 	{
 		.name   = "mipi_dsi",
 		.start  = MIPI_DSI_HW_BASE,
@@ -1753,11 +1753,11 @@ static struct resource msm_mipi_dsi1_resources[] = {
 	},
 };
 
-struct platform_device msm_mipi_dsi1_device = {
+static struct platform_device msm_mipi_dsi_device = {
 	.name   = "mipi_dsi",
 	.id     = 1,
-	.num_resources  = ARRAY_SIZE(msm_mipi_dsi1_resources),
-	.resource       = msm_mipi_dsi1_resources,
+	.num_resources  = ARRAY_SIZE(msm_mipi_dsi_resources),
+	.resource       = msm_mipi_dsi_resources,
 };
 
 static struct resource msm_mdp_resources[] = {
@@ -2200,7 +2200,7 @@ static void __init msm_register_device(struct platform_device *pdev, void *data)
 			  __func__, ret);
 }
 
-static struct platform_device msm_lcdc_device = {
+struct platform_device msm_lcdc_device = {
 	.name   = "lcdc",
 	.id     = 0,
 };
@@ -2235,7 +2235,7 @@ void __init msm_fb_register_device(char *name, void *data)
 	else if (!strncmp(name, "lcdc", 4))
 		msm_register_device(&msm_lcdc_device, data);
 	else if (!strncmp(name, "mipi_dsi", 8))
-		msm_register_device(&msm_mipi_dsi1_device, data);
+		msm_register_device(&msm_mipi_dsi_device, data);
 #ifdef CONFIG_FB_MSM_TVOUT
 	else if (!strncmp(name, "tvenc", 5))
 		msm_register_device(&msm_tvenc_device, data);
