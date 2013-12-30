@@ -2082,6 +2082,28 @@ void *pmem_setup_smi_region(void)
 #ifdef CONFIG_ION_MSM
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 
+static int request_smi_region(void *data)
+{
+        pmem_request_smi_region(data);
+
+        return 0;
+}
+
+static int release_smi_region(void *data)
+{
+        pmem_release_smi_region(data);
+
+        return 0;
+}
+
+static struct ion_cp_heap_pdata cp_mm_ion_pdata = {
+        .permission_type = IPT_TYPE_MM_CARVEOUT,
+        .align = PAGE_SIZE,
+        .request_region = request_smi_region,
+        .release_region = release_smi_region,
+        .setup_region = pmem_setup_smi_region,
+};
+
 static struct ion_cp_heap_pdata cp_wb_ion_pdata = {
         .permission_type = IPT_TYPE_MDP_WRITEBACK,
         .align = PAGE_SIZE,
@@ -2102,6 +2124,15 @@ static struct ion_platform_data ion_pdata = {
                         .name        = ION_VMALLOC_HEAP_NAME,
                 },
                 {
+		        .id          = ION_CP_MM_HEAP_ID,
+		        .type        = ION_HEAP_TYPE_CP,
+		        .name        = ION_MM_HEAP_NAME,
+			.base        = MSM_ION_MM_BASE,
+		        .size        = MSM_ION_MM_SIZE,
+		        .memory_type = ION_SMI_TYPE,
+		        .extra_data  = (void *) &cp_mm_ion_pdata,
+		},
+		{
                         .id          = ION_SF_HEAP_ID,
                         .type        = ION_HEAP_TYPE_CARVEOUT,
                         .name        = ION_SF_HEAP_NAME,
@@ -3515,6 +3546,11 @@ static struct memtype_reserve msm8x60_reserve_table[] __initdata = {
 		.limit	=	USER_SMI_SIZE,
 		.flags	=	MEMTYPE_FLAGS_FIXED,
 	},
+	[MEMTYPE_SMI_ION] = {
+		.start  =	MSM_SMI_ION_BASE,
+		.limit  =	MSM_SMI_ION_SIZE,
+		.flags  =	MEMTYPE_FLAGS_FIXED,
+	},
 	[MEMTYPE_EBI0] = {
 		.flags	=	MEMTYPE_FLAGS_1M_ALIGN,
 	},
@@ -3546,9 +3582,7 @@ static void __init size_pmem_devices(void)
 #ifdef CONFIG_ION_MSM
 static void __init reserve_ion_memory(void)
 {
-#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
-	msm8x60_reserve_table[MEMTYPE_EBI1].size += MSM_ION_SF_SIZE;
-#endif
+//Do nothing to reserve dynamically for now
 }
 #endif
 

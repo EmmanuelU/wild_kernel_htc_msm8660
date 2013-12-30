@@ -63,7 +63,7 @@ static unsigned long msm_ion_get_base(unsigned long size, int memory_type,
 		return allocate_contiguous_ebi_nomap(size, align);
 		break;
 	case ION_SMI_TYPE:
-		return allocate_contiguous_memory_nomap(size, MEMTYPE_SMI,
+		return allocate_contiguous_memory_nomap(size, MEMTYPE_SMI_ION,
 							align);
 		break;
 #ifdef CONFIG_SEC_KERNEL_REBASE_FOR_PMEM_OPTIMIZATION
