@@ -125,7 +125,7 @@
 #endif
 
 #include <mach/tpa2051d3.h>
-#include <linux/cy8c_tma_ts.h>
+#include <linux/atmel_qt602240.h>
 #include <linux/isl29028.h>
 #include <linux/isl29029.h>
 
@@ -1687,127 +1687,96 @@ static void __init msm8x60_allocate_memory_regions(void)
 	doubleshot_allocate_fb_region();
 }
 
-static int doubleshot_ts_cy8c_set_rst(int on)
+static int doubleshot_ts_atmel_power(int on)
 {
-	struct pm8058_gpio_cfg {
-		int                gpio;
-		struct pm_gpio cfg;
-	};
+	pr_info("%s: power %d\n", __func__, on);
 
-	struct pm8058_gpio_cfg tp_rst[] = {
-		{ /* TW RST Set LOW */
-			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_TP_RST),
-			{
-				.direction	= PM_GPIO_DIR_OUT,
-				.output_value	= 0,
-				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
-				.pull		= PM_GPIO_PULL_NO,
-				.out_strength	= PM_GPIO_STRENGTH_HIGH,
-				.function	= PM_GPIO_FUNC_NORMAL,
-				.vin_sel	= PM8058_GPIO_VIN_S3,
-				.inv_int_pol	= 0,
-			}
-		},
-		{ /* TW RST Set HIGH */
-			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_TP_RST),
-			{
-				.direction	= PM_GPIO_DIR_OUT,
-				.output_value	= 1,
-				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
-				.pull		= PM_GPIO_PULL_NO,
-				.out_strength	= PM_GPIO_STRENGTH_HIGH,
-				.function	= PM_GPIO_FUNC_NORMAL,
-				.vin_sel	= PM8058_GPIO_VIN_S3,
-				.inv_int_pol	= 0,
-			}
-		},
-	};
-	return pm8xxx_gpio_config(tp_rst[on].gpio,	&tp_rst[on].cfg);
-}
-
-static int doubleshot_ts_cy8c_power(int on)
-{
-	printk(KERN_INFO "%s():\n", __func__);
-	if (on)
-		doubleshot_ts_cy8c_set_rst(1);
+	gpio_set_value(PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_TP_RST), 0);
+//	gpio_set_value((DOUBLESHOT_TP_RST), 0);
+	msleep(5);
+	gpio_set_value(PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_TP_RST), 1);
+//	gpio_set_value((DOUBLESHOT_TP_RST), 1);
+	msleep(40);
 
 	return 0;
 }
 
-static int doubleshot_ts_cy8c_reset(void)
-{
-	printk(KERN_INFO "[TP] HW reset touch.\n");
-	doubleshot_ts_cy8c_set_rst(0);
-	msleep(10);
-	doubleshot_ts_cy8c_set_rst(1);
-	msleep(200);
+static struct atmel_cfg ts_atmel_cable_cfg_data[] = {
+        {.objid = 35,    .byte = 30,    .value = 8,        .orival = 16},
+};
 
-	return 0;
-}
-
-struct cy8c_i2c_platform_data doubleshot_ts_cy8c_data[] = {
+struct atmel_i2c_platform_data doubleshot_ts_atmel_data[] = {
 	{
-		.version = 0x0C,
-		.timeout = 1,
-		.unlock_attr = 1,
-		.abs_x_min = 11,
-		.abs_x_max = 1012,
-		.abs_y_min = 6,
-		.abs_y_max = 940,
+		.version = 0x020,
+		.abs_x_min = 0,
+		.abs_x_max = 1023,
+		.abs_y_min = 0,
+		.abs_y_max = 1023,
 		.abs_pressure_min = 0,
 		.abs_pressure_max = 255,
 		.abs_width_min = 0,
-		.abs_width_max = 512,
-		.power = doubleshot_ts_cy8c_power,
-		.gpio_irq = DOUBLESHOT_TP_ATT_N_XB,
-		.reset = doubleshot_ts_cy8c_reset,
+		.abs_width_max = 20,
+		.gpio_irq = DOUBLESHOT_TP_ATT_N,
+		.power = doubleshot_ts_atmel_power,
+		.config_T6 = {0, 0, 0, 0, 0, 0},
+		.config_T7 = {50, 15, 25},
+		.config_T8 = {9, 0, 10, 10, 0, 0, 5, 30, 5, 192},
+		.config_T9 = {139, 0, 0, 19, 11, 0, 16, 35, 3, 1, 0, 2, 2, 15, 4, 10, 20, 0, 0, 0, 0, 0, 0, 7, 0, 7, 162, 44, 0, 0, 20, 0},
+		.config_T15 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T18 = {0, 0},
+		.config_T19 = {0, 0, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T20 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T22 = {15, 0, 0, 0, 0, 0, 0, 0, 30, 0, 0, 0, 7, 18, 255, 255, 0},
+		.config_T23 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T24 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T25 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T28 = {0, 0, 3, 8, 16, 60},
+		.object_crc = {0xD3, 0xEC, 0x77},
+		.cable_config = {        .cnt = ARRAY_SIZE(ts_atmel_cable_cfg_data),
+                                        .cfg = ts_atmel_cable_cfg_data, },
+		.wlc_config = {50, 15, 25, 35, 30, 8, 16},
+		.wlc_freq = {20, 30, 40, 255, 255},
+		.GCAF_level = {20, 24, 28, 40, 63},
 	},
 	{
-		.version = 0x08,
-		.timeout = 1,
-		.abs_x_min = 11,
-		.abs_x_max = 1012,
-		.abs_y_min = 6,
-		.abs_y_max = 940,
+		.version = 0x016,
+		.abs_x_min = 0,
+		.abs_x_max = 1023,
+		.abs_y_min = 0,
+		.abs_y_max = 1023,
 		.abs_pressure_min = 0,
 		.abs_pressure_max = 255,
 		.abs_width_min = 0,
-		.abs_width_max = 512,
-		.power = doubleshot_ts_cy8c_power,
-		.gpio_irq = DOUBLESHOT_TP_ATT_N_XB,
-	},
-	{
-		.version = 0x00,
-		.timeout = 1,
-		.abs_x_min = 11,
-		.abs_x_max = 1012,
-		.abs_y_min = 6,
-		.abs_y_max = 940,
-		.abs_pressure_min = 0,
-		.abs_pressure_max = 255,
-		.abs_width_min = 0,
-		.abs_width_max = 512,
-		.power = doubleshot_ts_cy8c_power,
-		.gpio_irq = DOUBLESHOT_TP_ATT_N_XB,
-		.reset = doubleshot_ts_cy8c_reset,
+		.abs_width_max = 20,
+		.gpio_irq = DOUBLESHOT_TP_ATT_N,
+		.power = doubleshot_ts_atmel_power,
+		.config_T6 = {0, 0, 0, 0, 0, 0},
+		.config_T7 = {50, 15, 25},
+		.config_T8 = {9, 0, 10, 10, 0, 0, 5, 30},
+		.config_T9 = {139, 0, 0, 19, 11, 0, 16, 35, 3, 1, 0, 2, 2, 15, 4, 10, 20, 0, 0, 0, 0, 0, 0, 7, 0, 7, 162, 44, 0, 0, 20},
+		.config_T15 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T18 = {0, 0},
+		.config_T19 = {0, 0, 52, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T20 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T22 = {15, 0, 0, 0, 0, 0, 0, 0, 30, 0, 0, 0, 7, 18, 255, 255, 0},
+		.config_T23 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T24 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T25 = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		.config_T27 = {0, 0, 0, 0, 0, 0, 0},
+		.config_T28 = {0, 0, 3, 8, 16, 60},
+		.cable_config = {        .cnt = ARRAY_SIZE(ts_atmel_cable_cfg_data),
+                                        .cfg = ts_atmel_cable_cfg_data, },
+		.GCAF_level = {20, 24, 28, 40, 63},
 	},
 };
 
 #define PVT_VERSION	0x80
 
-static void doubleshot_ts_cy8c_set_system_rev(uint8_t rev)
-{
-	ssize_t i = 0;
-	if (rev >= PVT_VERSION)
-		for (i = 0; i < sizeof(doubleshot_ts_cy8c_data)/sizeof(struct cy8c_i2c_platform_data); i++)
-			doubleshot_ts_cy8c_data[i].auto_reset = 1;
-}
-
 static struct i2c_board_info msm_i2c_gsbi5_info[] = {
 	{
-		I2C_BOARD_INFO(CYPRESS_TMA_NAME, 0x67),
-		.platform_data = &doubleshot_ts_cy8c_data,
-		.irq = MSM_GPIO_TO_INT(DOUBLESHOT_TP_ATT_N_XB)
+		I2C_BOARD_INFO(ATMEL_QT602240_NAME, 0x94 >> 1),
+		.platform_data = &doubleshot_ts_atmel_data,
+		.irq = MSM_GPIO_TO_INT(DOUBLESHOT_TP_ATT_N)
 	},
 };
 
@@ -4496,7 +4465,7 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 
 	doubleshot_init_fb();
 
-	doubleshot_ts_cy8c_set_system_rev(system_rev);
+	//doubleshot_ts_cy8c_set_system_rev(system_rev);
 
 	register_i2c_devices();
 
