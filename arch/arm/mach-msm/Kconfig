@@ -2636,10 +2636,6 @@ config SUPPORT_USB_SPEAKER
 	bool "Support USB Speaker"
 	default n
 
-config MICROP_COMMON
-	bool "Common Atmega Microp Source"
-	default n
-
 config SENSE_4_PLUS
 	bool "SENSE 4 PLUS"
 	default y
