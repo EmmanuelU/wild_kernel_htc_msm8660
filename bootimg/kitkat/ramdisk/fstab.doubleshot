@@ -1,0 +1,21 @@
+# Android fstab file.
+#<src>			<mnt_point>	<type>	<mnt_flags>						<fs_mgr_flags>
+# load these in early-init instead
+
+#/dev/block/mmcblk0p17	/vendor/firmware/misc	auto	ro,shortname=lower				wait
+#/dev/block/mmcblk0p19	/vendor/firmware/adsp	auto	ro,shortname=lower				wait
+
+/dev/block/mmcblk0p20	/boot		emmc	defaults						defaults
+/dev/block/mmcblk0p21	/recovery	emmc	defaults						defaults
+/dev/block/mmcblk0p22	/system		ext4	rw,data=ordered,noauto_da_alloc				wait
+/dev/block/mmcblk0p24	/cache		ext4	noatime,nosuid,nodev,barrier=0        			wait
+/dev/block/mmcblk0p23	/data		ext4	noatime,nosuid,nodev,noauto_da_alloc,barrier=0    wait,encryptable=footer 
+/dev/block/mmcblk0p28	/devlog		ext4	noatime,nosuid,nodev,barrier=0				wait
+/dev/block/mmcblk1p2	/sd-ext         ext4	defaults						defaults
+/dev/block/mmcblk1p1	/sdcard		vfat	defaults						defaults
+/dev/block/mmcblk0p31	/misc           emmc	defaults						defaults
+
+
+#SD/USB Storage
+/devices/platform/msm_sdcc.3/mmc_host/mmc1      auto    auto     defaults                                                voldmanaged=sdcard0:auto,noemulatedsd
+/devices/platform/msm_hsusb.0/usb1              auto    auto     defaults                                                voldmanaged=usbdisk:auto 

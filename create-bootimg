@@ -1,0 +1,4 @@
+#!/bin/bash
+cp arch/arm/boot/zImage bootimg/kitkat/zImage
+bootimg/mkboot bootimg/kitkat boot.img
+

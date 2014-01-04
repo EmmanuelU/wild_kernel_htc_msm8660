@@ -1,0 +1,12 @@
+kernel=zImage
+ramdisk=ramdisk
+page_size=2048
+base_addr=0x48000000
+kernel_size=
+kernel_addr=0x48008000
+ramdisk_size=
+ramdisk_addr=0x49400000
+dt=
+dtb_size=0
+tags_addr=0x48000100
+cmd_line="console=ttyHSL0 androidboot.hardware=doubleshot no_console_suspend=1 androidboot.selinux=permissive"

@@ -81,6 +81,9 @@ GRTAGS
 GSYMS
 GTAGS
 
+bootimg/kitkat/zImage
+boot.img
+
 *.orig
 *~
 \#*#
