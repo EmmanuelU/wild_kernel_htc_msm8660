@@ -23,6 +23,7 @@ endif
 endif
 
 obj-y += acpuclock.o
+obj-y += drv_callback.o
 obj-y += radio_feedback.o
 obj-$(CONFIG_ARCH_MSM7X27) += acpuclock-7627.o clock-pll.o
 obj-$(CONFIG_ARCH_MSM_SCORPION) += pmu.o
@@ -372,6 +373,7 @@ obj-$(CONFIG_MACH_DOUBLESHOT) += htc_bdaddress.o board-doubleshot-rfkill.o
 obj-$(CONFIG_MACH_DOUBLESHOT) += board-doubleshot-mmc.o board-doubleshot-wifi.o htc_wifi_nvs.o
 obj-$(CONFIG_MACH_DOUBLESHOT) += htc_util.o
 obj-$(CONFIG_MACH_DOUBLESHOT) += board-doubleshot-audio.o
+obj-$(CONFIG_MACH_DOUBLESHOT) += board-doubleshot-microp.o
 obj-$(CONFIG_MACH_DOUBLESHOT) += board-doubleshot-display.o
 
 CFLAGS_msm_vibrator.o += -Idrivers/staging/android
@@ -467,6 +469,7 @@ obj-$(CONFIG_MSM_RPM_SMD) += rpm-smd.o
 
 obj-$(CONFIG_PERFLOCK) += perflock.o
 obj-y += htc_ramdump.o
+obj-$(CONFIG_MICROP_COMMON) += atmega_microp_common.o
 
 obj-$(CONFIG_HTC_MONITOR) += htc_monitor.o
 

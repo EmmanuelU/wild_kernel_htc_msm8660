@@ -37,6 +37,8 @@
 #include <linux/dma-mapping.h>
 #include <linux/mpu.h>
 
+#include <linux/curcial_oj.h>
+
 #ifdef CONFIG_ANDROID_PMEM
 #include <linux/android_pmem.h>
 #endif
@@ -52,6 +54,8 @@
 #include <mach/board.h>
 #include <mach/irqs.h>
 #include <mach/msm_spi.h>
+
+#include <mach/atmega_microp.h>
 
 #ifdef CONFIG_BT
 #include <mach/msm_serial_hs.h>
@@ -974,6 +978,17 @@ static struct platform_device cable_detect_device = {
 	},
 };
 
+static unsigned int engineerid;
+
+unsigned int doubleshot_get_engineerid(void)
+{
+	return engineerid;
+}
+
+#ifdef CONFIG_MICROP_COMMON
+void __init doubleshot_microp_init(void);
+#endif
+
 #ifdef CONFIG_FB_MSM_HDMI_MHL
 static uint32_t msm_hdmi_off_gpio[] = {
 	GPIO_CFG(170,  0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
@@ -1305,53 +1320,38 @@ static int hdmi_panel_power(int on)
 
 #endif
 
-#ifdef CONFIG_LEDS_PM8058
 static struct pm8058_led_config pm_led_config[] = {
 	{
-		.name = "green",
-		.type = PM8058_LED_RGB,
-		.bank = 0,
-		.pwm_size = 9,
-		.clk = PM_PWM_CLK_32KHZ,
-		.pre_div = PM_PWM_PREDIVIDE_2,
-		.pre_div_exp = 1,
-		.pwm_value = 511,
+		.name = "keyboard-backlight",
+		.type = PM8058_LED_CURRENT,
+		.bank = 3,
+		.out_current = 300,
 	},
 	{
-		.name = "amber",
-		.type = PM8058_LED_RGB,
-		.bank = 1,
-		.pwm_size = 9,
-		.clk = PM_PWM_CLK_32KHZ,
-		.pre_div = PM_PWM_PREDIVIDE_2,
-		.pre_div_exp = 1,
-		.pwm_value = 511,
-	},
-	{
-		.name = "button-backlight",
+		.name = "caps",
 		.type = PM8058_LED_DRVX,
-		.bank = 6,
-		.flags = PM8058_LED_LTU_EN,
-		.period_us = USEC_PER_SEC / 1000,
-		.start_index = 0,
-		.duites_size = 8,
-		.duty_time_ms = 32,
-		.lut_flag = PM_PWM_LUT_RAMP_UP | PM_PWM_LUT_PAUSE_HI_EN,
-		.out_current = 10,
+		.bank = 4,
+		.out_current = 40,
 	},
-
+	{
+		.name = "func",
+		.type = PM8058_LED_DRVX,
+		.bank = 5,
+		.out_current = 40,
+	},
 };
+
 static struct pm8058_led_platform_data pm8058_leds_data = {
 	.led_config = pm_led_config,
 	.num_leds = ARRAY_SIZE(pm_led_config),
 	.duties = {0, 15, 30, 45, 60, 75, 90, 100,
-		   100, 90, 75, 60, 45, 30, 15, 0,
-		   0, 0, 0, 0, 0, 0, 0, 0,
-		   0, 0, 0, 0, 0, 0, 0, 0,
-		   0, 0, 0, 0, 0, 0, 0, 0,
-		   0, 0, 0, 0, 0, 0, 0, 0,
-		   0, 0, 0, 0, 0, 0, 0, 0,
-		   0, 0, 0, 0, 0, 0, 0, 0},
+                100, 90, 75, 60, 45, 30, 15, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0, 0},
 };
 
 static struct platform_device pm8058_leds = {
@@ -1361,8 +1361,6 @@ static struct platform_device pm8058_leds = {
 		.platform_data	= &pm8058_leds_data,
 	},
 };
-#endif
-
 #ifdef CONFIG_MSM_GEMINI
 static struct resource msm_gemini_resources[] = {
 	{
@@ -2152,11 +2150,11 @@ static struct rpm_regulator_init_data rpm_regulator_init_data[] = {
 
 	/*	ID        a_on pd ss min_uV   max_uV   init_ip */
 	RPM_LDO(PM8901_L0,  0, 1, 0, 1200000, 1200000, LDO300HMIN),
-	RPM_LDO(PM8901_L1,  0, 1, 0, 2850000, 3100000, LDO300HMIN),
-	RPM_LDO(PM8901_L2,  0, 0, 0, 2850000, 3300000, LDO300HMIN),
-	RPM_LDO(PM8901_L3,  0, 1, 0, 3300000, 3300000, LDO300HMIN),
+	RPM_LDO(PM8901_L1,  0, 1, 0, 3000000, 3100000, LDO300HMIN),
+	RPM_LDO(PM8901_L2,  0, 0, 0, 3300000, 3300000, LDO300HMIN),
+	RPM_LDO(PM8901_L3,  0, 1, 0, 2850000, 2850000, LDO300HMIN),
 	RPM_LDO(PM8901_L4,  0, 1, 0, 1800000, 1800000, LDO300HMIN),
-	RPM_LDO(PM8901_L5,  0, 0, 0, 2850000, 2850000, LDO300HMIN),
+	RPM_LDO(PM8901_L5,  0, 0, 0, 1800000, 2850000, LDO300HMIN),
 	RPM_LDO(PM8901_L6,  0, 1, 0, 2200000, 2200000, LDO300HMIN),
 
 	/*	 ID       a_on pd ss min_uV   max_uV   init_ip   freq */
@@ -2818,6 +2816,76 @@ static int pm8058_gpios_init(void)
 	};
 
 	struct pm8058_gpio_cfg gpio_cfgs[] = {
+		{
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_KEYMATRIX_DRV1),
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+		{
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_KEYMATRIX_DRV2),
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+		{
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_KEYMATRIX_DRV3),
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+		{
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_KEYMATRIX_DRV4),
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+		{
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_KEYMATRIX_DRV5),
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+		{
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_KEYMATRIX_DRV6),
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
+		{
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_KEYMATRIX_DRV7),
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_30,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
+			},
+		},
 #ifdef CONFIG_MMC_MSM_CARD_HW_DETECTION
 		{
 			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_SDC3_DET),
@@ -2830,42 +2898,128 @@ static int pm8058_gpios_init(void)
 			},
 		},
 #endif
-		{
-			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_MIC_SEL),
+		{ /* Volume Up Key */
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_VOL_UP),
 			{
-				.direction      = PM_GPIO_DIR_OUT,
-				.output_value   = 0,
-				.output_buffer  = PM_GPIO_OUT_BUF_CMOS,
-				.pull           = PM_GPIO_PULL_NO,
-				.out_strength   = PM_GPIO_STRENGTH_HIGH,
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_31P5,
+				.vin_sel        = PM8058_GPIO_VIN_S3,
 				.function       = PM_GPIO_FUNC_NORMAL,
-				.vin_sel        = 6,
+				.inv_int_pol    = 0,
+			}
+		},
+		{ /* Volume Down key */
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_VOL_DN),
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_UP_1P5,
+				.vin_sel        = 2,
+				.function       = PM_GPIO_FUNC_NORMAL,
 				.inv_int_pol    = 0,
 			}
 		},
 		{
-			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_HP_EN),
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_HPTV_DET_HP), /* 24 */
 			{
-				.direction		= PM_GPIO_DIR_OUT,
-				.output_value	= 0,
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 1,
 				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
-				.pull			= PM_GPIO_PULL_NO,
+				.pull		= PM_GPIO_PULL_NO,
 				.out_strength	= PM_GPIO_STRENGTH_HIGH,
-				.function		= PM_GPIO_FUNC_NORMAL,
-				.vin_sel 		= 6,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= PM8058_GPIO_VIN_L5, /* 2.85 V */
 				.inv_int_pol	= 0,
 			}
 		},
 		{
-			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_PLS_INT),
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_HPTV_DET_TV), /* 25 */
 			{
-				.direction		= PM_GPIO_DIR_IN,
-				.pull			= PM_GPIO_PULL_UP_1P5,
-				.vin_sel		= PM8058_GPIO_VIN_L5,
-				.function		= PM_GPIO_FUNC_NORMAL,
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 0,
+				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
+				.pull		= PM_GPIO_PULL_NO,
+				.out_strength	= PM_GPIO_STRENGTH_HIGH,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= PM8058_GPIO_VIN_L5, /* 2.85 V */
 				.inv_int_pol	= 0,
+			}
+		},
+		{
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_TVOUT_HP_SEL), /* 36 */
+			{
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 0,
+				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
+				.pull		= PM_GPIO_PULL_NO,
+				.out_strength	= PM_GPIO_STRENGTH_HIGH,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= PM8058_GPIO_VIN_L5, /* 2.85 V */
+				.inv_int_pol	= 0,
+			}
+		},
+		{ /* Audio Microphone Selector */
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_MIC_SEL),	/* 26 */
+			{
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 0,
+				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
+				.pull		= PM_GPIO_PULL_NO,
+				.out_strength	= PM_GPIO_STRENGTH_HIGH,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= 6,	/* LDO5 2.85 V */
+				.inv_int_pol	= 0,
+			}
+		},
+		{ /* Audio Receiver Amplifier */
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_HANDSET_ENO),	/* 17 */
+			{
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 0,
+				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
+				.pull		= PM_GPIO_PULL_NO,
+				.out_strength	= PM_GPIO_STRENGTH_HIGH,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= 6,	/* LDO5 2.85 V */
+				.inv_int_pol	= 0,
+			}
+		},
+		{ /* Audio Speaker Amplifier */
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_SPK_ENO),	/* 18 */
+			{
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 0,
+				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
+				.pull		= PM_GPIO_PULL_NO,
+				.out_strength	= PM_GPIO_STRENGTH_HIGH,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= 6,	/* LDO5 2.85 V */
+				.inv_int_pol	= 0,
+			}
+		},
+		{ /* Timpani Reset */
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_QTR_RESET),
+			{
+				.direction	= PM_GPIO_DIR_OUT,
+				.output_value	= 0,
+				.output_buffer	= PM_GPIO_OUT_BUF_CMOS,
+				.pull		= PM_GPIO_PULL_DN,
+				.out_strength	= PM_GPIO_STRENGTH_HIGH,
+				.function	= PM_GPIO_FUNC_NORMAL,
+				.vin_sel	= 2,
+				.inv_int_pol	= 0,
+			}
+		},
+		{
+			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_REMO_PRES),
+			{
+				.direction      = PM_GPIO_DIR_IN,
+				.pull           = PM_GPIO_PULL_NO,
+				.vin_sel        = PM8058_GPIO_VIN_L5, /* 2.85 V */
+				.function       = PM_GPIO_FUNC_NORMAL,
+				.inv_int_pol    = 0,
 			},
 		},
+/*
 #ifdef CONFIG_LEDS_PM8058
 		{
 			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_GREEN_LED),
@@ -2894,36 +3048,7 @@ static int pm8058_gpios_init(void)
 			}
 		},
 #endif
-		{
-			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_VOL_UP),
-			{
-				.direction      = PM_GPIO_DIR_IN,
-				.pull           = PM_GPIO_PULL_UP_31P5,
-				.vin_sel        = PM8058_GPIO_VIN_S3,
-				.function       = PM_GPIO_FUNC_NORMAL,
-				.inv_int_pol    = 0,
-			}
-		},
-		{
-			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_VOL_DN),
-			{
-				.direction      = PM_GPIO_DIR_IN,
-				.pull           = PM_GPIO_PULL_UP_1P5,
-				.vin_sel        = 2,
-				.function       = PM_GPIO_FUNC_NORMAL,
-				.inv_int_pol    = 0,
-			}
-		},
-		{
-			PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_AUD_REMO_PRES),
-			{
-				.direction		= PM_GPIO_DIR_IN,
-				.pull			= PM_GPIO_PULL_UP_1P5,
-				.vin_sel		= PM8058_GPIO_VIN_L5,
-				.function		= PM_GPIO_FUNC_NORMAL,
-				.inv_int_pol	= 0,
-			}
-		},
+*/
 	};
 
 	for (i = 0; i < ARRAY_SIZE(gpio_cfgs); ++i) {
@@ -3415,7 +3540,7 @@ static struct i2c_board_info i2c_isl29029_devices[] = {
 };
 #endif
 
-static struct mpu3050_platform_data mpu3050_data = {
+/*static struct mpu3050_platform_data mpu3050_data = {
 	.int_config = 0x10,
 	.orientation = { -1, 0, 0,
 			 0, 1, 0,
@@ -3441,15 +3566,284 @@ static struct mpu3050_platform_data mpu3050_data = {
 					 0, 1, 0,
 					 0, 0, -1 },
 	},
-};
+};*/
 
-static struct i2c_board_info __initdata mpu3050_GSBI10_boardinfo[] = {
+/*static struct i2c_board_info __initdata mpu3050_GSBI10_boardinfo[] = {
 	{
 		I2C_BOARD_INFO("mpu3050", 0xD0 >> 1),
 		.irq = MSM_GPIO_TO_INT(DOUBLESHOT_GYRO_INT),
 		.platform_data = &mpu3050_data,
 	},
+};*/
+
+///// doubleshot sensors
+static struct microp_led_config up_led_config[] = {
+	{
+		.name = "amber",
+		.type = LED_RGB,
+	},
+	{
+		.name = "green",
+		.type = LED_RGB,
+	},
+	{
+		.name = "button-backlight",
+		.type = LED_PWM,
+		.led_pin = 1 << 0,
+		.init_value = 0xC8,
+		.fade_time = 5,
+	},
 };
+
+static struct microp_led_platform_data microp_leds_data = {
+	.num_leds	= ARRAY_SIZE(up_led_config),
+	.led_config	= up_led_config,
+};
+
+/*static struct cm3628_platform_data cm3628_pdata_xa = {
+	.intr = PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_PLS_INT),
+	.levels = { 0x1, 0x3, 0x5, 0x4f, 0x9d, 0x8B6,
+			0xEF7, 0x115D, 0x13C4, 0xFFFF},
+	.golden_adc = 0xA9C,
+	.power = NULL,
+	.ALS_slave_address = 0x30>>1,
+	.PS_slave_address = 0x32>>1,
+	.check_interrupt_add = 0x18>>1	,
+	.is_cmd = CM3628_ALS_IT_400ms | CM3628_ALS_PERS_2,
+	.ps_thd_set = 0x3,
+	.ps_conf2_val = 0,
+	.ps_calibration_rule = 1,
+	.ps_reset_thd = 1,
+	.ps_conf1_val = CM3628_PS_DR_1_320 |CM3628_PS_IT_1T,
+	.ps_thd_no_cal = 0xC,
+	.ps_thd_with_cal = 0x3,
+	.ps_adc_offset = 0x3,
+};*/
+
+
+/*static struct i2c_board_info i2c_CM3628_devices_xa[] = {
+	{
+		I2C_BOARD_INFO(CM3628_I2C_NAME, 0x30 >> 1),
+		.platform_data = &cm3628_pdata_xa,
+		.irq = PM8058_GPIO_IRQ(PM8058_IRQ_BASE,
+				       DOUBLESHOT_PLS_INT),
+	},
+};*/
+
+/*static struct cm3628_platform_data cm3628_pdata_xb = {
+	.intr = PM8058_GPIO_PM_TO_SYS(DOUBLESHOT_PLS_INT),
+	.levels = { 0x1, 0x3, 0x5, 0x4f, 0x9d, 0x8B6,
+			0xEF7, 0x115D, 0x13C4, 0xFFFF},
+	.golden_adc = 0xA9C,
+	.power = NULL,
+	.ALS_slave_address = 0xC0>>1,
+	.PS_slave_address = 0xC2>>1,
+	.check_interrupt_add = 0x2C>>1	,
+	.is_cmd = CM3628_ALS_IT_400ms | CM3628_ALS_PERS_2,
+	.ps_thd_set = 0x3,
+	.ps_conf2_val = 0,
+	.ps_calibration_rule = 1,
+	.ps_conf1_val = CM3628_PS_DR_1_320 |CM3628_PS_IT_1T,
+	.ps_thd_no_cal = 0xC,
+	.ps_thd_with_cal = 0x3,
+	.ps_adc_offset = 0x3,
+};*/
+
+
+/*static struct i2c_board_info i2c_CM3628_devices_xb[] = {
+	{
+		I2C_BOARD_INFO(CM3628_I2C_NAME, 0xC0 >> 1),
+		.platform_data = &cm3628_pdata_xb,
+		.irq = PM8058_GPIO_IRQ(PM8058_IRQ_BASE,
+				       DOUBLESHOT_PLS_INT),
+	},
+};*/
+static struct microp_function_config microp_functions[] = {
+	{
+		.name   = "microp_intrrupt",
+		.category = MICROP_FUNCTION_INTR,
+	},
+	{
+		.name   = "reset-int",
+		.category = MICROP_FUNCTION_RESET_INT,
+		.int_pin = 1 << 8,
+	},
+	{
+		.name   = "microp_key",
+		.category = MICROP_FUNCTION_KEY,
+		.int_pin = 1 << 0,
+	},
+};
+
+/*static struct bma150_platform_data gsensor_platform_data = {
+	.intr = DOUBLESHOT_GSENSOR_INT,
+	.chip_layout = 1,
+};*/
+
+/*static struct bma250_platform_data gsensor_bma250_platform_data = {
+	.intr = DOUBLESHOT_GSENSOR_INT,
+	.chip_layout = 1,
+};*/
+
+/*static struct i2c_board_info i2c_bma150_devices[] = {
+	{
+		I2C_BOARD_INFO(BMA150_I2C_NAME, 0x70 >> 1),
+		.platform_data = &gsensor_platform_data,
+		.irq = MSM_GPIO_TO_INT(DOUBLESHOT_GSENSOR_INT),
+	},
+};*/
+
+/*static struct i2c_board_info i2c_bma250_devices[] = {
+	{
+		I2C_BOARD_INFO(BMA250_I2C_NAME, 0x32 >> 1),
+		.platform_data = &gsensor_bma250_platform_data,
+		.irq = MSM_GPIO_TO_INT(DOUBLESHOT_GSENSOR_INT),
+	},
+};*/
+
+/*static struct akm8975_platform_data compass_platform_data = {
+	.layouts = DOUBLESHOT_LAYOUTS,
+};*/
+
+static void curcial_oj_reset(int enable)
+{
+	uint8_t cmd[3] = {0x40, 0x00, 0x00};
+	if (enable)
+		microp_i2c_write(0x90, cmd, 3);
+	else
+		microp_i2c_write(0x91, cmd, 3);
+}
+
+static void curcial_oj_shutdown(int enable)
+{
+	uint8_t cmd[3];
+	memset(cmd, 0x00, sizeof(uint8_t)*3);
+
+	cmd[0] = 0x80;
+	if (enable)
+		microp_i2c_write(0x91, cmd, 3);
+	else
+		microp_i2c_write(0x90, cmd, 3);
+}
+
+static struct regulator *reg_8901_l3;
+static int curcial_oj_poweron(int on)
+{
+	reg_8901_l3 = regulator_get(NULL, "8901_l3");
+	if (IS_ERR(reg_8901_l3)) {
+		printk(KERN_ERR"%s:Error power domain\n", __func__);
+		return PTR_ERR(reg_8901_l3);
+	}
+
+	if (on) {
+		regulator_set_voltage(reg_8901_l3, 2850000, 2850000);
+		if (!regulator_is_enabled(reg_8901_l3))
+			regulator_enable(reg_8901_l3);
+		printk(KERN_ERR "%s:OJ power enable(%d)\n", __func__, on);
+	} else {
+		if (regulator_is_enabled(reg_8901_l3))
+			regulator_disable(reg_8901_l3);
+		printk(KERN_ERR "%s:OJ power enable(%d)\n", __func__, on);
+	}
+	regulator_put(reg_8901_l3);
+	return 1;
+}
+
+static void curcial_oj_adjust_xy(uint8_t *data, int16_t *mSumDeltaX, int16_t *mSumDeltaY)
+{
+	int8_t 	deltaX;
+	int8_t 	deltaY;
+
+	if (data[2] == 0x80)
+		data[2] = 0x81;
+	if (data[1] == 0x80)
+		data[1] = 0x81;
+	if (0) {
+		deltaX = (1)*((int8_t) data[2]); /*X=2*/
+		deltaY = (-1)*((int8_t) data[1]); /*Y=1*/
+	} else {
+		deltaX = (1)*((int8_t) data[1]);
+		deltaY = (1)*((int8_t) data[2]);
+	}
+	*mSumDeltaX += -((int16_t)deltaX);
+	*mSumDeltaY += -((int16_t)deltaY);
+}
+
+#define DOUBLESHOT_MICROP_VER	0x03
+static struct curcial_oj_platform_data doubleshot_oj_data = {
+	.oj_poweron = curcial_oj_poweron,
+	.oj_shutdown = curcial_oj_shutdown,
+	.oj_adjust_xy = curcial_oj_adjust_xy,
+	.oj_reset = curcial_oj_reset,
+	.microp_version = DOUBLESHOT_MICROP_VER,
+	.mdelay_time = 0,
+	.normal_th = 8,
+	.xy_ratio = 15,
+	.interval = 0,
+	.swap = 0,
+	.x = 1,
+	.y = -1,
+	.share_power = false,
+	.reset_pin = true,
+	.debugflag = 0,
+	.ap_code = true,
+	.sht_tbl = {30, 200, 250, 300, 350, 400, 450},
+	.pxsum_tbl = {0, 0, 70, 80, 90, 100, 110},
+	.degree = 7,
+	.Xsteps = {0, 1, 2, 3, 4, 5, 6, 8, 10, 12,
+		14, 16, 18, 20, 22, 24, 26, 27, 28, 29,
+		9, 9, 9, 9, 9, 9, 9, 9, 9, 9},
+	.Ysteps = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
+		10, 11, 12, 13, 14, 15, 16, 17, 18, 19,
+		9, 9, 9, 9, 9, 9, 9, 9, 9, 9},
+	.irq = MSM_uP_TO_INT(12),
+	.device_id = 0x83,
+};
+
+static struct platform_device microp_devices[] = {
+	{
+		.name = "leds-microp",
+		.id = -1,
+		.dev = {
+			.platform_data = &microp_leds_data,
+		},
+	},
+	{
+		.name = CURCIAL_OJ_NAME,
+		.id = -1,
+		.dev = {
+			.platform_data	= &doubleshot_oj_data,
+		},
+	},
+};
+
+static struct microp_i2c_platform_data microp_data = {
+	.num_functions   = ARRAY_SIZE(microp_functions),
+	.microp_function = microp_functions,
+	.num_devices = ARRAY_SIZE(microp_devices),
+	.microp_devices = microp_devices,
+	.gpio_reset = DOUBLESHOT_GPIO_UP_RESET_N,
+	.spi_devices = SPI_OJ | SPI_GSENSOR,
+};
+
+static struct i2c_board_info i2c_microp_devices[] = {
+	{
+		I2C_BOARD_INFO(MICROP_I2C_NAME, 0xCC >> 1),
+		.platform_data = &microp_data,
+		.irq = MSM_GPIO_TO_INT(DOUBLESHOT_GPIO_UP_INT_N)
+
+	},
+};
+
+/*static struct i2c_board_info i2c_akm8975_devices[] = {
+	{
+		I2C_BOARD_INFO(AKM8975_I2C_NAME, 0x1A >> 1),
+		.platform_data = &compass_platform_data,
+		.irq = MSM_GPIO_TO_INT(DOUBLESHOT_COMPASS_INT),
+	},
+};*/
+
+//////////////////
 
 #ifdef CONFIG_I2C
 #define I2C_SURF 1
@@ -3467,6 +3861,12 @@ struct i2c_registry {
 };
 
 static struct i2c_registry msm8x60_i2c_devices[] __initdata = {
+	{
+		I2C_SURF | I2C_FFA,
+		MSM_GSBI10_QUP_I2C_BUS_ID,
+		i2c_microp_devices,
+		ARRAY_SIZE(i2c_microp_devices),
+	},
 #ifdef CONFIG_TPS65200
 	{
 		I2C_SURF | I2C_FFA,
@@ -3500,12 +3900,13 @@ static struct i2c_registry msm8x60_i2c_devices[] __initdata = {
 	},
 #endif
 #endif
-	{
+/*	{
 		I2C_SURF | I2C_FFA,
 		MSM_GSBI10_QUP_I2C_BUS_ID,
 		mpu3050_GSBI10_boardinfo,
 		ARRAY_SIZE(mpu3050_GSBI10_boardinfo),
 	},
+*/
 	{
 		I2C_SURF | I2C_FFA,
 		MSM_GSBI5_QUP_I2C_BUS_ID,
@@ -4476,6 +4877,11 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 #ifdef CONFIG_SENSORS_MSM_ADC
 	msm_adc_pdata.target_hw = MSM_8x60;
 #endif
+
+#ifdef CONFIG_MICROP_COMMON
+        doubleshot_microp_init();
+#endif
+
 	spi_register_board_info(msm_spi_board_info, ARRAY_SIZE(msm_spi_board_info));
 	gpio_tlmm_config(msm_spi_gpio[0], GPIO_CFG_ENABLE);
 	gpio_tlmm_config(msm_spi_gpio[1], GPIO_CFG_ENABLE);
@@ -4483,14 +4889,15 @@ static void __init msm8x60_init(struct msm_board_data *board_data)
 	gpio_tlmm_config(msm_spi_gpio[3], GPIO_CFG_ENABLE);
 	msm_snddev_init();
 	msm_auxpcm_init();
-	doubleshot_audio_init(); 
+	doubleshot_audio_init();
+	doubleshot_init_keypad();
 
 	properties_kobj = kobject_create_and_add("board_properties", NULL);
 	if (properties_kobj)
 		ret = sysfs_create_group(properties_kobj,
 				&doubleshot_properties_attr_group);
+	//msm_mpm_set_irq_ignore_list(irq_ignore_tbl, irq_num_ignore_tbl);
 
-	doubleshot_init_keypad();
 	headset_device_register();
 	doubleshot_wifi_init();
 

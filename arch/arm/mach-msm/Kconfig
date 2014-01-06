@@ -2622,6 +2622,7 @@ config MACH_DOUBLESHOT
 	default n
 	bool "Doubleshot"
  	select FB_MSM_MIPI_DSI
+	select CONFIG_MICROP_COMMON
 	help
 	  Support for the Doubleshot device.
 
@@ -2635,6 +2636,10 @@ config HTC_HEADSET_ONE_WIRE
 config SUPPORT_USB_SPEAKER
 	bool "Support USB Speaker"
 	default n
+
+config MICROP_COMMON
+  bool "Common Atmega Microp Source"
+  default n
 
 config SENSE_4_PLUS
 	bool "SENSE 4 PLUS"

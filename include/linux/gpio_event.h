@@ -39,8 +39,11 @@ struct gpio_event_info {
 	int (*event)(struct gpio_event_input_devs *input_devs,
 		     struct gpio_event_info *info,
 		     void **data, unsigned int dev, unsigned int type,
-		     unsigned int code, int value); 
+		     unsigned int code, int value); /* out events */
 	bool no_suspend;
+#ifdef CONFIG_OPTICALJOYSTICK_CRUCIAL
+	bool oj_btn;
+#endif
 };
 
 struct gpio_event_platform_data {
@@ -48,15 +51,16 @@ struct gpio_event_platform_data {
 	struct gpio_event_info **info;
 	size_t info_count;
 	int (*power)(const struct gpio_event_platform_data *pdata, bool on);
-	const char *names[]; 
-			     
+	const char *names[]; /* If name is NULL, names contain a NULL */
+			     /* terminated list of input devices to create */
 };
 
 #define GPIO_EVENT_DEV_NAME "gpio-event"
 
+/* Key matrix */
 
 enum gpio_event_matrix_flags {
-	
+	/* unset: drive active output low, set: drive active output high */
 	GPIOKPF_ACTIVE_HIGH              = 1U << 0,
 	GPIOKPF_DEBOUNCE                 = 1U << 1,
 	GPIOKPF_REMOVE_SOME_PHANTOM_KEYS = 1U << 2,
@@ -74,28 +78,41 @@ enum gpio_event_matrix_flags {
 #define MATRIX_KEY(dev, code) \
 	(((dev) << MATRIX_CODE_BITS) | (code & MATRIX_KEY_MASK))
 
+#ifdef CONFIG_MACH_DOUBLESHOT
+extern int get_kp_irq_mode(void);
+#endif
 extern int gpio_event_matrix_func(struct gpio_event_input_devs *input_devs,
 			struct gpio_event_info *info, void **data, int func);
 struct gpio_event_matrix_info {
-	
+	/* initialize to gpio_event_matrix_func */
 	struct gpio_event_info info;
-	
+	/* size must be ninputs * noutputs */
 	const unsigned short *keymap;
 	unsigned int *input_gpios;
 	unsigned int *output_gpios;
 	unsigned int ninputs;
 	unsigned int noutputs;
-	
+	/* time to wait before reading inputs after driving each output */
 	struct timespec settle_time;
-	
+	/* time to wait before scanning the keypad a second time */
 	struct timespec debounce_delay;
 	struct timespec poll_time;
 	unsigned flags;
+#ifdef CONFIG_MACH_DOUBLESHOT
+	void (*setup_ninputs_gpio)(void);
+	/* disable some gpio as wakeup source */
+	unsigned int notintr_gpios;
+	unsigned int detect_phone_status;
+	void (*setup_matrix_gpio)(void);
+#endif
 };
 
+/* Directly connected inputs and outputs */
 
 enum gpio_event_direct_flags {
 	GPIOEDF_ACTIVE_HIGH         = 1U << 0,
+/*	GPIOEDF_USE_DOWN_IRQ        = 1U << 1, */
+/*	GPIOEDF_USE_IRQ             = (1U << 2) | GPIOIDF_USE_DOWN_IRQ, */
 	GPIOEDF_PRINT_KEYS          = 1U << 8,
 	GPIOEDF_PRINT_KEY_DEBOUNCE  = 1U << 9,
 	GPIOEDF_PRINT_KEY_UNSTABLE  = 1U << 10,
@@ -106,12 +123,16 @@ struct gpio_event_direct_entry {
 	uint32_t code:10;
 	uint32_t dev:6;
 	bool     not_wakeup_src;
+#ifdef CONFIG_MACH_DOUBLESHOT
+	bool     check_call_status;
+#endif
 };
 
+/* inputs */
 extern int gpio_event_input_func(struct gpio_event_input_devs *input_devs,
 			struct gpio_event_info *info, void **data, int func);
 struct gpio_event_input_info {
-	
+	/* initialize to gpio_event_input_func */
 	struct gpio_event_info info;
 	ktime_t debounce_time;
 	ktime_t poll_time;
@@ -121,9 +142,9 @@ struct gpio_event_input_info {
 	size_t keymap_size;
 	void (*setup_input_gpio)(void);
 	void (*set_qty_irq)(uint8_t);
-	void (*clear_hw_reset)(void);
 };
 
+/* outputs */
 extern int gpio_event_output_func(struct gpio_event_input_devs *input_devs,
 			struct gpio_event_info *info, void **data, int func);
 extern int gpio_event_output_event(struct gpio_event_input_devs *input_devs,
@@ -131,7 +152,7 @@ extern int gpio_event_output_event(struct gpio_event_input_devs *input_devs,
 			unsigned int dev, unsigned int type,
 			unsigned int code, int value);
 struct gpio_event_output_info {
-	
+	/* initialize to gpio_event_output_func and gpio_event_output_event */
 	struct gpio_event_info info;
 	uint16_t flags;
 	uint16_t type;
@@ -140,6 +161,7 @@ struct gpio_event_output_info {
 };
 
 
+/* axes */
 
 enum gpio_event_axis_flags {
 	GPIOEAF_PRINT_UNKNOWN_DIRECTION  = 1U << 16,
@@ -150,11 +172,11 @@ enum gpio_event_axis_flags {
 extern int gpio_event_axis_func(struct gpio_event_input_devs *input_devs,
 			struct gpio_event_info *info, void **data, int func);
 struct gpio_event_axis_info {
-	
+	/* initialize to gpio_event_axis_func */
 	struct gpio_event_info info;
-	uint8_t  count; 
-	uint8_t  dev; 
-	uint8_t  type; 
+	uint8_t  count; /* number of gpios for this axis */
+	uint8_t  dev; /* device index when using multiple input devices */
+	uint8_t  type; /* EV_REL or EV_ABS */
 	uint16_t code;
 	uint16_t decoded_size;
 	uint16_t (*map)(struct gpio_event_axis_info *info, uint16_t in);
@@ -168,10 +190,26 @@ uint16_t gpio_axis_4bit_gray_map(
 uint16_t gpio_axis_5bit_singletrack_map(
 			struct gpio_event_axis_info *info, uint16_t in);
 
+#ifdef CONFIG_MACH_DOUBLESHOT
+extern int gpio_event_microp_func(struct gpio_event_input_devs *input_devs,
+			struct gpio_event_info *info, void **data, int func);
+struct gpio_event_microp_info {
+	/* initialize to gpio_event_microp_func */
+	struct gpio_event_info info;
+	uint16_t flags;
+	uint16_t type;
+	const struct gpio_event_direct_entry *keymap;
+	size_t keymap_size;
+	uint32_t irq;
+	uint8_t microp_info;
+};
+#endif
+
+/* switchs */
 extern int gpio_event_switch_func(struct gpio_event_input_devs *input_devs,
 			struct gpio_event_info *info, void **data, int func);
 struct gpio_event_switch_info {
-	
+	/* initialize to gpio_event_switch_func */
 	struct gpio_event_info info;
 	ktime_t debounce_time;
 	ktime_t poll_time;
@@ -182,4 +220,11 @@ struct gpio_event_switch_info {
 	void (*setup_switch_gpio)(void);
 	void (*set_qty_irq)(uint8_t);
 };
+
+#ifdef CONFIG_MACH_DOUBLESHOT
+int gpio_event_get_phone_call_status(void);
+int gpio_event_get_fm_radio_status(void);
+int gpio_event_get_quickboot_status(void);
 #endif
+
+#endif /* _LINUX_GPIO_EVENT_H */
