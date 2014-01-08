@@ -808,7 +808,7 @@ int res_trk_get_mem_type(void)
 			mem_type = MEMTYPE_SMI_KERNEL;
 		break;
 	case DDL_CMD_MEM:
-		if (res_trk_check_for_sec_session() && res_trk_get_enable_ion())
+		if (res_trk_get_enable_ion())
 			mem_type = ION_HEAP(ION_CP_MM_HEAP_ID);
 		else
 			mem_type = MEMTYPE_SMI_KERNEL;
