@@ -114,7 +114,9 @@
 
 #define MSM_FB_SIZE roundup((960 * ALIGN(540, 32) * 4 * 3) + 0x3F4800, 4096)
 
-#define MSM_ION_HEAP_NUM      4
+#define MSM_ION_HEAP_NUM      5
+
+#define MSM_FB_SIZE roundup((960 * ALIGN(540, 32) * 4 * 3) + 0x3F4800, 4096)
 
 // PMEM SMI
 #define MSM_SMI_SIZE          0x4000000
@@ -127,28 +129,28 @@
 #define MSM_PMEM_ADSP_SIZE    0x1800000
 
 // ION SMI
-#define MSM_ION_MM_SIZE       0x2D00000
-#define MSM_SMI_ION_SIZE      0x3000000
+#define MSM_ION_MM_SIZE       0x3500000
 
 // ION
-#define MSM_ION_WB_SIZE       0x2FD000
-#define MSM_ION_SF_SIZE       0x2800000
+#define MSM_ION_WB_SIZE       0x800000
+#define MSM_ION_SF_SIZE       0x29A0000
+#define MSM_ION_MM_FW_SIZE    0x200000
 
 // Base addresses
 #define MSM_SMI_BASE          (0x38000000)
 #define KERNEL_SMI_BASE       (MSM_SMI_BASE)
 #define USER_SMI_BASE         (KERNEL_SMI_BASE + KERNEL_SMI_SIZE)
 #define MSM_PMEM_SMIPOOL_BASE USER_SMI_BASE
-#define MSM_ION_MM_BASE       (0x40400000)
-#define MSM_SMI_ION_BASE      (0x40400000)
-#define MSM_ION_WB_BASE       (0x45C00000)
+#define MSM_ION_SF_BASE       (0x40400000)
 #define MSM_PMEM_AUDIO_BASE   (0x46400000)
-#define MSM_ION_SF_BASE       (0x6C000000)
+#define MSM_ION_WB_BASE       (0x6A900000)
+#define MSM_ION_MM_FW_BASE    (0x6B100000)
+#define MSM_ION_MM_BASE       (0x6B300000)
 #define MSM_PMEM_ADSP_BASE    (0x6E800000)
 
 // Userspace allocation
 #define PHY_BASE_ADDR1  0x48000000
-#define SIZE_ADDR1      0x24000000
+#define SIZE_ADDR1      0x22900000
 
 
 /* GPIO definition */
