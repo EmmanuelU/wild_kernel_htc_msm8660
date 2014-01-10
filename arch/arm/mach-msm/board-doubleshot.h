@@ -16,6 +16,7 @@
 #define __ARCH_ARM_MACH_MSM_BOARD_DOUBLESHOT_H
 
 #include <mach/board.h>
+#include <mach/msm_memtypes.h>
 
 #define DOUBLESHOT_PROJECT_NAME	"doubleshot"
 
