@@ -516,6 +516,7 @@ struct msm_i2c_ssbi_platform_data {
 };
 
 struct msm_vidc_platform_data {
+	int memtype;
 	u32 enable_ion;
 	int disable_dmx;
 	int disable_fullhd;
