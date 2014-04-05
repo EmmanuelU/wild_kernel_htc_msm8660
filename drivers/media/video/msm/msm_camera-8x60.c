@@ -280,7 +280,7 @@ static void msm_enqueue_vpe(struct msm_device_queue *queue,
 			break;		\
 		}		\
 		if (qcmd) {					\
-			if ((&qcmd->member) && (&qcmd->member.next))	{\
+			if (&qcmd->member)	{\
 				pr_info("[CAM] %s, qcmd->member.next= 0x%p\n", __func__, qcmd->member.next);	\
 				list_del_init(&qcmd->member);		\
 			}				\
