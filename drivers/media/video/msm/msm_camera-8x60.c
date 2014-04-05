@@ -1077,6 +1077,7 @@ static int msm_control(struct msm_control_device *ctrl_pmsm,
 		goto end;
 	}
 
+	msm_queue_drain(&ctrl_pmsm->ctrl_q, list_control);
 	qcmd_resp = __msm_control(sync,
 				  &ctrl_pmsm->ctrl_q,
 				  qcmd, MAX_SCHEDULE_TIMEOUT);
