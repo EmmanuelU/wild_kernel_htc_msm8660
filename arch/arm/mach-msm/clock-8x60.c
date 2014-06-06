@@ -2414,6 +2414,12 @@ static struct rcg_clk jpegd_clk = {
 	}
 static struct clk_freq_tbl clk_tbl_mdp[] = {
 	F_MDP(        0, gnd,  0,  0),
+#ifdef CONFIG_MACH_PYRAMID
+  	F_MDP( 59080000, pll8, 2, 13),
+  	F_MDP(128000000, pll8, 1,  3),
+  	F_MDP(160000000, pll2, 1,  5),
+  	F_MDP(200000000, pll2, 1,  4),
+#else
 	F_MDP(  9600000, pll8, 1, 40),
 	F_MDP( 13710000, pll8, 1, 28),
 	F_MDP( 27000000, pxo,  0,  0),
@@ -2428,6 +2434,7 @@ static struct clk_freq_tbl clk_tbl_mdp[] = {
 	F_MDP(160000000, pll2, 1,  5),
 	F_MDP(177780000, pll2, 2,  9),
 	F_MDP(200000000, pll2, 1,  4),
+#endif
 	F_END
 };
 
@@ -2469,8 +2476,13 @@ static struct rcg_clk mdp_clk = {
 	.c = {
 		.dbg_name = "mdp_clk",
 		.ops = &clk_ops_rcg,
+#ifdef CONFIG_MACH_PYRAMID
+ 		VDD_DIG_FMAX_MAP3(LOW,   59080000, NOMINAL, 200000000,
+ 				  HIGH, 228571000),
+#else
 		VDD_DIG_FMAX_MAP3(LOW,   85330000, NOMINAL, 200000000,
 				  HIGH, 228571000),
+#endif
 		CLK_INIT(mdp_clk.c),
 		.depends = &mdp_axi_clk.c,
 	},
