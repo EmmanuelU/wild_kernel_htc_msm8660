@@ -548,10 +548,19 @@ static int htc_batt_get_battery_info(struct battery_info_reply *htc_batt_update)
 	return 0;
 }
 
+extern int htc_battery_get_charging_status(void);
+
 static void batt_set_check_timer(u32 seconds)
 {
-	mod_timer(&htc_batt_timer.batt_timer,
-			jiffies + msecs_to_jiffies(seconds * 1000));
+	if (htc_battery_get_charging_status() == POWER_SUPPLY_STATUS_NOT_CHARGING) {
+		/* switch to fast timer (refresh every 5 sec) when on battery
+		 * power so reported battery percentage is accurate */
+		mod_timer(&htc_batt_timer.batt_timer,
+				jiffies + msecs_to_jiffies(5 * 1000));
+	} else {
+		mod_timer(&htc_batt_timer.batt_timer,
+				jiffies + msecs_to_jiffies(seconds * 1000));
+	}
 }
 
 
@@ -617,7 +626,8 @@ static int32_t htc_batt_get_battery_adc(void)
 	vref = htc_batt_getmidvalue(adc.adc_voltage);
 	battid_adc = htc_batt_getmidvalue(adc.adc_battid);
 
-	BATT_LOG("%s , vref:%d, battid_adc:%d, battid:%d\n", __func__,  vref, battid_adc, battid_adc * 1000 / vref);
+	if (htc_battery_get_charging_status() != POWER_SUPPLY_STATUS_NOT_CHARGING)
+		BATT_LOG("%s , vref:%d, battid_adc:%d, battid:%d\n", __func__,  vref, battid_adc, battid_adc * 1000 / vref);
 
 	if (ret)
 		goto get_adc_failed;
@@ -751,8 +761,9 @@ static long htc_batt_ioctl(struct file *filp,
 		tps_set_hv_battery(0);
 #endif
 
-		BATT_LOG("ioctl: battery level update: %u",
-			htc_batt_info.rep.level);
+		if (htc_battery_get_charging_status() != POWER_SUPPLY_STATUS_NOT_CHARGING)
+			BATT_LOG("ioctl: battery level update: %u",
+				htc_batt_info.rep.level);
 
 #ifdef CONFIG_HTC_BATT_ALARM
 		/* Set a 3V voltage alarm when screen is on */

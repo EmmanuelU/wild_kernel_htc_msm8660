@@ -165,7 +165,9 @@ static int __init enable_zcharge_setup(char *str)
 }
 __setup("enable_zcharge=", enable_zcharge_setup);
 
-static int htc_battery_get_charging_status(void)
+int htc_battery_get_charging_status(void);
+
+int htc_battery_get_charging_status(void)
 {
 	enum charger_type_t charger;
 	int ret;
@@ -698,24 +700,24 @@ int htc_battery_core_update_changed(void)
 	battery_core_info.update_time = jiffies;
 	mutex_unlock(&battery_core_info.info_lock);
 
-	BATT_LOG("ID=%d, level=%d, vol=%d, temp=%d, batt_current=%d, "
-		"chg_src=%d, chg_en=%d, full_bat=%d, over_vchg=%d, batt_state=%d",
-			battery_core_info.rep.batt_id,
-			battery_core_info.rep.level,
-			battery_core_info.rep.batt_vol,
-			battery_core_info.rep.batt_temp,
-			battery_core_info.rep.batt_current,
-			battery_core_info.rep.charging_source,
-			battery_core_info.rep.charging_enabled,
-			battery_core_info.rep.full_bat,
-			battery_core_info.rep.over_vchg,
-			battery_core_info.rep.batt_state);
+	if (htc_battery_get_charging_status() != POWER_SUPPLY_STATUS_NOT_CHARGING)
+		BATT_LOG("ID=%d, level=%d, vol=%d, temp=%d, batt_current=%d, "
+			"chg_src=%d, chg_en=%d, full_bat=%d, over_vchg=%d, batt_state=%d",
+				battery_core_info.rep.batt_id,
+				battery_core_info.rep.level,
+				battery_core_info.rep.batt_vol,
+				battery_core_info.rep.batt_temp,
+				battery_core_info.rep.batt_current,
+				battery_core_info.rep.charging_source,
+				battery_core_info.rep.charging_enabled,
+				battery_core_info.rep.full_bat,
+				battery_core_info.rep.over_vchg,
+				battery_core_info.rep.batt_state);
 
 	/* send uevent if need */
-	if (is_send_batt_uevent) {
+	if (is_send_batt_uevent)
 		power_supply_changed(&htc_power_supplies[BATTERY_SUPPLY]);
-		BATT_LOG("power_supply_changed: battery");
-	}
+
 	if (is_send_usb_uevent) {
 		power_supply_changed(&htc_power_supplies[USB_SUPPLY]);
 		BATT_LOG("power_supply_changed: usb");
