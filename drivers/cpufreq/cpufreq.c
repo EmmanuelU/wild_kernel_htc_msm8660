@@ -423,20 +423,26 @@ static int __cpufreq_set_policy(struct cpufreq_policy *data,
 /**
  * cpufreq_per_cpu_attr_write() / store_##file_name() - sysfs write access
  */
-#define store_one(file_name, object)			\
+#define store_one(file_name, object)					\
 static ssize_t store_##file_name					\
 (struct cpufreq_policy *policy, const char *buf, size_t count)		\
 {									\
 	unsigned int ret = -EINVAL;					\
+	unsigned int freq = 0;						\
 	struct cpufreq_policy new_policy;				\
 									\
 	ret = cpufreq_get_policy(&new_policy, policy->cpu);		\
 	if (ret)							\
 		return -EINVAL;						\
 									\
-	ret = sscanf(buf, "%u", &new_policy.object);			\
+	ret = sscanf(buf, "%u", &freq);					\
 	if (ret != 1)							\
 		return -EINVAL;						\
+	if (freq < new_policy.cpuinfo.min_freq)				\
+		freq = new_policy.cpuinfo.min_freq;			\
+	if (freq > new_policy.cpuinfo.max_freq)				\
+		freq = new_policy.cpuinfo.max_freq;			\
+	new_policy.object = freq;					\
 									\
 	ret = cpufreq_driver->verify(&new_policy);			\
 	if (ret)							\

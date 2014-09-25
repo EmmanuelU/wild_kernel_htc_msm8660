@@ -18,6 +18,7 @@
 #include <mach/msm_iomap.h>
 #include <mach/msm_bus.h>
 #include <linux/ktime.h>
+#include <linux/cpufreq.h>
 
 #include "kgsl.h"
 #include "kgsl_pwrscale.h"
@@ -33,6 +34,10 @@
 #define GPU_SWFI_LATENCY	3
 #define UPDATE_BUSY_VAL		1000000
 #define UPDATE_BUSY		50
+
+#ifdef CONFIG_CPU_FREQ_GOV_BADASS_GPU_CONTROL
+extern bool gpu_busy_state;
+#endif
 
 struct clk_pair {
 	const char *name;
@@ -719,6 +724,9 @@ static void kgsl_pwrctrl_busy_time(struct kgsl_device *device, bool on_time)
 		!test_bit(KGSL_PWRFLAGS_AXI_ON, &device->pwrctrl.power_flags)) {
 		update_statistics(device);
 	}
+#ifdef CONFIG_CPU_FREQ_GOV_BADASS_GPU_CONTROL
+	gpu_busy_state = on_time;
+#endif
 }
 
 void kgsl_pwrctrl_clk(struct kgsl_device *device, int state,

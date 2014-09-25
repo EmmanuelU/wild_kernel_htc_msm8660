@@ -131,6 +131,16 @@
 #include <mach/ion.h>
 #include <mach/msm_rtb.h>
 
+#ifdef CONFIG_CPU_FREQ_GOV_ONDEMAND_2_PHASE
+int set_two_phase_freq(int cpufreq);
+#endif
+#ifdef CONFIG_CPU_FREQ_GOV_BADASS_2_PHASE
+int set_two_phase_freq_badass(int cpufreq);
+#endif
+#ifdef CONFIG_CPU_FREQ_GOV_BADASS_3_PHASE
+int set_three_phase_freq_badass(int cpufreq);
+#endif
+
 extern int ps_type;
 
 static unsigned int engineerid, mem_size_mb;
@@ -2315,7 +2325,7 @@ static void __init msm8x60_gfx_init(void)
 
 static void __init pyramid_init(void)
 {
-        int rc;
+	int rc;
 	uint32_t soc_platform_version;
 	uint32_t raw_speed_bin, speed_bin;
 	struct kobject *properties_kobj;
@@ -2343,11 +2353,11 @@ static void __init pyramid_init(void)
 
 	msm_clock_init(&msm8x60_clock_init_data);
 
-        pyramid_init_gpiomux();
+	pyramid_init_gpiomux();
 	pyramid_init_pmic();
 
-        msm8x60_i2c_init();
-        msm8x60_gfx_init();
+	msm8x60_i2c_init();
+	msm8x60_gfx_init();
 
 	soc_platform_version = socinfo_get_platform_version();
 	if (SOCINFO_VERSION_MAJOR(soc_platform_version) == 1 &&
@@ -2376,7 +2386,17 @@ static void __init pyramid_init(void)
 	pyramid_init_mmc();
 
 #ifdef CONFIG_MSM_CAMERA
-        msm8x60_init_cam();
+	msm8x60_init_cam();
+#endif
+
+#ifdef CONFIG_CPU_FREQ_GOV_ONDEMAND_2_PHASE
+    set_two_phase_freq(CONFIG_CPU_FREQ_GOV_ONDEMAND_2_PHASE_FREQ);
+#endif
+#ifdef CONFIG_CPU_FREQ_GOV_BADASS_2_PHASE
+	set_two_phase_freq_badass(CONFIG_CPU_FREQ_GOV_BADASS_2_PHASE_FREQ);
+#endif
+#ifdef CONFIG_CPU_FREQ_GOV_BADASS_3_PHASE
+	set_three_phase_freq_badass(CONFIG_CPU_FREQ_GOV_BADASS_3_PHASE_FREQ);
 #endif
 
 	/* Accessory */
