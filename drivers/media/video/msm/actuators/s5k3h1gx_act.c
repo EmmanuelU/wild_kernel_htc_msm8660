@@ -140,14 +140,21 @@ int32_t s5k3h1gx_msm_actuator_move_focus(
 		dir,
 		num_steps);
 
+	if (num_steps > a_ctrl->set_info.total_steps) {
+		pr_err("Illegal focus number of steps: %d\n", num_steps);
+		num_steps = a_ctrl->set_info.total_steps;
+	} else if (num_steps <= 0) {
+		pr_err("Illegal focus number of steps\n");
+		return -EINVAL;
+	}
+
 	if (dir == MOVE_NEAR)
 		sign_dir = 1;
 	else if (dir == MOVE_FAR)
 		sign_dir = -1;
 	else {
 		pr_err("Illegal focus direction\n");
-		rc = -EINVAL;
-		return rc;
+		return -EINVAL;
 	}
 	
 	dest_step_pos = a_ctrl->curr_step_pos +
