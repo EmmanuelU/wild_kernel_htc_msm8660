@@ -78,4 +78,7 @@ GTAGS
 *.orig
 *~
 zImage
+*.img
+build_log.txt
+*.zip
 \#*#
