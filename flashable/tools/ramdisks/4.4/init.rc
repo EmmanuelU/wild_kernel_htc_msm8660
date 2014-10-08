@@ -229,6 +229,7 @@ on post-fs-data
     chmod 0660 /data/misc/wifi/wpa_supplicant.conf
     mkdir /data/local 0751 root root
     mkdir /data/misc/media 0700 media media
+    restorecon_recursive /data/misc/media
 
     # For security reasons, /data/local/tmp should always be empty.
     # Do not place files or directories in /data/local/tmp
@@ -384,6 +385,7 @@ on boot
     setprop net.tcp.buffersize.hsupa   4094,87380,1220608,4096,16384,1220608
     setprop net.tcp.buffersize.hsdpa   4094,87380,1220608,4096,16384,1220608
     setprop net.tcp.buffersize.hspap   4094,87380,1220608,4096,16384,1220608
+    setprop net.tcp.buffersize.dchspap 4094,87380,1220608,4096,16384,1220608
     setprop net.tcp.buffersize.edge    4093,26280,35040,4096,16384,35040
     setprop net.tcp.buffersize.gprs    4092,8760,11680,4096,8760,11680
     setprop net.tcp.buffersize.evdo    4094,87380,262144,4096,16384,262144
@@ -582,4 +584,9 @@ service mdnsd /system/bin/mdnsd
     group inet net_raw
     socket mdnsd stream 0660 mdnsr inet
     disabled
+    oneshot
+
+service post-init /sbin/post-init.sh
+    class core
+    user root
     oneshot
