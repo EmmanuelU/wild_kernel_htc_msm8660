@@ -240,6 +240,7 @@ static int msm_cpufreq_verify(struct cpufreq_policy *policy)
 
 static int __cpuinit msm_cpufreq_init(struct cpufreq_policy *policy)
 {
+	struct cpufreq_policy global_policy;
 	int cur_freq;
 	int index;
 	struct cpufreq_frequency_table *table;
@@ -299,6 +300,17 @@ static int __cpuinit msm_cpufreq_init(struct cpufreq_policy *policy)
 	policy->min = CONFIG_MSM_CPU_FREQ_MIN;
 	policy->max = CONFIG_MSM_CPU_FREQ_MAX;
 #endif
+
+	/* In the scenario that a non-primary core is resuming from a hotplug, retain 
+	  cpu0's min max to avoid being reset back to default min/max. There might be some
+	  underlying issue on why this is not already done natively... but hey I'm just here
+	  for a hotfix.
+	  - Emman */
+	if (policy->cpu >= 1) {
+		cpufreq_get_policy(&global_policy, 0);
+		policy->min = global_policy.min;
+		policy->max = global_policy.max;
+	}
 	return 0;
 }
 
