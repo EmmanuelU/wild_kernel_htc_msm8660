@@ -399,8 +399,90 @@ static ssize_t store_##file_name					\
 	return ret ? ret : count;					\
 }
 
+#ifdef CONFIG_LINK_CPU_GOVERNORS
+static ssize_t store_scaling_min_freq
+(struct cpufreq_policy *policy, const char *buf, size_t count)
+{							
+	unsigned int ret = -EINVAL;
+	struct cpufreq_policy new_policy;
+	int cpu_alt_id = 0;
+
+
+	ret = cpufreq_get_policy(&new_policy, policy->cpu);
+	if (ret)
+		return -EINVAL;
+
+	ret = sscanf(buf, "%u", &new_policy.min);
+	if (ret != 1)
+		return -EINVAL;
+
+	ret = __cpufreq_set_policy(policy, &new_policy);
+	policy->user_policy.min = policy->min;
+
+	if (force_cpu_gov_sync != 0) {
+		cpu_alt_id = policy->cpu ? 0 : 1;
+		if (!cpu_online(cpu_alt_id)) {	
+			cpu_up(cpu_alt_id);
+		}
+		ret = cpufreq_get_policy(&new_policy, cpu_alt_id);
+		if (!ret) {
+			struct cpufreq_policy* cpu_alt=cpufreq_cpu_get(cpu_alt_id);
+			if (cpu_alt != NULL) {
+				new_policy.min = policy->min;
+				__cpufreq_set_policy(cpu_alt, &new_policy);
+				cpu_alt->user_policy.min = cpu_alt->min;
+				cpufreq_cpu_put(cpu_alt);
+			}
+		}
+	}
+
+	return ret ? ret : count;
+}
+#else
 store_one(scaling_min_freq, min);
+#endif
+#ifdef CONFIG_LINK_CPU_GOVERNORS
+static ssize_t store_scaling_max_freq
+(struct cpufreq_policy *policy, const char *buf, size_t count)
+{							
+	unsigned int ret = -EINVAL;
+	struct cpufreq_policy new_policy;
+	int cpu_alt_id = 0;
+
+
+	ret = cpufreq_get_policy(&new_policy, policy->cpu);
+	if (ret)
+		return -EINVAL;
+
+	ret = sscanf(buf, "%u", &new_policy.max);
+	if (ret != 1)
+		return -EINVAL;
+
+	ret = __cpufreq_set_policy(policy, &new_policy);
+	policy->user_policy.max = policy->max;
+
+	if (force_cpu_gov_sync != 0) {
+		cpu_alt_id = policy->cpu ? 0 : 1;
+		if (!cpu_online(cpu_alt_id)) {	
+			cpu_up(cpu_alt_id);
+		}
+		ret = cpufreq_get_policy(&new_policy, cpu_alt_id);
+		if (!ret) {
+			struct cpufreq_policy* cpu_alt=cpufreq_cpu_get(cpu_alt_id);
+			if (cpu_alt != NULL) {
+				new_policy.max = policy->max;
+				__cpufreq_set_policy(cpu_alt, &new_policy);
+				cpu_alt->user_policy.max = cpu_alt->max;
+				cpufreq_cpu_put(cpu_alt);
+			}
+		}
+	}
+
+	return ret ? ret : count;
+}				
+#else
 store_one(scaling_max_freq, max);
+#endif
 
 /**
  * show_cpuinfo_cur_freq - current CPU frequency as detected by hardware
