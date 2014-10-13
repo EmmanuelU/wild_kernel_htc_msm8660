@@ -2,7 +2,7 @@
 latestversion=001
 latestdate=141013
 latestdateliteral='October 13 2014'
-latestDL=http://forum.xda-developers.com/showthread.php?t=2765196
+latestDL=http://forum.xda-developers.com/showthread.php?t=2551715
 input="$1"
 if [[ -z "$input" ]]
 	then
