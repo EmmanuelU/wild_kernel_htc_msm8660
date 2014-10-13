@@ -10,7 +10,7 @@ kernelversion=001
 device="doubleshot"
 ramdisk="4.4"
 outfile=WildKernel_signed.zip
-OTALink="http://forum.xda-developers.com/showthread.php?t=2765196"
+OTALink="http://forum.xda-developers.com/showthread.php?t=2551715"
 
 outdate=$(date +%y%m%d)
 outdateliteral=$(date "+%B %d %Y")
