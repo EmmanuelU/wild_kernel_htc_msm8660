@@ -141,6 +141,7 @@ sed -i "1ilatestDL=$OTALink" flashable/tools/updatewild.sh
 sed -i "1ilatestdateliteral=$outdateliteral" flashable/tools/updatewild.sh
 sed -i "1ilatestdate=$outdate" flashable/tools/updatewild.sh
 sed -i "1ilatestversion=$kernelversion" flashable/tools/updatewild.sh
+sed -i "1i#DO NOT EDIT FILE - AUTO GENERATED FOR $device" flashable/tools/updatewild.sh
 sed -i '1i#!/bin/sh' flashable/tools/updatewild.sh
 find -iname "*.ko" -exec cp {} flashable/zip/system/lib/modules/ \; >/dev/null
 if [[ "$dynamic" == "false" ]]; then
