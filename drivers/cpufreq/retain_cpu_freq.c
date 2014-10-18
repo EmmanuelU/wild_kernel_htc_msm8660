@@ -23,6 +23,7 @@ void retain_cpu_freq_policy(struct cpufreq_policy *policy)
 	if(policy != NULL){
 		user_policy[policy->cpu].min = policy->min;
 		user_policy[policy->cpu].max = policy->max;
+		user_policy[policy->cpu].governor = policy->governor;
 		user_policy[policy->cpu].set = true;
 	}
 	else user_policy[policy->cpu].set = false;
@@ -41,6 +42,11 @@ unsigned int get_retained_min_cpu_freq(int cpu)
 unsigned int get_retained_max_cpu_freq(int cpu)
 {
 	return user_policy[cpu].max;
+}
+
+struct cpufreq_governor* get_retained_governor(int cpu)
+{
+	return user_policy[cpu].governor;
 }
 
 int retain_cpu_freq_init(void)

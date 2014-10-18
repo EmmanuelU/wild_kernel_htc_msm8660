@@ -20,6 +20,7 @@ struct cpufreq_user_policy {
 	bool set;
 	unsigned int min;
 	unsigned int max;
+	struct cpufreq_governor* governor;
 };
 
 #ifdef CONFIG_CPU_FREQ_RETAIN_MIN_MAX
@@ -27,11 +28,13 @@ void retain_cpu_freq_policy(struct cpufreq_policy *policy);
 bool retained_cpu_freq_policy(int cpu);
 unsigned int get_retained_min_cpu_freq(int cpu);
 unsigned int get_retained_max_cpu_freq(int cpu);
+struct cpufreq_governor* get_retained_governor(int cpu);
 #else
 static inline void retain_cpu_freq_policy(struct cpufreq_policy *policy) {}
 static inline bool retained_cpu_freq_policy(int cpu) { return false; }
 static inline unsigned int get_retained_min_cpu_freq(int cpu) { return 0; }
 static inline unsigned int get_retained_max_cpu_freq(int cpu) { return 0; }
+static inline struct cpufreq_governor* get_retained_governor(int cpu) { return NULL; }
 #endif
 
 #endif
