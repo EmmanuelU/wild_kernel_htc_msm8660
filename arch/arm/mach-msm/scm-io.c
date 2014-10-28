@@ -34,6 +34,7 @@ static u32 __secure_readl(u32 addr)
 	register u32 r0 asm("r0") = SCM_IO_READ;
 	register u32 r1 asm("r1") = (u32)&context_id;
 	register u32 r2 asm("r2") = addr;
+	//asm(".arch_extension sec\n\t"); uncomment for GCC 4.7+
 	asm(
 		__asmeq("%0", "r0")
 		__asmeq("%1", "r0")

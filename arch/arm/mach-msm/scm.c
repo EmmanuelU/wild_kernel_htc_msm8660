@@ -189,6 +189,7 @@ static u32 smc(u32 cmd_addr)
 	register u32 r0 asm("r0") = 1;
 	register u32 r1 asm("r1") = (u32)&context_id;
 	register u32 r2 asm("r2") = cmd_addr;
+	//asm(".arch_extension sec\n\t"); uncomment for GCC 4.7+
 	asm(
 		__asmeq("%0", "r0")
 		__asmeq("%1", "r0")
@@ -284,6 +285,7 @@ u32 scm_get_version(void)
 		return version;
 
 	mutex_lock(&scm_lock);
+	//asm(".arch_extension sec\n\t"); uncomment for GCC 4.7+
 	asm(
 		__asmeq("%0", "r1")
 		__asmeq("%1", "r0")
