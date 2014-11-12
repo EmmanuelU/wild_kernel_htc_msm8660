@@ -84,6 +84,13 @@ struct workqueue_struct *batt_charger_ctrl_wq;
 static unsigned int charger_ctrl_stat;
 static unsigned int phone_call_stat;
 
+static int htc_batt_level = 66;
+
+int htc_get_batt_level(void)
+{
+ return htc_batt_level;
+}
+
 static int test_power_monitor;
 
 static enum power_supply_property htc_battery_properties[] = {
@@ -1081,7 +1088,7 @@ int htc_battery_core_update_changed(void)
 			battery_core_info.rep.overload,
 			battery_core_info.htc_charge_full);
 
-
+	htc_batt_level = battery_core_info.rep.level;
 	
 	if (is_send_batt_uevent) {
 		power_supply_changed(&htc_power_supplies[BATTERY_SUPPLY]);

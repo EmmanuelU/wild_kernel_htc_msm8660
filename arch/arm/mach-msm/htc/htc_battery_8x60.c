@@ -37,6 +37,7 @@
 #include <linux/android_alarm.h>
 #include <linux/suspend.h>
 #include <linux/earlysuspend.h>
+#include <linux/rtc.h>
 #include <mach/rpm.h>
 #ifdef CONFIG_FORCE_FAST_CHARGE
 #include <linux/fastchg.h>
