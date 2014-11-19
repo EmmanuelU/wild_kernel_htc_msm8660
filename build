@@ -8,7 +8,9 @@ upload=
 
 kernelversion=001
 device="doubleshot"
+defconfig="doubleshot_defconfig"
 ramdisk="4.4"
+dynamic_ramdisk_override="false"
 outfile=WildKernel_signed.zip
 OTALink="http://forum.xda-developers.com/showthread.php?t=2551715"
 
@@ -101,7 +103,7 @@ rm -rf flashable/zip/META-INF/com/google/android/updater-script
 if [[ "$fixed" == "false" ]]; then
 rm -rf flashable/zip/system/lib/modules
 mkdir flashable/zip/system/ 
-mkdir flashable/zip/system/lib/ 
+mkdir flashable/zip/system/lib/
 mkdir flashable/zip/system/lib/modules/
 fi
 rm -rf arch/arm/boot/zImage
@@ -112,7 +114,7 @@ make clean $buildargs | tee build_log.txt
 fi
 echo >> build_log.txt
 echo Writing configs ...
-make "$device"_defconfig | tee -a build_log.txt
+make "$defconfig" | tee -a build_log.txt
 echo >> build_log.txt
 make $buildargs | tee -a build_log.txt
 if [ ! -f arch/arm/boot/zImage ];
@@ -149,18 +151,26 @@ flashable/tools/mkbootfs flashable/tools/ramdisks/tmp/ | gzip > flashable/tools/
 flashable/tools/mkbootimg --kernel arch/arm/boot/zImage --ramdisk flashable/tools/ramdisks/ramdisk.gz --cmdline "no_console_suspend=1 androidboot.selinux=permissive" --base 0x48000000 --pagesize 2048 --output flashable/zip/boot.img
 fi
 fi
-rm -rf flashable/tools/ramdisks/ramdisk.gz
-rm -rf flashable/tools/ramdisks/tmp
 
 if [[ "$dynamic" == "false" ]]; then
-cp -f flashable/zip/META-INF/com/google/android/normal-updater-script flashable/zip/META-INF/com/google/android/updater-script
+cp -f flashable/tools/normal-updater-script flashable/zip/META-INF/com/google/android/updater-script
 else
-cp -f flashable/zip/META-INF/com/google/android/dynamic-updater-script flashable/zip/META-INF/com/google/android/updater-script
+cp -f flashable/tools/dynamic-updater-script flashable/zip/META-INF/com/google/android/updater-script
 fi
+if [[ ! "$dynamic_ramdisk_override" == "false" ]]; then
+rm -rf flashable/zip/tools/ramdisk_override
+mkdir flashable/zip/tools/ramdisk_override
+cp -arf flashable/tools/ramdisks/$dynamic_ramdisk_override/* flashable/zip/tools/ramdisk_override
+rm -rf flashable/zip/tools/ramdisk_override/default.prop
+cp -f flashable/tools/ramdisks/tmp/default.prop flashable/zip/tools/ramdisk_override/default.prop
+fi
+rm -rf flashable/tools/ramdisks/ramdisk.gz
+rm -rf flashable/tools/ramdisks/tmp
 cd flashable/zip/
 zip -r9 ../../tmp-kernel.zip *
-rm -rf flashable/zip/META-INF/com/google/android/updater-script
 cd ../..
+rm -rf flashable/zip/META-INF/com/google/android/updater-script
+rm -rf flashable/zip/tools/ramdisk_override
 java -jar flashable/tools/signapk.jar flashable/tools/testkey.x509.pem flashable/tools/testkey.pk8 tmp-kernel.zip $outfile
 rm -rf tmp-kernel.zip
 if [[ "$upload" == "true" ]]; then
