@@ -1,0 +1,170 @@
+#!/bin/bash
+
+clean=
+buildargs=
+fixed=
+dynamic=
+upload=
+
+kernelversion=001
+device="doubleshot"
+ramdisk="4.4"
+outfile=WildKernel_signed.zip
+OTALink="http://forum.xda-developers.com/showthread.php?t=2551715"
+
+outdate=$(date +%y%m%d)
+outdateliteral=$(date "+%B %d %Y")
+outdateliteral="'${outdateliteral}'"
+
+input="$1 $2 $3"
+if [[ -z "$input" ]] 
+	then
+	buildargs=-j4
+	clean=true
+fi
+
+if [[ "$1" == *"-j"* ]]; then
+	buildargs=$1
+elif [[ "$2" == *"-j"* ]]; then
+	buildargs=$2
+elif [[ "$3" == *"-j"* ]]; then
+	buildargs=$3
+elif [[ "$4" == *"-j"* ]]; then
+	buildargs=$4
+else
+	buildargs=-j4
+fi
+
+if [[ "$1" == *"-c"* ]]; then
+	clean=true
+elif [[ "$2" == *"-c"* ]]; then
+	clean=true
+elif [[ "$3" == *"-c"* ]]; then
+	clean=true
+elif [[ "$4" == *"-c"* ]]; then
+	clean=true
+else
+	clean=false
+fi
+
+if [[ "$1" == *"-p"* ]]; then
+	upload=true
+elif [[ "$2" == *"-p"* ]]; then
+	upload=true
+elif [[ "$3" == *"-p"* ]]; then
+	upload=true
+elif [[ "$4" == *"-p"* ]]; then
+	upload=true
+else
+	upload=false
+fi
+
+if [[ "$1" == *"-f"* ]]; then
+	fixed=true
+	dynamic=false
+elif [[ "$2" == *"-f"* ]]; then
+	fixed=true
+	dynamic=false
+elif [[ "$3" == *"-f"* ]]; then
+	fixed=true
+	dynamic=false
+elif [[ "$4" == *"-f"* ]]; then
+	fixed=true
+	dynamic=false
+else
+	fixed=false
+fi
+
+if [[ "$1" == *"-d"* ]]; then
+	dynamic=true
+	fixed=false
+elif [[ "$2" == *"-d"* ]]; then
+	dynamic=true
+	fixed=false
+elif [[ "$3" == *"-d"* ]]; then
+	dynamic=true
+	fixed=false
+elif [[ "$4" == *"-d"* ]]; then
+	dynamic=true
+	fixed=false
+else
+	dynamic=false
+fi
+
+clear
+rm build_log.txt >>build_log.txt
+echo Build Jobs: $buildargs
+sleep 2
+echo Cleaning workspace ...
+rm -rf *.zip
+rm -rf flashable/zip/META-INF/com/google/android/updater-script
+if [[ "$fixed" == "false" ]]; then
+rm -rf flashable/zip/system/lib/modules
+mkdir flashable/zip/system/ 
+mkdir flashable/zip/system/lib/ 
+mkdir flashable/zip/system/lib/modules/
+fi
+rm -rf arch/arm/boot/zImage
+rm -rf flashable/zip/tools/zImage
+if [[ "$fixed" == "false" ]]; then
+if [[ "$clean" == "true" ]]; then
+make clean $buildargs | tee build_log.txt
+fi
+echo >> build_log.txt
+echo Writing configs ...
+make "$device"_defconfig | tee -a build_log.txt
+echo >> build_log.txt
+make $buildargs | tee -a build_log.txt
+if [ ! -f arch/arm/boot/zImage ];
+then
+	echo
+	echo An error occured in the build process, aborting...
+        exit 1
+fi
+fi
+clear
+echo Creating Flash-able Zip ...
+if [[ "$dynamic" == "true" ]]; then
+cp -f arch/arm/boot/zImage flashable/zip/tools/zImage
+rm -rf flashable/zip/boot.img
+fi
+
+if [[ "$fixed" == "false" ]]; then
+cp -arf flashable/tools/ramdisks/$ramdisk flashable/tools/ramdisks/tmp
+echo "ro.wild.date=$outdate" >> flashable/tools/ramdisks/tmp/default.prop
+echo "ro.wild.version=$kernelversion" >> flashable/tools/ramdisks/tmp/default.prop
+echo "ro.wild.device=$device" >> flashable/tools/ramdisks/tmp/default.prop
+rm -rf flashable/tools/updatewild.sh
+cp flashable/tools/wild.sh flashable/tools/updatewild.sh
+sed -i '1i' flashable/tools/updatewild.sh
+sed -i "1ilatestDL=$OTALink" flashable/tools/updatewild.sh
+sed -i "1ilatestdateliteral=$outdateliteral" flashable/tools/updatewild.sh
+sed -i "1ilatestdate=$outdate" flashable/tools/updatewild.sh
+sed -i "1ilatestversion=$kernelversion" flashable/tools/updatewild.sh
+sed -i "1i#DO NOT EDIT FILE - AUTO GENERATED FOR $device" flashable/tools/updatewild.sh
+sed -i '1i#!/bin/sh' flashable/tools/updatewild.sh
+find -iname "*.ko" -exec cp {} flashable/zip/system/lib/modules/ \; >/dev/null
+if [[ "$dynamic" == "false" ]]; then
+flashable/tools/mkbootfs flashable/tools/ramdisks/tmp/ | gzip > flashable/tools/ramdisks/ramdisk.gz
+flashable/tools/mkbootimg --kernel arch/arm/boot/zImage --ramdisk flashable/tools/ramdisks/ramdisk.gz --cmdline "no_console_suspend=1 androidboot.selinux=permissive" --base 0x48000000 --pagesize 2048 --output flashable/zip/boot.img
+fi
+fi
+rm -rf flashable/tools/ramdisks/ramdisk.gz
+rm -rf flashable/tools/ramdisks/tmp
+
+if [[ "$dynamic" == "false" ]]; then
+cp -f flashable/zip/META-INF/com/google/android/normal-updater-script flashable/zip/META-INF/com/google/android/updater-script
+else
+cp -f flashable/zip/META-INF/com/google/android/dynamic-updater-script flashable/zip/META-INF/com/google/android/updater-script
+fi
+cd flashable/zip/
+zip -r9 ../../tmp-kernel.zip *
+rm -rf flashable/zip/META-INF/com/google/android/updater-script
+cd ../..
+java -jar flashable/tools/signapk.jar flashable/tools/testkey.x509.pem flashable/tools/testkey.pk8 tmp-kernel.zip $outfile
+rm -rf tmp-kernel.zip
+if [[ "$upload" == "true" ]]; then
+adb push $outfile /sdcard/
+fi
+echo
+echo Done - Your File is $outfile
