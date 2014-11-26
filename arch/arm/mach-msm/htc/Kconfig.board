@@ -2,6 +2,9 @@
 # Include the specific Kconfig file for HTC board
 #
 
+# DOUBLESHOT
+source "arch/arm/mach-msm/htc/doubleshot/Kconfig"
+
 # ELITE
 source "arch/arm/mach-msm/htc/elite/Kconfig"
 

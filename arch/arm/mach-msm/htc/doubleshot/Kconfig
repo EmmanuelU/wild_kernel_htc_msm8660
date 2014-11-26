@@ -1,0 +1,11 @@
+config BOARD_HEADER_FILE
+	string "HTC board specific header file name"
+	default ""
+
+config MACH_DOUBLESHOT
+	depends on ARCH_MSM8X60
+	default n
+	bool "Doubleshot"
+ 	select FB_MSM_MIPI_DSI
+	help
+	  Support for the Doubleshot device.
