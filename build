@@ -146,7 +146,7 @@ sed -i '1i#!/bin/sh' flashable/tools/updatewild.sh
 find -iname "*.ko" -exec cp {} flashable/zip/system/lib/modules/ \; >/dev/null
 if [[ "$dynamic" == "false" ]]; then
 flashable/tools/mkbootfs flashable/tools/ramdisks/tmp/ | gzip > flashable/tools/ramdisks/ramdisk.gz
-flashable/tools/mkbootimg --kernel arch/arm/boot/zImage --ramdisk flashable/tools/ramdisks/ramdisk.gz --cmdline "no_console_suspend=1 androidboot.selinux=permissive" --base 0x48000000 --pagesize 2048 --output flashable/zip/boot.img
+flashable/tools/mkbootimg --kernel arch/arm/boot/zImage --ramdisk flashable/tools/ramdisks/ramdisk.gz --cmdline "console=ttyHSL0 androidboot.hardware=doubleshot no_console_suspend=1" --base 0x48000000 --pagesize 2048 --output flashable/zip/boot.img
 fi
 fi
 rm -rf flashable/tools/ramdisks/ramdisk.gz
