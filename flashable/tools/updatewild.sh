@@ -1,8 +1,8 @@
 #!/bin/sh
 #DO NOT EDIT FILE - AUTO GENERATED FOR doubleshot
 latestversion=001
-latestdate=141007
-latestdateliteral='October 07 2014'
+latestdate=150401
+latestdateliteral='April 01 2015'
 latestDL=http://forum.xda-developers.com/showthread.php?t=2765196
 input="$1"
 if [[ -z "$input" ]]
