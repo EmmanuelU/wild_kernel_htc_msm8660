@@ -1,15 +1,9 @@
 #!/bin/sh
 #DO NOT EDIT FILE - AUTO GENERATED FOR doubleshot
 latestversion=001
-<<<<<<< HEAD
-latestdate=141118
-latestdateliteral='November 18 2014'
-latestDL=http://forum.xda-developers.com/showthread.php?t=2551715
-=======
-latestdate=141013
-latestdateliteral='October 13 2014'
+latestdate=141007
+latestdateliteral='October 07 2014'
 latestDL=http://forum.xda-developers.com/showthread.php?t=2765196
->>>>>>> parent of e0bfb00... cpufreq: Cleanup cpu_gov_sync
 input="$1"
 if [[ -z "$input" ]]
 	then

@@ -398,7 +398,7 @@ static ssize_t store_##file_name					\
 	ret = __cpufreq_set_policy(policy, &new_policy);		\
 	policy->user_policy.object = policy->object;			\
 									\
-	retain_cpu_freq_policy(&new_policy);					\
+	retain_cpu_freq_policy(policy);					\
 									\
 	return ret ? ret : count;					\
 }
@@ -439,7 +439,7 @@ static ssize_t store_scaling_min_freq
 			}
 		}
 	}
-	retain_cpu_freq_policy(&new_policy);
+	retain_cpu_freq_policy(policy);
 
 	return ret ? ret : count;
 }
@@ -482,7 +482,7 @@ static ssize_t store_scaling_max_freq
 			}
 		}
 	}
-	retain_cpu_freq_policy(&new_policy);
+	retain_cpu_freq_policy(policy);
 
 	return ret ? ret : count;
 }				
