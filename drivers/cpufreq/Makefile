@@ -2,6 +2,8 @@
 obj-$(CONFIG_CPU_FREQ)			+= cpufreq.o
 # CPUfreq stats
 obj-$(CONFIG_CPU_FREQ_STAT)             += cpufreq_stats.o
+# Retain CPU Policy after hotplug
+obj-$(CONFIG_CPU_FREQ_RETAIN_POLICY)	+= retain_cpu_policy.o
 
 # CPUfreq governors 
 obj-$(CONFIG_CPU_FREQ_GOV_PERFORMANCE)	+= cpufreq_performance.o
